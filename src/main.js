@@ -19,31 +19,29 @@ var root = module.exports = function(parent, queryResults, options) {
 	parent = $(parent);
 	
 	yasr.options = $.extend(true, {}, root.defaults, options);
-	if (queryResults) setResults(queryResults);
+	
 	
 	yasr.draw = draw;
 	yasr.parent = parent;
-	
+	yasr.setResults = setResults;
 	
 	
 	/**
 	 * postprocess
 	 */
-	if (yasr.results) {
-//		yasr.setResponse(queryResponse);
-		yasr.draw();
-	};
+	if (queryResults) setResults(queryResults);
 	return yasr;
 };
 var setResults = function(queryResults) {
 	yasr.results = require("./parsers/wrapper.js")(queryResults);
+	yasr.draw();
 };
 var draw = function(output) {
 	if (!yasr.results) return false;
 	if (!output) output = yasr.options.output;
 	if (output in root.plugins) {
 		yasr.parent.empty();
-		root.plugins[output].draw(yasr);
+		root.plugins[output](yasr);
 		return true;
 	}
 	return false;
@@ -57,6 +55,7 @@ var draw = function(output) {
  */
 root.plugins = {
 	boolean: require("./boolean.js"),
+	table: require("./table.js")
 	
 };
 
@@ -66,71 +65,15 @@ root.plugins = {
  * 
  * @attribute YASR.defaults
  */
-root.defaults = $.extend(root.defaults, {
+root.defaults = {
 	
 	
-	plugins: {
-		boolean: {},
-		
-	},
 	
-	output: "boolean",
+	output: "table",
 	
 	
 	
 	
 	
 	
-	
-	
-	
-	
-	mode : "sparql11",
-	/**
-	 * Query string
-	 * 
-	 * @property value
-	 * @type String
-	 * @default "SELECT * WHERE {\n  ?sub ?pred ?obj .\n} \nLIMIT 10"
-	 */
-	value : "SELECT * WHERE {\n  ?sub ?pred ?obj .\n} \nLIMIT 10",
-	highlightSelectionMatches : {
-		showToken : /\w/
-	},
-	tabMode : "indent",
-	lineNumbers : true,
-	gutters : [ "gutterErrorBar", "CodeMirror-linenumbers" ],
-	matchBrackets : true,
-	fixedGutter : true,
-
-	/**
-	 * Extra shortcut keys. Check the CodeMirror manual on how to add your own
-	 * 
-	 * @property extraKeys
-	 * @type object
-	 */
-	extraKeys : {
-		"Ctrl-Space" : root.autoComplete,
-		"Cmd-Space" : root.autoComplete,
-		"Ctrl-D" : root.deleteLine,
-		"Ctrl-K" : root.deleteLine,
-		"Cmd-D" : root.deleteLine,
-		"Cmd-K" : root.deleteLine,
-		"Ctrl-/" : root.commentLines,
-		"Cmd-/" : root.commentLines,
-		"Ctrl-Alt-Down" : root.copyLineDown,
-		"Ctrl-Alt-Up" : root.copyLineUp,
-		"Cmd-Alt-Down" : root.copyLineDown,
-		"Cmd-Alt-Up" : root.copyLineUp,
-		"Shift-Ctrl-F" : root.doAutoFormat,
-		"Shift-Cmd-F" : root.doAutoFormat,
-		"Ctrl-]" : root.indentMore,
-		"Cmd-]" : root.indentMore,
-		"Ctrl-[" : root.indentLess,
-		"Cmd-[" : root.indentLess,
-		"Ctrl-S" : root.storeQuery,
-		"Cmd-S" : root.storeQuery,
-		"Ctrl-Enter" : root.executeQuery,
-		"Cmd-Enter" : root.executeQuery
-	},
-});
+};

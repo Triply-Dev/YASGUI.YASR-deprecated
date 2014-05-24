@@ -1,7 +1,9 @@
 var paths = {
 	style: [
-		'bower_components/codemirror/lib/codemirror.css', 
-		'bower_components/codemirror/addon/hint/show-hint.css',
+//		'bower_components/codemirror/lib/codemirror.css', 
+//		'bower_components/codemirror/addon/hint/show-hint.css',
+		'lib/DataTables/media/css/jquery.dataTables.css',
+		'jquery.dataTables_themeroller.css',
 		'src/**/*.css',
 	]
 };

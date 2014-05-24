@@ -123,7 +123,7 @@
     	query: {
     		handlers: {
     			success: function(data, status, response) {
-    				yasr.setResponse({response: data, contentType: response.getResponseHeader("Content-Type")});
+    				yasr.setResults({response: data, contentType: response.getResponseHeader("Content-Type")});
     			}
     		}
     	}

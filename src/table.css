@@ -1,0 +1,10 @@
+.dataTables_wrapper .dataTables_length {
+	float:right;
+	margin-left: 10px;
+}
+.dataTables_length label, .dataTables_length select {
+    vertical-align: middle;
+}
+table.dataTable thead th {
+	background:none !important;
+}
