@@ -1,10 +1,19 @@
 var $ = require("jquery");
-var booleanVal = null;
-var container = $("<div class='booleanResult'></div>");
+
 var root = module.exports = function(yasr, parent, options) {
-	options = $.extend(true, {}, root.defaults, options);
-	container.appendTo(parent);
-	booleanVal = yasr.results.getBoolean();
+	var plugin = {};
+	plugin.container = $("<div class='booleanResult'></div>").appendTo(parent);
+	plugin.options = $.extend(true, {}, root.defaults, options);
+	plugin.yasr = yasr;
+	
+	plugin.draw = function() {
+		root.draw(plugin);
+	};
+	return plugin;
+};
+
+root.draw = function(plugin) {
+	var booleanVal = yasr.results.getBoolean();
 	
 	var imgId = null;
 	var textVal = null;
@@ -15,19 +24,23 @@ var root = module.exports = function(yasr, parent, options) {
 		imgId = "cross";
 		textVal = "False";
 	} else {
-		container.width("140");
+		plugin.container.width("140");
 		textVal = "Could not find boolean value in response";
 	}
 	
 	//add icon
-	if (imgId) require("./imgs").draw(container, {
+	if (imgId) require("./imgs").draw(plugin.container, {
 		width: 25,
 		height: 25,
 		id: imgId,
 	});
 	
-	$("<span></span>").text(textVal).appendTo(container);
+	$("<span></span>").text(textVal).appendTo(plugin.container);
 };
+
 root.defaults = {
-		
+	hideFromSelection:true,
+	canHandleResults: function(results){},
+	getPriority: function(results){}
+	
 };

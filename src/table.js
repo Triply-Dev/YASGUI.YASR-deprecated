@@ -1,30 +1,43 @@
 var $ = require("jquery");
 require("./../lib/DataTables/media/js/jquery.dataTables.js");
 var imgs = require("./imgs");
-var table;
-var plugin = {};
-plugin.parent = null;
+
 var root = module.exports = function(yasr,parent, options) {
+	var plugin = {};
 	plugin.options = $.extend(true, {}, root.defaults, options);
 	plugin.yasr = yasr;
 	plugin.parent = parent;
+	plugin.draw = function() {
+		root.draw(plugin);
+	};
 	
-	plugin.dataTable = $('<table cellpadding="0" cellspacing="0" border="0" class="resultsTable"></table>');
-	$(parent).html( plugin.dataTable );
-	var dataTableConfig = plugin.options.datatable;
-	dataTableConfig.aaData = getRows();
-	dataTableConfig.aoColumns = getVariablesAsCols(),
-	plugin.dataTable.dataTable(dataTableConfig); 
-	
-	drawSvgIcons();
-	
-	addEvents();
 	return plugin;
 };
 
+root.draw = function(plugin) {
+	plugin.table = $('<table cellpadding="0" cellspacing="0" border="0" class="resultsTable"></table>');
+	$(plugin.parent).html(plugin.table);
+
+	var dataTableConfig = plugin.options.datatable;
+	dataTableConfig.aaData = getRows(plugin);
+	dataTableConfig.aoColumns = getVariablesAsCols(plugin),
+	plugin.table.dataTable(dataTableConfig); 
+	
+	
+	drawSvgIcons(plugin);
+	
+	addEvents(plugin);
+	
+	if (plugin.yasr.options.drawOutputSelector) {
+		//in that case, move the table upward, so the table options nicely align with the selector
+		plugin.yasr.container.find(".dataTables_wrapper")
+			.css("position", "relative")
+			.css("top", "-30px");
+	}
+};
 
 
-var getVariablesAsCols = function() {
+var getVariablesAsCols = function(plugin) {
 	var cols = [];
 	cols.push({"sTitle": ""});//row numbers
 	var sparqlVars = plugin.yasr.results.getVariables();
@@ -34,7 +47,7 @@ var getVariablesAsCols = function() {
 	return cols;
 };
 
-var getRows = function() {
+var getRows = function(plugin) {
 	var rows = [];
 	var bindings = plugin.yasr.results.getBindings();
 	var vars = plugin.yasr.results.getVariables();
@@ -87,12 +100,12 @@ var executeSnorqlQuery = function(uri) {
 //	Yasgui.sparql.query();
 };
 
-var addEvents = function() {
-	plugin.dataTable.on( 'order.dt', function () {
-	    drawSvgIcons();
+var addEvents = function(plugin) {
+	plugin.table.on( 'order.dt', function () {
+	    drawSvgIcons(plugin);
 	});
 	
-	plugin.dataTable.delegate("td", "click", function() {
+	plugin.table.delegate("td", "click", function() {
 		if (plugin.options.handlers && plugin.options.handlers.onCellClick) {
 			var result = plugin.options.handlers.onCellClick(this);
 			if (result === false) return false;
@@ -117,17 +130,17 @@ var addEvents = function() {
 	});
 };
 
-var drawSvgIcons = function() {
+var drawSvgIcons = function(plugin) {
 	var sortings = {
 		"sorting": "unsorted",
 		"sorting_asc": "sortAsc",
 		"sorting_desc": "sortDesc"
 	};
-	plugin.dataTable.find(".sortIcons").remove();
+	plugin.table.find(".sortIcons").remove();
 	for (var sorting in sortings) {
 		var svgDiv = $("<div class='sortIcons'></div>").css("float", "right").css("margin-right", "-12px").width(10).height(15);
 		imgs.draw(svgDiv, {id: sortings[sorting], width: 12, height: 16});
-		plugin.dataTable.find("th." + sorting).append(svgDiv);
+		plugin.table.find("th." + sorting).append(svgDiv);
 	}
 };
 root.openCellUriInNewWindow = function(cell) {
@@ -167,15 +180,15 @@ root.defaults = {
         	
         	//Hide pagination when we have a single page
         	var activePaginateButton = false;
-        	$(plugin.parent).find(".paginate_button").each(function() {
+        	$(oSettings.nTableWrapper).find(".paginate_button").each(function() {
         		if ($(this).attr("class").indexOf("current") == -1 && $(this).attr("class").indexOf("disabled") == -1) {
         			activePaginateButton = true;
         		}
         	});
         	if (activePaginateButton) {
-        		$(plugin.parent).find(".dataTables_paginate").show();
+        		$(oSettings.nTableWrapper).find(".dataTables_paginate").show();
         	} else {
-        		$(plugin.parent).find(".dataTables_paginate").hide();
+        		$(oSettings.nTableWrapper).find(".dataTables_paginate").hide();
         	}
 		},
 		"aoColumnDefs": [
