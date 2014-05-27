@@ -40,7 +40,6 @@ root.draw = function(plugin) {
 
 root.defaults = {
 	hideFromSelection:true,
-	canHandleResults: function(results){},
-	getPriority: function(results){}
-	
+	canHandleResults: function(yasr){return yasr.results.getBoolean() === true || yasr.results.getBoolean() == false;},
+	getPriority: function(yasr){return 10;}
 };

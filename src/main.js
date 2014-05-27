@@ -19,15 +19,17 @@ var root = module.exports = function(parent, queryResults, options) {
 	var yasr = {};
 	yasr.options = $.extend(true, {}, root.defaults, options);
 	yasr.container = $("<div class='yasr'></div>").appendTo(parent);
+	yasr.header = $("<div class='yasr_header'></div>").appendTo(yasr.container);
+	yasr.resultsContainer = $("<div class='yasr_results'></div>").appendTo(yasr.container);
 //	yasr.parent = parent;
 	
 	
 	yasr.draw = function(output) {
 		if (!yasr.results) return false;
 		if (!output) output = yasr.options.output;
-		if (output in root.plugins) {
+		if (output in yasr.plugins) {
 			$(yasr.resultsContainer).empty();
-			getPluginDoc(yasr, output).draw();
+			yasr.plugins[output].draw();
 			return true;
 		}
 		return false;
@@ -38,28 +40,25 @@ var root = module.exports = function(parent, queryResults, options) {
 		yasr.draw();
 	};
 	
-	
-	if (yasr.options.drawOutputSelector) root.drawSelector(yasr);
-	yasr.resultsContainer = $("<div class='yasr_results'></div>").appendTo(yasr.container);
-	yasr.pluginDocs = {};
-	
+	yasr.plugins = {};
+	for (var plugin in root.plugins) {
+		yasr.plugins[plugin] = root.plugins[plugin](yasr, yasr.resultsContainer);
+	}
 	/**
 	 * postprocess
 	 */
 	if (queryResults) yasr.setResults(queryResults);
+	if (yasr.options.drawOutputSelector) root.drawSelector(yasr);
 	root.updateSelector(yasr);
 	
 	return yasr;
 };
-var getPluginDoc = function(yasr, plugin) {
-	if (!yasr.pluginDocs[plugin]) yasr.pluginDocs[plugin] = root.plugins[plugin](yasr,yasr.resultsContainer);
-	return yasr.pluginDocs[plugin];
-};
 
 root.drawSelector = function(yasr) {
-	var btnGroup = $('<div class="yasr_btnGroup"></div>').appendTo(yasr.container);
-	$.each(root.plugins, function(pluginName, plugin) {
-		var name = plugin.name || pluginName;
+	var btnGroup = $('<div class="yasr_btnGroup"></div>').appendTo(yasr.header);
+	$.each(yasr.plugins, function(pluginName, plugin) {
+		if (plugin.options.hideFromSelection) return;
+		var name = plugin.options.name || pluginName;
 		var button = $("<button></button>")
 		.text(name)
 		.addClass("select_" + pluginName)
@@ -74,6 +73,8 @@ root.drawSelector = function(yasr) {
 		.appendTo(btnGroup);
 		if (yasr.options.output == pluginName) button.addClass("selected");
 	});
+	
+	if (btnGroup.children().length == 1) btnGroup.hide();
 };
 
 root.updateSelector = function(yasr) {
@@ -88,8 +89,8 @@ root.updateSelector = function(yasr) {
  */
 root.plugins = {
 	boolean: require("./boolean.js"),
-	table: require("./table.js")
-	
+	table: require("./table.js"),
+	rawResponse: require("./rawResponse.js")
 };
 
 /**

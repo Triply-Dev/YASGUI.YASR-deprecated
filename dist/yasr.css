@@ -408,7 +408,7 @@ table.dataTable td {
 	margin-right: 7px;
 }
 .yasr {
-	margin: 5px;
+	margin-top: 5px;
 }
 
 
@@ -467,6 +467,10 @@ table.dataTable td {
 
 .yasr_btnGroup button+button {
 	margin-left: -1px;
+}
+.yasr_results .CodeMirror {
+	margin-top: 5px;
+	height: 100%;
 }
 .dataTables_wrapper .dataTables_length {
 	float:right;

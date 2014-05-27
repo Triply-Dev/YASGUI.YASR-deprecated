@@ -28,7 +28,7 @@ root.draw = function(plugin) {
 	
 	addEvents(plugin);
 	
-	if (plugin.yasr.options.drawOutputSelector) {
+	if (plugin.yasr.header.find(".yasr_btnGroup").is(':visible')) {
 		//in that case, move the table upward, so the table options nicely align with the selector
 		plugin.yasr.container.find(".dataTables_wrapper")
 			.css("position", "relative")
@@ -150,6 +150,9 @@ root.openCellUriInNewWindow = function(cell) {
 };
 
 root.defaults = {
+	name: "Table",
+	canHandleResults: function(yasr){return yasr.results.getVariables().length > 0;},
+	getPriority: function(yasr){return 10;},
 	drawCellContent: root.getFormattedValueFromBinding,
 //	associativeBrowsingTemplate: function(uri) {
 //		return 'SELECT ?property ?hasValue ?isValueOf\n' + 
