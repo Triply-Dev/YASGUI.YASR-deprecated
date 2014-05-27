@@ -1,10 +1,10 @@
 var $ = require("jquery");
 var booleanVal = null;
 var container = $("<div class='booleanResult'></div>");
-var root = module.exports = function(yasqe, options) {
+var root = module.exports = function(yasr, parent, options) {
 	options = $.extend(true, {}, root.defaults, options);
-	container.appendTo(yasqe.parent);
-	booleanVal = yasqe.results.getBoolean();
+	container.appendTo(parent);
+	booleanVal = yasr.results.getBoolean();
 	
 	var imgId = null;
 	var textVal = null;

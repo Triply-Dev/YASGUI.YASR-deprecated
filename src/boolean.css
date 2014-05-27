@@ -1,7 +1,7 @@
 .booleanResult {
 	width: 70px;
 	margin: 0 auto;
-	vertical-align: center;
+	vertical-align: middle;
 }
 .booleanResult svg {
 	margin-bottom: -10px;

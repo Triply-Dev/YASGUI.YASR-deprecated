@@ -1,0 +1,53 @@
+.yasr_btnGroup {
+	margin: 9px 0 5px;
+	position: relative;
+display: inline-block;
+vertical-align: middle;
+}
+.yasr_btnGroup>button:first-child:not(:last-child) {
+border-bottom-right-radius: 0;
+border-top-right-radius: 0;
+}
+.yasr_btnGroup>button:last-child:not(:first-child) {
+border-bottom-left-radius: 0;
+border-top-left-radius: 0;
+}
+
+.yasr_btnGroup>button:not(:first-child):not(:last-child) {
+border-radius: 0;
+}
+
+.yasr_btnGroup>button {
+color: #333;
+border: 1px solid transparent;
+background-color: #fff;
+border-color: #ccc;
+border-width: 1px;
+display: inline-block;
+text-align: center;
+vertical-align: middle;
+
+cursor: pointer;
+white-space: nowrap;
+padding: 6px 12px;
+border-radius: 4px;
+-webkit-user-select: none;
+-moz-user-select: none;
+-ms-user-select: none;
+user-select: none;
+-webkit-appearance: button;
+/* margin: 0; */
+overflow: visible;
+box-sizing: border-box;	
+}
+
+.yasr_btnGroup>button:hover, .yasr_btnGroup>button:focus, .yasr_btnGroup>button.selected {
+color: #333;
+outline:0;
+background-color: #ebebeb;
+border-color: #adadad;
+}
+
+.yasr_btnGroup button+button {
+	margin-left: -1px;
+}

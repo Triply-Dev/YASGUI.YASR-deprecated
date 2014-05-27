@@ -1,7 +1,7 @@
 'use strict';
 var $ = require("jquery");
 
-console = console || {"log":function(){}};//make sure any console statements
+console = console || {"log":function(){}};//make sure any console statements don't break in IE
 var yasr = {};
 
 
@@ -16,20 +16,21 @@ var yasr = {};
  * @return {doc} YASR document
  */
 var root = module.exports = function(parent, queryResults, options) {
-	parent = $(parent);
-	
 	yasr.options = $.extend(true, {}, root.defaults, options);
-	
-	
+	yasr.parent = parent;
 	yasr.draw = draw;
 	yasr.parent = parent;
 	yasr.setResults = setResults;
+	if (yasr.options.drawOutputSelector) root.drawSelector();
+	yasr.resultsContainer = $("<div class='resultsWrapper'></div>").appendTo(parent);
 	
 	
 	/**
 	 * postprocess
 	 */
 	if (queryResults) setResults(queryResults);
+	root.updateSelector();
+	
 	return yasr;
 };
 var setResults = function(queryResults) {
@@ -40,14 +41,37 @@ var draw = function(output) {
 	if (!yasr.results) return false;
 	if (!output) output = yasr.options.output;
 	if (output in root.plugins) {
-		yasr.parent.empty();
-		root.plugins[output](yasr);
+		$(yasr.resultsContainer).empty();
+		root.plugins[output](yasr,yasr.resultsContainer);
 		return true;
 	}
 	return false;
 };
 
+root.drawSelector = function() {
+	var btnGroup = $('<div class="yasr_btnGroup"></div>').appendTo(yasr.parent);
+//	style="margin: 9px 0 5px;">
+//    <button type="button" class="btn btn-default">Left</button>
+//    <button type="button" class="btn btn-default">Middle</button>
+//    <button type="button" class="btn btn-default">Right</button>
+//  </div>
+	for (var pluginName in root.plugins) {
+		var plugin = root.plugins[pluginName];
+		var name = plugin.name || pluginName;
+		$("<button></button>")
+			.text(name)
+			.click(function() {
+				
+			})
+			.appendTo(btnGroup);
+	}
+};
 
+root.updateSelector = function() {
+	for (var plugin in root.plugins) {
+		
+	}
+};
 /**
  * Register plugins
  * 
@@ -70,8 +94,7 @@ root.defaults = {
 	
 	
 	output: "table",
-	
-	
+	drawOutputSelector: true
 	
 	
 	
