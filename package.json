@@ -52,11 +52,12 @@
       "web": "http://laurensrietveld.nl"
     }
   ],
-  "readme": "TODO",
+  "readme": "README.md",
   "dependencies": {
     "browserify-shim": "~3.2.0",
     "jquery": "~ 1.11.0",
-    "codemirror": "^4.2.0"
+    "codemirror": "^4.2.0",
+    "YASGUI-Utils": "0.0.0"
   },
   "browserify-shim": {
     "twitter-bootstrap-3.0.0": "bootstrap"

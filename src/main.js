@@ -1,6 +1,6 @@
 'use strict';
 var $ = require("jquery");
-
+var utils = require("yasgui-utils");
 console = console || {"log":function(){}};//make sure any console statements don't break in IE
 
 
@@ -21,7 +21,6 @@ var root = module.exports = function(parent, queryResults, options) {
 	yasr.container = $("<div class='yasr'></div>").appendTo(parent);
 	yasr.header = $("<div class='yasr_header'></div>").appendTo(yasr.container);
 	yasr.resultsContainer = $("<div class='yasr_results'></div>").appendTo(yasr.container);
-//	yasr.parent = parent;
 	
 	
 	yasr.draw = function(output) {
@@ -38,6 +37,14 @@ var root = module.exports = function(parent, queryResults, options) {
 	yasr.setResults = function(queryResults) {
 		yasr.results = require("./parsers/wrapper.js")(queryResults);
 		yasr.draw();
+		
+		//store if needed
+		if (yasr.options.persistency && yasr.options.persistency.results) {
+			if (yasr.results.getOriginalResponse().length < yasr.options.persistency.results.maxSize) {
+				var id = (typeof yasr.options.persistency.results.id == "string" ? yasr.options.persistency.results.id: yasr.options.persistency.results.id(yasr));
+				utils.storage.set(id, yasr.results.getOriginalResponse(), "month");
+			}
+		}
 	};
 	
 	yasr.plugins = {};
@@ -47,7 +54,17 @@ var root = module.exports = function(parent, queryResults, options) {
 	/**
 	 * postprocess
 	 */
-	if (queryResults) yasr.setResults(queryResults);
+	if (yasr.options.persistency && yasr.options.persistency.outputSelector) {
+		var id = (typeof yasr.options.persistency.outputSelector == "string"? yasr.options.persistency.outputSelector: yasr.options.persistency.outputSelector(yasr));
+		yasr.options.output = utils.storage.get(id);
+	}
+	if (!queryResults && yasr.options.persistency && yasr.options.persistency.results) {
+		var id = (typeof yasr.options.persistency.results.id == "string" ? yasr.options.persistency.results.id: yasr.options.persistency.results.id(yasr));
+		queryResults = utils.storage.get(id);
+	}
+	if (queryResults) {
+		yasr.setResults(queryResults);
+	} 
 	if (yasr.options.drawOutputSelector) root.drawSelector(yasr);
 	root.updateSelector(yasr);
 	
@@ -68,6 +85,14 @@ root.drawSelector = function(yasr) {
 			$(this).addClass("selected");
 			//set and draw output
 			yasr.options.output = pluginName;
+			
+			//store if needed
+			if (yasr.options.persistency && yasr.options.persistency.outputSelector) {
+				var id = (typeof yasr.options.persistency.outputSelector == "string"? yasr.options.persistency.outputSelector: yasr.options.persistency.outputSelector(yasr));
+				utils.storage.set(id, yasr.options.output, "month");
+			}
+			
+			
 			yasr.draw();
 		})
 		.appendTo(btnGroup);
@@ -104,7 +129,31 @@ root.defaults = {
 	
 	
 	output: "table",
-	drawOutputSelector: true
+	drawOutputSelector: true,
+	/**
+	 * Make output selector and the query results persistent. Setting the value
+	 * to null, will disable persistancy: nothing is stored between browser
+	 * sessions Setting the values to a string (or a function which returns a
+	 * string), will store the query in localstorage using the specified string.
+	 * By default, the ID is dynamically generated using the determineID
+	 * function, to avoid collissions when using multiple YASR items on one
+	 * page
+	 * 
+	 * @property persistent
+	 * @type function|string
+	 */
+	persistency: {
+		outputSelector: function(yasr) {
+			return "selector_" + utils.determineId(yasr.container);
+		},
+		results: {
+			id: function(yasr){
+				return "results_" + utils.determineId(yasr.container);
+			},
+			maxSize: 2000 //char count
+		}
+		
+	},
 	
 	
 	
