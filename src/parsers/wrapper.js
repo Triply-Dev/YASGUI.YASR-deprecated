@@ -2,28 +2,21 @@ var $ = require("jquery");
 
 var root = module.exports = function(queryResponse) {
 	var parsers = {
-			xml: require("./xml.js"),
-			json: require("./json.js"),
-			tsv: require("./tsv.js"),
-			csv: require("./csv.js")
-		};
-		var contentType;
-		var origResponse;
-		var json = null;
+		xml: require("./xml.js"),
+		json: require("./json.js"),
+		tsv: require("./tsv.js"),
+		csv: require("./csv.js")
+	};
+	var contentType;
+	var origResponse;
+	var json = null;
+	var type = null;//json, xml, csv, or tsv
 		
 		
 	contentType = (typeof queryResponse == "object" && queryResponse.contentType? queryResponse.contentType.toLowerCase(): null);
 	origResponse = (typeof queryResponse == "object" && queryResponse.response? queryResponse.response: queryResponse);
 	
-	var getQueryResponseObject = function(queryResponse) {
-		var returnObj = {};
-		if (typeof queryResponse == "string") {
-			returnObj.response = queryResponse;
-		} else {
-			returnObj = queryResponse;
-		}
-		return returnObj;
-	};
+	
 
 	var getAsJson = function() {
 		if (json) return json;
@@ -32,12 +25,16 @@ var root = module.exports = function(queryResponse) {
 			if (contentType) {
 				if (contentType.indexOf("json") > -1) {
 					json = parsers.json(origResponse);
+					type = "json";
 				} else if (contentType.indexOf("xml") > -1) {
 					json = parsers.xml(origResponse);
+					type = "xml";
 				} else if (contentType.indexOf("csv") > -1) {
 					json = parsers.csv(origResponse);
+					type = "csv";
 				} else if (contentType.indexOf("tab-separated") > -1) {
 					json = parsers.tsv(origResponse);
+					type = "tsv";
 				}
 			}
 		};
@@ -45,7 +42,12 @@ var root = module.exports = function(queryResponse) {
 
 		var doLuckyGuess = function() {
 			json = parsers.json(origResponse);
-			if (!json) json = parsers.xml(origResponse);
+			if (json)  {
+				type = "json";
+			} else {
+				json = parsers.xml(origResponse);
+				if (json) type="xml";
+			}
 		};
 
 		
@@ -88,12 +90,18 @@ var root = module.exports = function(queryResponse) {
 		return origResponse;
 	};
 	
+	var getType = function() {
+		if (type == null) getAsJson();//detects type as well
+		return type;
+	};
+	
 	return {
 		getAsJson: getAsJson,
 		getOriginalResponse: getOriginalResponse,
 		getVariables: getVariables,
 		getBindings: getBindings,
-		getBoolean: getBoolean
+		getBoolean: getBoolean,
+		getType: getType
 	};
 };
 
