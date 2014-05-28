@@ -1,5 +1,5 @@
 {
-  "name": "YASR",
+  "name": "yasgui-yasr",
   "version": "0.0.0",
   "description": "Yet Another SPARQL Resultset GUI",
   "main": "main.js",
