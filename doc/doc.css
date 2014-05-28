@@ -6926,3 +6926,23 @@ td.visible-print {
     display: none !important;
   }
 }
+.CodeMirror-scroll {
+	overflow-x: auto;
+	overflow-y: hidden;
+}
+.CodeMirror {
+	height: auto;
+	width: 100%;
+}
+
+.affix-top {
+	top: 100px;
+}
+
+
+body{
+	margin-top:40px;
+}
+.doc {
+	margin: 10px;
+}

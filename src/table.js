@@ -2,6 +2,16 @@ var $ = require("jquery");
 require("./../lib/DataTables/media/js/jquery.dataTables.js");
 var imgs = require("./imgs");
 
+/**
+ * Constructor of plugin which displays results as a table
+ * 
+ * @param yasr {object}
+ * @param parent {DOM element}
+ * @param options {object}
+ * @class YASR.plugins.table
+ * @return yasr-table (doc)
+ * 
+ */
 var root = module.exports = function(yasr,parent, options) {
 	var plugin = {};
 	plugin.options = $.extend(true, {}, root.defaults, options);
@@ -149,10 +159,48 @@ root.openCellUriInNewWindow = function(cell) {
 	}
 };
 
+/**
+ * Defaults for table plugin
+ * 
+ * @type object
+ * @attribute YASR.plugins.table.defaults
+ */
 root.defaults = {
+	/**
+	 * Human-readable name of this plugin (used in selection widget)
+	 * 
+	 * @property name
+	 * @type string
+	 * @default "Table"
+	 */
 	name: "Table",
+	/**
+	 * Check whether this plugin can handler the current results
+	 * 
+	 * @property canHandleResults
+	 * @type function
+	 * @default If resultset contains variables in the resultset, return true
+	 */
 	canHandleResults: function(yasr){return yasr.results.getVariables().length > 0;},
+	/**
+	 * If we need to dynamically check which plugin to use, we rank the possible plugins by priority, and select the highest one
+	 * 
+	 * @property getPriority
+	 * @param yasrDoc
+	 * @type int|function
+	 * @default 10
+	 */
 	getPriority: function(yasr){return 10;},
+	
+	/**
+	 * Draw the cell content, from a given binding
+	 * 
+	 * @property drawCellContent
+	 * @param binding {object}
+	 * @type function
+	 * @return string
+	 * @default YASR.plugins.table.getFormattedValueFromBinding
+	 */
 	drawCellContent: root.getFormattedValueFromBinding,
 //	associativeBrowsingTemplate: function(uri) {
 //		return 'SELECT ?property ?hasValue ?isValueOf\n' + 
@@ -160,15 +208,49 @@ root.defaults = {
 //				'UNION	{ ?isValueOf ?property <http://www.openlinksw.com/virtrdf-data-formats#default-iid-nullable> }\n' +
 //				'}';
 //	},
+	/**
+	 * Set a number of handlers for the table
+	 * 
+	 * @property handlers
+	 * @type object
+	 */
 	handlers: {
-		onCellMouseEnter: function(cell) {
-			console.log("mouse enter");
-		},
-		onCellMouseLeave: function(cell) {
-			console.log("mouse leave");
-		},
-		onCellClick: root.openCellUriInNewWindow
+		/**
+		 * Mouse-enter-cell event
+		 * 
+		 * @property handlers.onCellMouseEnter
+		 * @type function
+		 * @param td-element
+		 * @default null
+		 */
+		onCellMouseEnter: null,
+		/**
+		 * Mouse-leave-cell event
+		 * 
+		 * @property handlers.onCellMouseLeave
+		 * @type function
+		 * @param td-element
+		 * @default null
+		 */
+		onCellMouseLeave: null,
+		/**
+		 * Cell clicked event
+		 * 
+		 * @property handlers.onCellClick
+		 * @type function
+		 * @param td-element
+		 * @default null
+		 */
+//		onCellClick: root.openCellUriInNewWindow
+		onCellClick: null
 	},
+	/**
+	 * This plugin uses the datatables jquery plugin (See datatables.net). For any datatables specific defaults, change this object. 
+	 * See the datatables reference for more information
+	 * 
+	 * @property handlers
+	 * @type object
+	 */
 	datatable: {
 		"aaSorting": [],//disable initial sorting
 		"iDisplayLength": 50,//default page length

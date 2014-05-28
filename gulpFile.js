@@ -1,7 +1,5 @@
 var paths = {
 	style: [
-//		'bower_components/codemirror/lib/codemirror.css', 
-//		'bower_components/codemirror/addon/hint/show-hint.css',
 		'lib/DataTables/media/css/jquery.dataTables.css',
 		'jquery.dataTables_themeroller.css',
 		'src/**/*.css',
@@ -133,7 +131,7 @@ gulp.task('makedoc', ['makeDocLib', 'makeDocCss'], function() {
 //	gulp.src("./src/main.js")
 //	.pipe(jsdoc.parser())
 //	.pipe(gulp.dest("./doc"));
-	gulp.src("./src/main.js")
+	gulp.src("./src/*.js")
 	.pipe(yuidoc.parser())
 	.pipe(gulp.dest("./doc"));
 	
