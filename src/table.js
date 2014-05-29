@@ -44,6 +44,11 @@ root.draw = function(plugin) {
 			.css("position", "relative")
 			.css("top", "-30px");
 	}
+	
+	//make sure we redraw the table on resize
+	$(window).on('resize', function () {
+		if (plugin.table) plugin.table.fnAdjustColumnSizing();
+	});
 };
 
 
