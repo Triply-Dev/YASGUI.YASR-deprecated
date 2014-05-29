@@ -1,16 +1,16 @@
 {
   "name": "yasgui-yasr",
-  "version": "0.0.0",
+  "version": "1.0.0",
   "description": "Yet Another SPARQL Resultset GUI",
-  "main": "main.js",
-  "repository": {
-    "type": "git",
-    "url": "todo"
-  },
+  "main": "src/main.js",
+  "licenses": [
+    {
+      "type": "MIT",
+      "url": "http://yasgui.github.io/license.txt"
+    }
+  ],
   "author": "Laurens Rietveld",
-  "license": "MIT",
-  "bugs": "https://github.com/YASGUI/YASR/issues/",
-  "homepage": "https://github.com/YASGUI/YASR",
+  "homepage": "http://yasgui.github.io/YASQE",
   "devDependencies": {
     "gulp": "~3.6.0",
     "vinyl-source-stream": "~0.1.1",
@@ -52,12 +52,16 @@
       "web": "http://laurensrietveld.nl"
     }
   ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/YASGUI/YASR.git"
+  },
   "readme": "README.md",
   "dependencies": {
     "browserify-shim": "~3.2.0",
     "jquery": "~ 1.11.0",
     "codemirror": "^4.2.0",
-    "YASGUI-Utils": "0.0.0"
+    "YASGUI-Utils": "^1.0.0"
   },
   "browserify-shim": {
     "twitter-bootstrap-3.0.0": "bootstrap"
