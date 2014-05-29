@@ -203,9 +203,6 @@ root.defaults = {
 	},
 	
 	
-	
-	
-	
 };
 
 //handlers in plugin:

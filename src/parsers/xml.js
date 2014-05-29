@@ -10,7 +10,7 @@ var root = module.exports = function(xml) {
 	if (xmlHead.length > 0) {
 		json.head = [];
 		xmlHead.children().each(function(key, value) {
-			xmlHead.push($(value).attr("name"));
+			json.head.push($(value).attr("name"));
 		});
 	}
 	
@@ -54,9 +54,7 @@ var root = module.exports = function(xml) {
 		
 		var getBindings = function() {
 			var querySolutions = [];
-//			console.log(xml.find("results").children());
 			xml.find("results").children().each(function (qsKey, value){
-//				console.log(value);
 				var querySolution = {};
 				$(value).children().each(function(bindingKey, binding){
 					var variable = $(binding).attr("name");

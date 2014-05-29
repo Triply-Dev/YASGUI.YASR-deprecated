@@ -90,7 +90,7 @@ var getRows = function(plugin) {
 root.getFormattedValueFromBinding = function(rowId, colId, binding) {
 	var value = null;
 	if (binding.type == "uri") {
-		value = "<a class='uri' href='#'>" + binding.value + "</a>";
+		value = "<a class='uri' href='" + binding.value + "'>" + binding.value + "</a>";
 	} else {
 		value = "<span class='nonUri'>" + binding.value + "</span>";
 	}
@@ -253,7 +253,7 @@ root.defaults = {
 	 * This plugin uses the datatables jquery plugin (See datatables.net). For any datatables specific defaults, change this object. 
 	 * See the datatables reference for more information
 	 * 
-	 * @property handlers
+	 * @property datatable
 	 * @type object
 	 */
 	datatable: {
