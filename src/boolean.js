@@ -39,7 +39,7 @@ root.draw = function(plugin) {
 	}
 	
 	//add icon
-	if (imgId) require("./imgs").draw(plugin.container, {
+	if (imgId) require("yasgui-utils").imgs.draw(plugin.container, {
 		width: 25,
 		height: 25,
 		id: imgId,

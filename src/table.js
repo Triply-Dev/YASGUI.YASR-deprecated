@@ -1,6 +1,6 @@
 var $ = require("jquery");
 require("./../lib/DataTables/media/js/jquery.dataTables.js");
-var imgs = require("./imgs");
+var imgs = require("yasgui-utils").imgs;
 
 /**
  * Constructor of plugin which displays results as a table

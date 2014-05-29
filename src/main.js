@@ -56,7 +56,10 @@ var root = module.exports = function(parent, queryResults, options) {
 	 */
 	if (yasr.options.persistency && yasr.options.persistency.outputSelector) {
 		var id = (typeof yasr.options.persistency.outputSelector == "string"? yasr.options.persistency.outputSelector: yasr.options.persistency.outputSelector(yasr));
-		yasr.options.output = utils.storage.get(id);
+		if (id) {
+			var selection = utils.storage.get(id);
+			if (selection) yasr.options.output = selection;
+		}
 	}
 	if (!queryResults && yasr.options.persistency && yasr.options.persistency.results) {
 		var id = (typeof yasr.options.persistency.results.id == "string" ? yasr.options.persistency.results.id: yasr.options.persistency.results.id(yasr));
