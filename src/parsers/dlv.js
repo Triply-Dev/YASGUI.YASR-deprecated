@@ -1,9 +1,8 @@
-var $ = require("jquery");
+var $ = jQuery = require('jquery');
 require("../../lib/jquery.csv-0.71.js");
 var root = module.exports = function(queryResponse) {
 	var json = {};
 	var arrays =  $.csv.toArrays(queryResponse, {separator: ","});
-	
 	var detectType = function(value) {
 		if (value.indexOf("http") == 0) {
 			return "uri";

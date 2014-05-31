@@ -48,6 +48,15 @@ var root = module.exports = function(yasr,parent, options) {
 	 */
 	plugin.getPriority =  function(yasr){return 10;};
 	
+	plugin.getDownloadInfo = function() {
+		return {
+			getContent: function(){return require("./bindingsToCsv.js")(yasr.results.getAsJson());},
+			filename: "queryResults.csv",
+			contentType: "text/csv",
+			buttonTitle: "Download as CSV"
+		};
+	};
+	
 	plugin.disableSelectorOn = function(yasr) {
 		
 	};
@@ -68,12 +77,15 @@ root.draw = function(plugin) {
 	
 	addEvents(plugin);
 	
-	if (plugin.yasr.header.find(".yasr_btnGroup").is(':visible')) {
-		//in that case, move the table upward, so the table options nicely align with the selector
+	//move the table upward, so the table options nicely aligns with the yasr header
+	var headerHeight = plugin.yasr.header.outerHeight() - 5; //add some space of 5 px between table and yasr header
+	if (headerHeight > 0) {
 		plugin.yasr.container.find(".dataTables_wrapper")
-			.css("position", "relative")
-			.css("top", "-30px");
+		.css("position", "relative")
+		.css("top", "-" + headerHeight + "px")
+		.css("margin-bottom", "-" + headerHeight + "px");
 	}
+	
 	
 	//make sure we redraw the table on resize
 	$(window).on('resize', function () {

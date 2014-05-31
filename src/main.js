@@ -83,51 +83,102 @@ var root = module.exports = function(parent, queryResults, options) {
 		var id = (typeof yasr.options.persistency.results.id == "string" ? yasr.options.persistency.results.id: yasr.options.persistency.results.id(yasr));
 		queryResults = utils.storage.get(id);
 	}
+	
+	root.drawHeader(yasr);
+	
 	if (queryResults) {
 		yasr.setResults(queryResults);
 	} 
-	if (yasr.options.drawOutputSelector) root.drawSelector(yasr);
-	root.updateSelector(yasr);
-	
+	root.updateHeader(yasr);
 	return yasr;
 };
-
-root.drawSelector = function(yasr) {
-	var btnGroup = $('<div class="yasr_btnGroup"></div>').appendTo(yasr.header);
-	$.each(yasr.plugins, function(pluginName, plugin) {
-		if (plugin.hideFromSelection) return;
-		var name = plugin.name || pluginName;
-		var button = $("<button></button>")
-		.text(name)
-		.addClass("select_" + pluginName)
-		.click(function() {
-			//update buttons
-			btnGroup.find("button.selected").removeClass("selected");
-			$(this).addClass("selected");
-			//set and draw output
-			yasr.options.output = pluginName;
-			
-			//store if needed
-			if (yasr.options.persistency && yasr.options.persistency.outputSelector) {
-				var id = (typeof yasr.options.persistency.outputSelector == "string"? yasr.options.persistency.outputSelector: yasr.options.persistency.outputSelector(yasr));
-				utils.storage.set(id, yasr.options.output, "month");
-			}
-			
-			
-			yasr.draw();
-		})
-		.appendTo(btnGroup);
-		if (yasr.options.output == pluginName) button.addClass("selected");
-	});
+root.updateHeader = function(yasr) {
+	var downloadIcon = yasr.header.find(".yasr_downloadIcon");
+	downloadIcon
+		.removeAttr("title");//and remove previous titles
 	
-	if (btnGroup.children().length == 1) btnGroup.hide();
-};
-
-root.updateSelector = function(yasr) {
-	for (var plugin in root.plugins) {
-		
+	var outputPlugin = yasr.plugins[yasr.options.output];
+	if (outputPlugin) {
+		if (outputPlugin.getDownloadInfo) {
+			var info = outputPlugin.getDownloadInfo();
+			if (info.buttonTitle) downloadIcon.attr(info.buttonTitle);
+			downloadIcon.prop("disabled", false);
+			downloadIcon.find("path").each(function(){
+				this.style.fill = "black";
+			});
+		} else {
+			downloadIcon.prop("disabled", true).prop("title", "Download not supported for this result representation");
+			downloadIcon.find("path").each(function(){
+				this.style.fill = "gray";
+			});
+		}
 	}
 };
+
+root.drawHeader = function(yasr) {
+	var drawOutputSelector = function() {
+		var btnGroup = $('<div class="yasr_btnGroup"></div>');
+		$.each(yasr.plugins, function(pluginName, plugin) {
+			if (plugin.hideFromSelection) return;
+			var name = plugin.name || pluginName;
+			var button = $("<button class='yasr_btn'></button>")
+			.text(name)
+			.addClass("select_" + pluginName)
+			.click(function() {
+				//update buttons
+				btnGroup.find("button.selected").removeClass("selected");
+				$(this).addClass("selected");
+				//set and draw output
+				yasr.options.output = pluginName;
+				
+				//store if needed
+				if (yasr.options.persistency && yasr.options.persistency.outputSelector) {
+					var id = (typeof yasr.options.persistency.outputSelector == "string"? yasr.options.persistency.outputSelector: yasr.options.persistency.outputSelector(yasr));
+					utils.storage.set(id, yasr.options.output, "month");
+				}
+				
+				
+				yasr.draw();
+				root.updateHeader(yasr);
+			})
+			.appendTo(btnGroup);
+			if (yasr.options.output == pluginName) button.addClass("selected");
+		});
+		
+		if (btnGroup.children().length > 1) yasr.header.append(btnGroup);
+	};
+	var drawDownloadIcon = function() {
+		var stringToUrl = function(string, contentType) {
+			var url = null;
+			var windowUrl = window.URL || window.webkitURL || window.mozURL || window.msURL;
+			if (windowUrl && Blob) {
+				var blob = new Blob([string], {type: contentType});
+				url = windowUrl.createObjectURL(blob);
+			}
+			return url;
+		};
+		var button = $("<button class='yasr_btn yasr_downloadIcon'></button>")
+			.append(require("yasgui-utils").imgs.getElement({id: "download", width: "15px", height: "15px"}))
+			.click(function() {
+				var currentPlugin = yasr.plugins[yasr.options.output];
+				if (currentPlugin && currentPlugin.getDownload) {
+					var downloadInfo = currentPlugin.getDownloadInfo();
+					var downloadUrl = stringToUrl(downloadInfo.getContent(), (downloadInfo.contentType? downloadInfo.contentType: "text/plain"));
+					var downloadMockLink = $("<a></a>");
+					downloadMockLink.attr("href", downloadUrl);
+					downloadMockLink.attr("download", downloadInfo.filename);
+					downloadMockLink.get(0).click();
+				}
+			});
+		yasr.header.append(button);
+	};
+	if (yasr.options.drawOutputSelector) drawOutputSelector();
+	if (yasr.options.drawDownloadIcon) drawDownloadIcon();
+};
+
+
+
+
 /**
  * Registered plugins. Add a plugin by adding it to this object. 
  * Each plugin -must- return an object from the constructor with the following keys: draw (function) and 
@@ -166,6 +217,15 @@ root.defaults = {
 	 * @default true
 	 */
 	drawOutputSelector: true,
+	/**
+	 * Draw download icon. This issues html5 download functionality to 'download' files created on the client-side.
+	 *  This allows the user to download results already queried for, such as a CSV when a table is shown, or the original response when the raw response output is selected
+	 * 
+	 * @property drawDownloadIcon
+	 * @type boolean
+	 * @default true
+	 */
+	drawDownloadIcon: true,
 	/**
 	 * Make certain settings and values of YASR persistent. Setting a key
 	 * to null, will disable persistancy: nothing is stored between browser

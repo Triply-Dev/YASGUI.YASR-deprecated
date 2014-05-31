@@ -45,8 +45,10 @@ var root = module.exports = function(queryResponse) {
 			if (json)  {
 				type = "json";
 			} else {
-				json = parsers.xml(origResponse);
-				if (json) type="xml";
+				try {
+					json = parsers.xml(origResponse);
+					if (json) type="xml";
+				} catch(err){};
 			}
 		};
 
@@ -62,7 +64,7 @@ var root = module.exports = function(queryResponse) {
 
 	var getVariables = function() {
 		var json = getAsJson();
-		if ("head" in json) {
+		if (json && "head" in json) {
 			return json.head.vars;
 		} else {
 			return null;
@@ -71,7 +73,7 @@ var root = module.exports = function(queryResponse) {
 
 	var getBindings = function() {
 		var json = getAsJson();
-		if ("results" in json) {
+		if (json && "results" in json) {
 			return json.results.bindings;
 		} else {
 			return null;
@@ -80,7 +82,7 @@ var root = module.exports = function(queryResponse) {
 
 	var getBoolean = function() {
 		var json = getAsJson();
-		if ("boolean" in json) {
+		if (json && "boolean" in json) {
 			return json.boolean;
 		} else {
 			return null;
@@ -98,6 +100,7 @@ var root = module.exports = function(queryResponse) {
 	return {
 		getAsJson: getAsJson,
 		getOriginalResponse: getOriginalResponse,
+		getOriginalContentType: function(){return contentType;},
 		getVariables: getVariables,
 		getBindings: getBindings,
 		getBoolean: getBoolean,

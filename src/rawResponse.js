@@ -14,7 +14,18 @@ var root = module.exports = function(yasr,parent, options) {
 	};
 	plugin.name = "Raw Response";
 	plugin.canHandleResults = function(){return true;};
-	plugin.getPriority = function(yasr){return 5;};
+	plugin.getPriority = 2;
+	
+	plugin.getDownloadInfo = function() {
+		var contentType = plugin.yasr.results.getOriginalContentType();
+		return {
+			getContent: function() {return yasr.results.getOriginalResponse();},
+			filename: "queryResults." + plugin.yasr.results.getType(),
+			contentType: (contentType? contentType: "text/plain"),
+			buttonTitle: "Download raw response"
+		};
+	};
+	
 	return plugin;
 };
 
@@ -23,7 +34,6 @@ root.draw = function(plugin) {
 	cmOptions.value = plugin.yasr.results.getOriginalResponse();
 	
 	var mode = plugin.yasr.results.getType();
-	console.log(mode);
 	if (mode) {
 		if (mode == "json") {
 			mode = {name: "javascript", json: true};
