@@ -176,7 +176,28 @@
 	      ']' +
 	      '}' +
 	      '}';
-	var yasr = YASR(document.getElementById("showcase"), testJsonString);
+	var textXmlString = '<?xml version="1.0"?><sparql xmlns="http://www.w3.org/2005/sparql-results#">  <head>    <variable name="x"/>    <variable name="hpage"/>    <variable name="name"/>    <variable name="age"/>    <variable name="mbox"/>    <variable name="friend"/>  </head>  <results>    <result>       <binding name="x">	<bnode>r2</bnode>      </binding>      <binding name="hpage">	<uri>http://work.example.org/bob/</uri>      </binding>      <binding name="name">	<literal xml:lang="en">Bob</literal>      </binding>      <binding name="age">	<literal datatype="http://www.w3.org/2001/XMLSchema#integer">30</literal>      </binding>      <binding name="mbox">	<uri>mailto:bob@work.example.org</uri>      </binding>    </result>  </results></sparql>';
+	var textXmlStringBoolean = '<?xml version="1.0"?><sparql xmlns="http://www.w3.org/2005/sparql-results#">  <boolean>true</boolean></sparql>';
+	var textCsv = 'x,literal\n'+
+		'http://example/x,String\n'+
+			'http://example/x,"String-with-dquote"""\n'+
+			'_:b0,Blank node\n'+
+			',Missing \'x\'\n'+
+			',\n'+
+			'http://example/x,\n'+
+			'_:b1,String-with-lang\n'+
+			'_:b1,123';
+	var textTsv = '?x\t?literal\n'+
+'<http://example/x>\t"String"\n'+
+'<http://example/x>\t"String-with-dquote\\""\n'+ 
+'\n'+
+'_:blank0\t"Blank node"\n'+
+'\t"Missing \'x\'"\n'+
+'\t\n'+
+'<http://example/x>\t\n'+
+'_:blank1\t"String-with-lang"@en\n'+
+'_:blank1\t123';
+	var yasr = YASR(document.getElementById("showcase"), textXmlStringBoolean);
 </script>
   </body>
 </html>

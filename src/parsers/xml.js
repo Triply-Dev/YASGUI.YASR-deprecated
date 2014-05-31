@@ -1,110 +1,79 @@
 var $ = require("jquery");
 var root = module.exports = function(xml) {
-	if (typeof xml == "string") xml = $.parseXML(response.content);
-	var json = {};
+
+	
 	
 	/**
 	 * head
 	 */
-	var xmlHead = xml.find("head");
-	if (xmlHead.length > 0) {
-		json.head = [];
-		xmlHead.children().each(function(key, value) {
-			json.head.push($(value).attr("name"));
-		});
-	}
-	
-	/**
-	 * results
-	 */
-	var xmlResults = xml.find("results");
-	if (xmlResults.length > 0) {
-		json.results = [];
-		
-		/**
-		 * finish this (distinguish between bindings and booleans
-		 */
-		xmlResults.children().each(function (qsKey, value){
-			var querySolution = {};
-			$(value).children().each(function(bindingKey, binding){
-				var variable = $(binding).attr("name");
-				
-				var bindingInfo = $(binding).children().first();
-				var type = bindingInfo[0].nodeName;
-				var value = bindingInfo[0].innerHTML;
-				
-				querySolution[variable] = {
-					"type": type,
-					"value": value
-				};
-				if ($(bindingInfo).attr("datatype")) {
-					querySolution[variable]["datatype"] = type.attr("datatype");
-				}
-			});
-			json.results.push(querySolution);
-		});
-	}
-	
-};
-(function(){
-	this.Yasgui = this.Yasgui || {};
-	this.Yasgui.parsers = this.Yasgui.parsers || {};
-	
-	var XmlParser = function(xml) {
-		
-		var getBindings = function() {
-			var querySolutions = [];
-			xml.find("results").children().each(function (qsKey, value){
-				var querySolution = {};
-				$(value).children().each(function(bindingKey, binding){
-					var variable = $(binding).attr("name");
-					
-					var bindingInfo  = $(binding).children().first();
-					var type = bindingInfo[0].nodeName;
-					var value = bindingInfo[0].innerHTML;
-					
-					querySolution[variable] = {
-						"type": type,
-						"value": value
-					};
-					if ($(bindingInfo).attr("datatype")) {
-						querySolution[variable]["datatype"] = type.attr("datatype");
-					}
-				});
-				querySolutions.push(querySolution);
-				
-			});
-			return querySolutions;
-		};
-		
-		var getBoolean = function() {
-			var result = null;
-			var booleanEl = xml.find("boolean");
-			if (booleanEl.get().length > 0) {
-				if (booleanEl.get()[0].innerHTML.toLowerCase() == "true") {
-					result = true;
-				} else {
-					result = false;
-				}
+	var parseHead = function(node) {
+		json.head = {};
+		for (var headNodeIt = 0; headNodeIt < node.childNodes.length; headNodeIt++) {
+			var headNode = node.childNodes[headNodeIt];
+			if (headNode.nodeName == "variable") {
+				if (!json.head.vars) json.head.vars = [];
+				var name = headNode.getAttribute("name");
+				if (name) json.head.vars.push(name);
 			}
-			return result;
-		};
-		var getResponse = function() {
-			return actualResponseString;
-		};
-		
-		var getCmMode = function() {
-			return "xml";
-		};
-		return {
-			getVariables: getVariables,
-			getBindings: getBindings,
-			getBoolean: getBoolean,
-			getResponse: getResponse,
-			getCmMode: getCmMode,
-			getMetaInfo: metaInfo
-		};
+		}
 	};
 	
-	Yasgui.parsers.XmlParser = XmlParser;
-})(this);
+	var parseResults = function(node) {
+		json.results = {};
+		json.results.bindings = [];
+		for (var resultIt = 0; resultIt < node.childNodes.length; resultIt++) {
+			var resultNode = node.childNodes[resultIt];
+			var jsonResult = null;
+			
+			for (var bindingIt = 0; bindingIt < resultNode.childNodes.length; bindingIt++) {
+				var bindingNode = resultNode.childNodes[bindingIt];
+				if (bindingNode.nodeName == "binding") {
+					var varName = bindingNode.getAttribute("name");
+					if (varName) {
+						jsonResult = jsonResult || {};
+						jsonResult[varName] = {};
+						for (var bindingInfIt = 0; bindingInfIt < bindingNode.childNodes.length; bindingInfIt++) {
+							var bindingInf = bindingNode.childNodes[bindingInfIt];
+ 							var type = bindingInf.nodeName;
+							if (type == "#text") continue;
+							jsonResult[varName].type = type;
+							jsonResult[varName].value = bindingInf.innerHTML;
+							var dataType = bindingInf.getAttribute("datatype");
+							if (dataType) jsonResult[varName].datatype = dataType;
+							
+						}
+					}
+				}
+			}
+			if (jsonResult) json.results.bindings.push(jsonResult);
+		}
+	};
+	
+	var parseBoolean = function(node) {
+		if (node.innerHTML == "true") {
+			json.boolean = true;
+		} else {
+			json.boolean = false;
+		}
+	};
+	
+	if (typeof xml == "string") mainXml = $.parseXML(xml);
+	var xml = null;
+	if (mainXml.childNodes.length > 0) {
+		//enter the main 'sparql' node
+		xml = mainXml.childNodes[0];
+	} else {
+		return null;
+	}
+	var json = {};
+	
+	
+    for(var i = 0; i < xml.childNodes.length; i++) {
+    	var node = xml.childNodes[i];
+    	if (node.nodeName == "head") parseHead(node);
+    	if (node.nodeName == "results") parseResults(node);
+    	if (node.nodeName == "boolean") parseBoolean(node);
+    }
+    
+	return json;
+};

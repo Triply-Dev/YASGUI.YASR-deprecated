@@ -12,7 +12,9 @@ var root = module.exports = function(yasr,parent, options) {
 	plugin.draw = function() {
 		root.draw(plugin);
 	};
-	
+	plugin.name = "Raw Response";
+	plugin.canHandleResults = function(){return true;};
+	plugin.getPriority = function(yasr){return 5;};
 	return plugin;
 };
 
@@ -35,9 +37,7 @@ root.draw = function(plugin) {
 
 
 root.defaults = {
-	name: "Raw Response",
-	canHandleResults: function(){return true;},
-	getPriority: function(yasr){return 5;},
+	
 	CodeMirror: {
 		readOnly: true,
 	}

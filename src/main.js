@@ -26,9 +26,27 @@ var root = module.exports = function(parent, queryResults, options) {
 	yasr.draw = function(output) {
 		if (!yasr.results) return false;
 		if (!output) output = yasr.options.output;
-		if (output in yasr.plugins) {
+		if (output in yasr.plugins && yasr.plugins[output].canHandleResults(yasr)) {
 			$(yasr.resultsContainer).empty();
 			yasr.plugins[output].draw();
+			return true;
+		}
+		//ah, our default output does not take our current results. Try to autodetect
+		var selectedOutput = null;
+		var selectedOutputPriority = -1;
+		for (var tryOutput in yasr.plugins) {
+			if (yasr.plugins[tryOutput].canHandleResults(yasr)) {
+				var priority = yasr.plugins[tryOutput].getPriority;
+				if (typeof priority == "function") priority = priority(yasr);
+				if (priority != null && priority != undefined && priority > selectedOutputPriority) {
+					selectedOutputPriority = priority;
+					selectedOutput = tryOutput;
+				}
+			}
+		}
+		if (selectedOutput) {
+			$(yasr.resultsContainer).empty();
+			yasr.plugins[selectedOutput].draw();
 			return true;
 		}
 		return false;
@@ -77,8 +95,8 @@ var root = module.exports = function(parent, queryResults, options) {
 root.drawSelector = function(yasr) {
 	var btnGroup = $('<div class="yasr_btnGroup"></div>').appendTo(yasr.header);
 	$.each(yasr.plugins, function(pluginName, plugin) {
-		if (plugin.options.hideFromSelection) return;
-		var name = plugin.options.name || pluginName;
+		if (plugin.hideFromSelection) return;
+		var name = plugin.name || pluginName;
 		var button = $("<button></button>")
 		.text(name)
 		.addClass("select_" + pluginName)

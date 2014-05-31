@@ -20,7 +20,37 @@ var root = module.exports = function(yasr,parent, options) {
 	plugin.draw = function() {
 		root.draw(plugin);
 	};
+	/**
+	 * Human-readable name of this plugin (used in selection widget)
+	 * 
+	 * @property pluginDoc.name
+	 * @type string
+	 * @default "Table"
+	 */
+	plugin.name = "Table";
+	/**
+	 * Check whether this plugin can handler the current results
+	 * 
+	 * @property canHandleResults
+	 * @type function
+	 * @default If resultset contains variables in the resultset, return true
+	 */
+	plugin.canHandleResults = function(yasr){
+		return yasr.results && yasr.results.getVariables() && yasr.results.getVariables().length > 0;
+	};
+	/**
+	 * If we need to dynamically check which plugin to use, we rank the possible plugins by priority, and select the highest one
+	 * 
+	 * @property getPriority
+	 * @param yasrDoc
+	 * @type int|function
+	 * @default 10
+	 */
+	plugin.getPriority =  function(yasr){return 10;};
 	
+	plugin.disableSelectorOn = function(yasr) {
+		
+	};
 	return plugin;
 };
 
@@ -171,31 +201,6 @@ root.openCellUriInNewWindow = function(cell) {
  * @attribute YASR.plugins.table.defaults
  */
 root.defaults = {
-	/**
-	 * Human-readable name of this plugin (used in selection widget)
-	 * 
-	 * @property name
-	 * @type string
-	 * @default "Table"
-	 */
-	name: "Table",
-	/**
-	 * Check whether this plugin can handler the current results
-	 * 
-	 * @property canHandleResults
-	 * @type function
-	 * @default If resultset contains variables in the resultset, return true
-	 */
-	canHandleResults: function(yasr){return yasr.results.getVariables().length > 0;},
-	/**
-	 * If we need to dynamically check which plugin to use, we rank the possible plugins by priority, and select the highest one
-	 * 
-	 * @property getPriority
-	 * @param yasrDoc
-	 * @type int|function
-	 * @default 10
-	 */
-	getPriority: function(yasr){return 10;},
 	
 	/**
 	 * Draw the cell content, from a given binding
