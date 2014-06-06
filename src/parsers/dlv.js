@@ -39,7 +39,7 @@ var root = module.exports = function(queryResponse, separator) {
 						var value = arrays[rowIt][colIt];
 						var detectedType = detectType(value);
 						binding[varName] = {value: value};
-						if (detectedType) binding[varName].datatype = detectedType;
+						if (detectedType) binding[varName].type = detectedType;
 					}
 				}
 				
