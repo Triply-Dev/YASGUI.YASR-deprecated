@@ -167,24 +167,29 @@ var addEvents = function(plugin) {
 			var result = plugin.options.handlers.onCellClick(this);
 			if (result === false) return false;
 		}
-//		console.log("click uri");
-//		executeSnorqlQuery(this.innerHTML);
-//		return false;
 	}).delegate("td",'mouseenter', function(event) {
 		if (plugin.options.handlers && plugin.options.handlers.onCellMouseEnter) {
 			plugin.options.handlers.onCellMouseEnter(this);
 		}
-//		var extLinkElement = getExternalLinkElement();
-//		$(this).append(extLinkElement);
-//		extLinkElement.css("top", ($(this).height() - extLinkElement.height() / 2)); 
-//		extLinkElement.show();
+		var tdEl = $(this);
+		if (plugin.options.fetchTitlesFromPreflabel 
+				&& !tdEl.attr("title") 
+				&& tdEl.text().trim().indexOf("http") == 0) {
+			addPrefLabelTo(tdEl);
+		}
 	}).delegate("td",'mouseleave', function(event) {
 		if (plugin.options.handlers && plugin.options.handlers.onCellMouseLeave) {
 			plugin.options.handlers.onCellMouseLeave(this);
 			
 		}
-//		getExternalLinkElement().hide();
 	});
+};
+
+var addPrefLabelTo = function(td) {
+	$.get("http://preflabel.org/api/label/" + encodeURIComponent(td.text()))
+		.success(function(data) {
+			td.attr("title", data);
+		});
 };
 
 var drawSvgIcons = function(plugin) {
@@ -224,12 +229,15 @@ root.defaults = {
 	 * @default YASR.plugins.table.getFormattedValueFromBinding
 	 */
 	drawCellContent: root.getFormattedValueFromBinding,
-//	associativeBrowsingTemplate: function(uri) {
-//		return 'SELECT ?property ?hasValue ?isValueOf\n' + 
-//				'WHERE {	{ <http://www.openlinksw.com/virtrdf-data-formats#default-iid-nullable> ?property ?hasValue	}\n' +
-//				'UNION	{ ?isValueOf ?property <http://www.openlinksw.com/virtrdf-data-formats#default-iid-nullable> }\n' +
-//				'}';
-//	},
+	
+	/**
+	 * Try to fetch the label representation for each URI, using the preflabel.org services. (fetching occurs when hovering over the cell)
+	 * 
+	 * @property fetchTitlesFromPreflabel
+	 * @type boolean
+	 * @default true
+	 */
+	fetchTitlesFromPreflabel: true,
 	/**
 	 * Set a number of handlers for the table
 	 * 
