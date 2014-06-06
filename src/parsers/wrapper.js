@@ -11,7 +11,7 @@ var root = module.exports = function(queryResponse) {
 	var origResponse;
 	var json = null;
 	var type = null;//json, xml, csv, or tsv
-		
+	var exception = null;
 		
 	contentType = (typeof queryResponse == "object" && queryResponse.contentType? queryResponse.contentType.toLowerCase(): null);
 	origResponse = (typeof queryResponse == "object" && queryResponse.response? queryResponse.response: queryResponse);
@@ -24,16 +24,32 @@ var root = module.exports = function(queryResponse) {
 		var getParserFromContentType = function() {
 			if (contentType) {
 				if (contentType.indexOf("json") > -1) {
-					json = parsers.json(origResponse);
+					try {
+						json = parsers.json(origResponse);
+					} catch (e) {
+						exception = e;
+					}
 					type = "json";
 				} else if (contentType.indexOf("xml") > -1) {
-					json = parsers.xml(origResponse);
+					try {
+						json = parsers.xml(origResponse);
+					} catch (e) {
+						exception = e;
+					}
 					type = "xml";
 				} else if (contentType.indexOf("csv") > -1) {
-					json = parsers.csv(origResponse);
+					try {
+						json = parsers.csv(origResponse);
+					} catch (e) {
+						exception = e;
+					}
 					type = "csv";
 				} else if (contentType.indexOf("tab-separated") > -1) {
-					json = parsers.tsv(origResponse);
+					try {
+						json = parsers.tsv(origResponse);
+					} catch (e) {
+						exception = e;
+					}
 					type = "tsv";
 				}
 			}
@@ -91,11 +107,14 @@ var root = module.exports = function(queryResponse) {
 	var getOriginalResponse = function() {
 		return origResponse;
 	};
-	
+	var getException = function() {
+		return exception
+	};
 	var getType = function() {
 		if (type == null) getAsJson();//detects type as well
 		return type;
 	};
+	json = getAsJson();
 	
 	return {
 		getAsJson: getAsJson,
@@ -104,7 +123,8 @@ var root = module.exports = function(queryResponse) {
 		getVariables: getVariables,
 		getBindings: getBindings,
 		getBoolean: getBoolean,
-		getType: getType
+		getType: getType,
+		getException: getException
 	};
 };
 

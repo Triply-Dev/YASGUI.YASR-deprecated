@@ -189,7 +189,7 @@
 			'_:b1,123';
 	var textTsv = '?x\t?literal\n'+
 '<http://example/x>\t"String"\n'+
-'<http://example/x>\t"String-with-dquote\\""\n'+ 
+'<http://example/x>\t"String-with-dquote"\n'+ 
 '\n'+
 '_:blank0\t"Blank node"\n'+
 '\t"Missing \'x\'"\n'+
@@ -197,7 +197,8 @@
 '<http://example/x>\t\n'+
 '_:blank1\t"String-with-lang"@en\n'+
 '_:blank1\t123';
-	var yasr = YASR(document.getElementById("showcase"), textXmlStringBoolean);
+	var yasr = YASR(document.getElementById("showcase"), {response:textTsv, contentType: "tab-separated"});
+	//var yasr = YASR(document.getElementById("showcase"), textXmlString);
 </script>
   </body>
 </html>

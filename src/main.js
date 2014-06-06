@@ -26,6 +26,7 @@ var root = module.exports = function(parent, queryResults, options) {
 	yasr.draw = function(output) {
 		if (!yasr.results) return false;
 		if (!output) output = yasr.options.output;
+		
 		if (output in yasr.plugins && yasr.plugins[output].canHandleResults(yasr)) {
 			$(yasr.resultsContainer).empty();
 			yasr.plugins[output].draw();
@@ -53,12 +54,16 @@ var root = module.exports = function(parent, queryResults, options) {
 	};
 	
 	yasr.setResults = function(queryResults) {
-		yasr.results = require("./parsers/wrapper.js")(queryResults);
+		try {
+			yasr.results = require("./parsers/wrapper.js")(queryResults);
+		} catch(exception) {
+			yasr.results = exception;
+		}
 		yasr.draw();
 		
 		//store if needed
 		if (yasr.options.persistency && yasr.options.persistency.results) {
-			if (yasr.results.getOriginalResponse().length < yasr.options.persistency.results.maxSize) {
+			if (yasr.results.getOriginalResponse && yasr.results.getOriginalResponse().length < yasr.options.persistency.results.maxSize) {
 				var id = (typeof yasr.options.persistency.results.id == "string" ? yasr.options.persistency.results.id: yasr.options.persistency.results.id(yasr));
 				utils.storage.set(id, yasr.results.getOriginalResponse(), "month");
 			}
@@ -94,8 +99,8 @@ var root = module.exports = function(parent, queryResults, options) {
 };
 root.updateHeader = function(yasr) {
 	var downloadIcon = yasr.header.find(".yasr_downloadIcon");
-	downloadIcon
-		.removeAttr("title");//and remove previous titles
+		downloadIcon
+			.removeAttr("title");//and remove previous titles
 	
 	var outputPlugin = yasr.plugins[yasr.options.output];
 	if (outputPlugin) {
@@ -191,7 +196,8 @@ root.drawHeader = function(yasr) {
 root.plugins = {
 	boolean: require("./boolean.js"),
 	table: require("./table.js"),
-	rawResponse: require("./rawResponse.js")
+	rawResponse: require("./rawResponse.js"),
+	error: require("./error.js")
 };
 
 /**
