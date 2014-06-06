@@ -187,16 +187,17 @@
 			'http://example/x,\n'+
 			'_:b1,String-with-lang\n'+
 			'_:b1,123';
-	var textTsv = '?x\t?literal\n'+
-'<http://example/x>\t"String"\n'+
-'<http://example/x>\t"String-with-dquote"\n'+ 
-'\n'+
-'_:blank0\t"Blank node"\n'+
-'\t"Missing \'x\'"\n'+
-'\t\n'+
-'<http://example/x>\t\n'+
-'_:blank1\t"String-with-lang"@en\n'+
-'_:blank1\t123';
+	var textTsv = '"sub"	"pred"	"obj"\n'+
+		'"http://www.openlinksw.com/virtrdf-data-formats#default-iid"	"http://www.w3.org/1999/02/22-rdf-syntax-ns#type"	"http://www.openlinksw.com/schemas/virtrdf#QuadMapFormat"\n'+
+		'"http://www.openlinksw.com/virtrdf-data-formats#default-iid-nullable"	"http://www.w3.org/1999/02/22-rdf-syntax-ns#type"	"http://www.openlinksw.com/schemas/virtrdf#QuadMapFormat"\n'+
+		'"http://www.openlinksw.com/virtrdf-data-formats#default-iid-nonblank"	"http://www.w3.org/1999/02/22-rdf-syntax-ns#type"	"http://www.openlinksw.com/schemas/virtrdf#QuadMapFormat"\n'+
+		'"http://www.openlinksw.com/virtrdf-data-formats#default-iid-nonblank-nullable"	"http://www.w3.org/1999/02/22-rdf-syntax-ns#type"	"http://www.openlinksw.com/schemas/virtrdf#QuadMapFormat"\n'+
+		'"http://www.openlinksw.com/virtrdf-data-formats#default"	"http://www.w3.org/1999/02/22-rdf-syntax-ns#type"	"http://www.openlinksw.com/schemas/virtrdf#QuadMapFormat"\n'+
+		'"http://www.openlinksw.com/virtrdf-data-formats#default-nullable"	"http://www.w3.org/1999/02/22-rdf-syntax-ns#type"	"http://www.openlinksw.com/schemas/virtrdf#QuadMapFormat"\n'+
+		'"http://www.openlinksw.com/virtrdf-data-formats#sql-varchar"	"http://www.w3.org/1999/02/22-rdf-syntax-ns#type"	"http://www.openlinksw.com/schemas/virtrdf#QuadMapFormat"\n'+
+		'"http://www.openlinksw.com/virtrdf-data-formats#sql-varchar-nullable"	"http://www.w3.org/1999/02/22-rdf-syntax-ns#type"	"http://www.openlinksw.com/schemas/virtrdf#QuadMapFormat"\n'+
+		'"http://www.openlinksw.com/virtrdf-data-formats#sql-varchar-dt"	"http://www.w3.org/1999/02/22-rdf-syntax-ns#type"	"http://www.openlinksw.com/schemas/virtrdf#QuadMapFormat"\n'+
+		'"http://www.openlinksw.com/virtrdf-data-formats#sql-varchar-dt-nullable"	"http://www.w3.org/1999/02/22-rdf-syntax-ns#type"	"http://www.openlinksw.com/schemas/virtrdf#QuadMapFormat"\n';
 	var yasr = YASR(document.getElementById("showcase"), {response:textTsv, contentType: "tab-separated"});
 	//var yasr = YASR(document.getElementById("showcase"), textXmlString);
 </script>
