@@ -126,17 +126,8 @@ gulp.task('makeDocCss', function() {
     ;
 	
 });
-gulp.task('makedoc', ['makeDocLib', 'makeDocCss'], function() {
-	//copy bootstrap, used for our documentation
-//	gulp.src("./src/main.js")
-//	.pipe(jsdoc.parser())
-//	.pipe(gulp.dest("./doc"));
-	gulp.src("./src/*.js")
-	.pipe(yuidoc.parser())
-	.pipe(gulp.dest("./doc"));
+gulp.task('makedoc', ['makeDocLib', 'makeDocCss']);
 	
-	
-});
 gulp.task('packageMinified', ['minifyJs', 'minifyCss']);
 gulp.task('default', ['browserify', 'packageMinified']);
 gulp.task('serve', ['browserify', 'minifyCss', 'watch', 'connect']);

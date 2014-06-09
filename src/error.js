@@ -1,13 +1,13 @@
 var $ = require("jquery");
 
 /**
- * Constructor of plugin which displays boolean info
+ * Constructor of plugin which displays SPARQL errors
  * 
  * @param yasr {object}
  * @param parent {DOM element}
  * @param options {object}
  * @class YASR.plugins.boolean
- * @return yasr-boolean (doc)
+ * @return yasr-erro (doc)
  * 
  */
 var root = module.exports = function(yasr, parent, options) {
@@ -37,7 +37,7 @@ var root = module.exports = function(yasr, parent, options) {
 	 * 
 	 * @property canHandleResults
 	 * @type function
-	 * @default If resultset contains boolean val, return true
+	 * @default If resultset contains an exception, return true
 	 */
 	plugin.canHandleResults = function(yasr){return yasr.results.getException() || false;};
 	/**
@@ -55,10 +55,10 @@ var root = module.exports = function(yasr, parent, options) {
 };
 
 /**
- * Defaults for boolean plugin
+ * Defaults for error plugin
  * 
  * @type object
- * @attribute YASR.plugins.boolean.defaults
+ * @attribute YASR.plugins.error.defaults
  */
 root.defaults = {
 	

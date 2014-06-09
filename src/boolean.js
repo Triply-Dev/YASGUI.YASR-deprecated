@@ -78,13 +78,3 @@ root.draw = function(plugin) {
 	
 	$("<span></span>").text(textVal).appendTo(plugin.container);
 };
-
-/**
- * Defaults for boolean plugin
- * 
- * @type object
- * @attribute YASR.plugins.boolean.defaults
- */
-root.defaults = {
-	
-};
