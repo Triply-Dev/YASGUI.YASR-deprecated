@@ -166,7 +166,7 @@ root.drawHeader = function(yasr) {
 			.append(require("yasgui-utils").imgs.getElement({id: "download", width: "15px", height: "15px"}))
 			.click(function() {
 				var currentPlugin = yasr.plugins[yasr.options.output];
-				if (currentPlugin && currentPlugin.getDownload) {
+				if (currentPlugin && currentPlugin.getDownloadInfo) {
 					var downloadInfo = currentPlugin.getDownloadInfo();
 					var downloadUrl = stringToUrl(downloadInfo.getContent(), (downloadInfo.contentType? downloadInfo.contentType: "text/plain"));
 					var downloadMockLink = $("<a></a>");
