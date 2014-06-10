@@ -11,7 +11,7 @@ var root = module.exports = function(queryResponse) {
 	var origResponse;
 	var json = null;
 	var type = null;//json, xml, csv, or tsv
-	var exception = null;
+	var exception = (typeof queryResponse == "object" && queryResponse.exception? queryResponse.exception: null);
 		
 	contentType = (typeof queryResponse == "object" && queryResponse.contentType? queryResponse.contentType.toLowerCase(): null);
 	origResponse = (typeof queryResponse == "object" && queryResponse.response? queryResponse.response: queryResponse);
@@ -20,7 +20,7 @@ var root = module.exports = function(queryResponse) {
 
 	var getAsJson = function() {
 		if (json) return json;
-		if (json === false) return false;//already tried parsing this, and failed. do not try again... 
+		if (json === false || exception) return false;//already tried parsing this, and failed. do not try again... 
 		var getParserFromContentType = function() {
 			if (contentType) {
 				if (contentType.indexOf("json") > -1) {
@@ -107,8 +107,19 @@ var root = module.exports = function(queryResponse) {
 	var getOriginalResponse = function() {
 		return origResponse;
 	};
+	var getOriginalResponseAsString = function() {
+		var responseString = "";
+		if (typeof origResponse == "string") {
+			responseString = origResponse;
+		} else if (type == "json") {
+			responseString = JSON.stringify(origResponse, undefined, 2);//prettifies as well
+		} else if (type == "xml") {
+			responseString = new XMLSerializer().serializeToString(origResponse);
+		}
+		return responseString;
+	};
 	var getException = function() {
-		return exception
+		return exception;
 	};
 	var getType = function() {
 		if (type == null) getAsJson();//detects type as well
@@ -119,6 +130,7 @@ var root = module.exports = function(queryResponse) {
 	return {
 		getAsJson: getAsJson,
 		getOriginalResponse: getOriginalResponse,
+		getOriginalResponseAsString: getOriginalResponseAsString,
 		getOriginalContentType: function(){return contentType;},
 		getVariables: getVariables,
 		getBindings: getBindings,

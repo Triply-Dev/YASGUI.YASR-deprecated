@@ -117,86 +117,18 @@
  <script src="yasqe.js"></script>
 <script src="doc/doc.js"></script>
 <script type="text/javascript">
+	var yasr = YASR(document.getElementById("showcase"));
     var yasqe = YASQE(document.getElementById("yasqe"), {
-    	query: {
+    	sparql: {
+    		showQueryButton: true,
     		handlers: {
     			success: function(data, status, response) {
-    				yasr.setResults({response: data, contentType: response.getResponseHeader("Content-Type")});
+    				yasr.setResponse({response: data, contentType: response.getResponseHeader("Content-Type")});
     			}
     		}
     	}
     });
-    var testJson = {
-    		  "head": { "vars": [ "book" , "title" ]
-    		  } ,
-    		  "results": { 
-    		    "bindings": [
-    		      {
-    		        "book": { "type": "uri" , "value": "http://example.org/book/book6" } ,
-    		        "title": { "type": "literal" , "value": "Harry Potter and the Half-Blood Prince" }
-    		      } ,
-    		      {
-    		        "book": { "type": "uri" , "value": "http://example.org/book/book7" } ,
-    		        "title": { "type": "literal" , "value": "Harry Potter and the Deathly Hallows" }
-    		      } ,
-    		      {
-    		        "book": { "type": "uri" , "value": "http://example.org/book/book5" } ,
-    		        "title": { "type": "literal" , "value": "Harry Potter and the Order of the Phoenix" }
-    		      } ,
-    		      {
-    		        "book": { "type": "uri" , "value": "http://example.org/book/book4" } ,
-    		        "title": { "type": "literal" , "value": "Harry Potter and the Goblet of Fire" }
-    		      } ,
-    		      {
-    		        "book": { "type": "uri" , "value": "http://example.org/book/book2" } ,
-    		        "title": { "type": "literal" , "value": "Harry Potter and the Chamber of Secrets" }
-    		      } ,
-    		      {
-    		        "book": { "type": "uri" , "value": "http://example.org/book/book3" } ,
-    		        "title": { "type": "literal" , "value": "Harry Potter and the Prisoner Of Azkaban" }
-    		      } ,
-    		      {
-    		        "book": { "type": "uri" , "value": "http://example.org/book/book1" } ,
-    		        "title": { "type": "literal" , "value": "Harry Potter and the Philosopher's Stone" }
-    		      }
-    		    ]
-    		  }
-    		};
-    var testJsonString = '{  "head": { "vars": [ "book" , "title" ]  } ,  "results": {     "bindings": [      {        "book": { "type": "uri" , "value": "http://example.org/book/book6" } ,        "title": { "type": "literal" , "value": "Harry Potter and the Half-Blood Prince" }      } ,      {        "book": { "type": "uri" , "value": "http://example.org/book/book7" } ,        "title": { "type": "literal" , "value": "Harry Potter and the Deathly Hallows" }      } ,      {        "book": { "type": "uri" , "value": "http://example.org/book/book5" } ,        "title": { "type": "literal" , "value": "Harry Potter and the Order of the Phoenix" }      } ,      {        "book": { "type": "uri" , "value": "http://example.org/book/book4" } ,        "title": { "type": "literal" , "value": "Harry Potter and the Goblet of Fire" }      } ,      {        "book": { "type": "uri" , "value": "http://example.org/book/book2" } ,        "title": { "type": "literal" , "value": "Harry Potter and the Chamber of Secrets" }      } ,      {        "book": { "type": "uri" , "value": "http://example.org/book/book3" } ,        "title": { "type": "literal" , "value": "Harry Potter and the Prisoner Of Azkaban" }      } ,      {        "book": { "type": "uri" , "value": "http://example.org/book/book1" } ,        "title": { "type": "literal" , "value": "Harry Potter and the Philosophers Stone" }      }    ]  }}';
-    var testJsonStringWrong = '"head": { "vars": [ "book" , "title" ]'+
-	  '} ,'+
-	  '"results": {'+ 
-	   ' "bindings": ['+
-	    '  {'+
-	     '   "book": { "type": "uri" , "value": "http://example.org/book/book6" } ,'+
-	      '  "title": { "type": "literal" , "value": "Harry Potter and the Half-Blood Prince" }'+
-	      '}'+
-	      ']' +
-	      '}' +
-	      '}';
-	var textXmlString = '<?xml version="1.0"?><sparql xmlns="http://www.w3.org/2005/sparql-results#">  <head>    <variable name="x"/>    <variable name="hpage"/>    <variable name="name"/>    <variable name="age"/>    <variable name="mbox"/>    <variable name="friend"/>  </head>  <results>    <result>       <binding name="x">	<bnode>r2</bnode>      </binding>      <binding name="hpage">	<uri>http://work.example.org/bob/</uri>      </binding>      <binding name="name">	<literal xml:lang="en">Bob</literal>      </binding>      <binding name="age">	<literal datatype="http://www.w3.org/2001/XMLSchema#integer">30</literal>      </binding>      <binding name="mbox">	<uri>mailto:bob@work.example.org</uri>      </binding>    </result>  </results></sparql>';
-	var textXmlStringBoolean = '<?xml version="1.0"?><sparql xmlns="http://www.w3.org/2005/sparql-results#">  <boolean>true</boolean></sparql>';
-	var textCsv = 'x,literal\n'+
-		'http://example/x,String\n'+
-			'http://example/x,"String-with-dquote"""\n'+
-			'_:b0,Blank node\n'+
-			',Missing \'x\'\n'+
-			',\n'+
-			'http://example/x,\n'+
-			'_:b1,String-with-lang\n'+
-			'_:b1,123';
-	var textTsv = '"sub"	"pred"	"obj"\n'+
-		'"http://www.openlinksw.com/virtrdf-data-formats#default-iid"	"http://www.w3.org/1999/02/22-rdf-syntax-ns#type"	"http://www.openlinksw.com/schemas/virtrdf#QuadMapFormat"\n'+
-		'"http://www.openlinksw.com/virtrdf-data-formats#default-iid-nullable"	"http://www.w3.org/1999/02/22-rdf-syntax-ns#type"	"http://www.openlinksw.com/schemas/virtrdf#QuadMapFormat"\n'+
-		'"http://www.openlinksw.com/virtrdf-data-formats#default-iid-nonblank"	"http://www.w3.org/1999/02/22-rdf-syntax-ns#type"	"http://www.openlinksw.com/schemas/virtrdf#QuadMapFormat"\n'+
-		'"http://www.openlinksw.com/virtrdf-data-formats#default-iid-nonblank-nullable"	"http://www.w3.org/1999/02/22-rdf-syntax-ns#type"	"http://www.openlinksw.com/schemas/virtrdf#QuadMapFormat"\n'+
-		'"http://www.openlinksw.com/virtrdf-data-formats#default"	"http://www.w3.org/1999/02/22-rdf-syntax-ns#type"	"http://www.openlinksw.com/schemas/virtrdf#QuadMapFormat"\n'+
-		'"http://www.openlinksw.com/virtrdf-data-formats#default-nullable"	"http://www.w3.org/1999/02/22-rdf-syntax-ns#type"	"http://www.openlinksw.com/schemas/virtrdf#QuadMapFormat"\n'+
-		'"http://www.openlinksw.com/virtrdf-data-formats#sql-varchar"	"http://www.w3.org/1999/02/22-rdf-syntax-ns#type"	"http://www.openlinksw.com/schemas/virtrdf#QuadMapFormat"\n'+
-		'"http://www.openlinksw.com/virtrdf-data-formats#sql-varchar-nullable"	"http://www.w3.org/1999/02/22-rdf-syntax-ns#type"	"http://www.openlinksw.com/schemas/virtrdf#QuadMapFormat"\n'+
-		'"http://www.openlinksw.com/virtrdf-data-formats#sql-varchar-dt"	"http://www.w3.org/1999/02/22-rdf-syntax-ns#type"	"http://www.openlinksw.com/schemas/virtrdf#QuadMapFormat"\n'+
-		'"http://www.openlinksw.com/virtrdf-data-formats#sql-varchar-dt-nullable"	"http://www.w3.org/1999/02/22-rdf-syntax-ns#type"	"http://www.openlinksw.com/schemas/virtrdf#QuadMapFormat"\n';
-	var yasr = YASR(document.getElementById("showcase"), {response:textTsv, contentType: "tab-separated"});
+	
 	//var yasr = YASR(document.getElementById("showcase"), textXmlString);
 </script>
   </body>

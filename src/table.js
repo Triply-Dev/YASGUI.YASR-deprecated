@@ -49,6 +49,7 @@ var root = module.exports = function(yasr,parent, options) {
 	plugin.getPriority =  function(yasr){return 10;};
 	
 	plugin.getDownloadInfo = function() {
+		if (!plugin.yasr.results) return null;
 		return {
 			getContent: function(){return require("./bindingsToCsv.js")(yasr.results.getAsJson());},
 			filename: "queryResults.csv",

@@ -53,7 +53,7 @@ var root = module.exports = function(parent, queryResults, options) {
 		return false;
 	};
 	
-	yasr.setResults = function(queryResults) {
+	yasr.setResponse = function(queryResults) {
 		try {
 			yasr.results = require("./parsers/wrapper.js")(queryResults);
 		} catch(exception) {
@@ -63,7 +63,7 @@ var root = module.exports = function(parent, queryResults, options) {
 		
 		//store if needed
 		if (yasr.options.persistency && yasr.options.persistency.results) {
-			if (yasr.results.getOriginalResponse && yasr.results.getOriginalResponse().length < yasr.options.persistency.results.maxSize) {
+			if (yasr.results.getOriginalResponseAsString && yasr.results.getOriginalResponseAsString().length < yasr.options.persistency.results.maxSize) {
 				var id = (typeof yasr.options.persistency.results.id == "string" ? yasr.options.persistency.results.id: yasr.options.persistency.results.id(yasr));
 				utils.storage.set(id, yasr.results.getOriginalResponse(), "month");
 			}
@@ -92,7 +92,7 @@ var root = module.exports = function(parent, queryResults, options) {
 	root.drawHeader(yasr);
 	
 	if (queryResults) {
-		yasr.setResults(queryResults);
+		yasr.setResponse(queryResults);
 	} 
 	root.updateHeader(yasr);
 	return yasr;
@@ -104,8 +104,8 @@ root.updateHeader = function(yasr) {
 	
 	var outputPlugin = yasr.plugins[yasr.options.output];
 	if (outputPlugin) {
-		if (outputPlugin.getDownloadInfo) {
-			var info = outputPlugin.getDownloadInfo();
+		var info = (outputPlugin.getDownloadInfo? outputPlugin.getDownloadInfo(): null);
+		if (info) {
 			if (info.buttonTitle) downloadIcon.attr(info.buttonTitle);
 			downloadIcon.prop("disabled", false);
 			downloadIcon.find("path").each(function(){
@@ -279,9 +279,9 @@ root.defaults = {
 			 * 
 			 * @property persistency.results.maxSize
 			 * @type int
-			 * @default 400
+			 * @default 100000
 			 */
-			maxSize: 4000 //char count
+			maxSize: 100000 //char count
 		}
 		
 	},

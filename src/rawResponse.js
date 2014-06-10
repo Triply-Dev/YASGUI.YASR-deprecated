@@ -17,6 +17,7 @@ var root = module.exports = function(yasr,parent, options) {
 	plugin.getPriority = 2;
 	
 	plugin.getDownloadInfo = function() {
+		if (!plugin.yasr.results) return null;
 		var contentType = plugin.yasr.results.getOriginalContentType();
 		return {
 			getContent: function() {return yasr.results.getOriginalResponse();},
@@ -31,7 +32,7 @@ var root = module.exports = function(yasr,parent, options) {
 
 root.draw = function(plugin) {
 	var cmOptions = plugin.options.CodeMirror;
-	cmOptions.value = plugin.yasr.results.getOriginalResponse();
+	cmOptions.value = plugin.yasr.results.getOriginalResponseAsString();
 	
 	var mode = plugin.yasr.results.getType();
 	if (mode) {
