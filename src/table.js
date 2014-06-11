@@ -189,7 +189,7 @@ var addEvents = function(plugin) {
 var addPrefLabelTo = function(td) {
 	$.get("http://preflabel.org/api/label/" + encodeURIComponent(td.text()))
 		.success(function(data) {
-			td.attr("title", data);
+			td.attr("title", data.label);
 		})
 		.fail(function() {
 			td.attr("title", "");//this avoids trying to fetch the label again on next hover

@@ -56,7 +56,6 @@
     "type": "git",
     "url": "https://github.com/YASGUI/YASR.git"
   },
-  "readme": "README.md",
   "dependencies": {
     "browserify-shim": "~3.2.0",
     "jquery": "~ 1.11.0",
