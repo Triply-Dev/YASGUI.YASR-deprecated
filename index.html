@@ -117,19 +117,24 @@
  <script src="yasqe.js"></script>
 <script src="doc/doc.js"></script>
 <script type="text/javascript">
-	var yasr = YASR(document.getElementById("showcase"));
-    var yasqe = YASQE(document.getElementById("yasqe"), {
+	var yasr, yasqe = {};
+	yasr = YASR(document.getElementById("showcase"));
+    yasqe = YASQE(document.getElementById("yasqe"), {
     	sparql: {
     		showQueryButton: true,
-    		handlers: {
-    			success: function(data, status, response) {
-    				yasr.setResponse({response: data, contentType: response.getResponseHeader("Content-Type")});
-    			}
-    		}
     	}
     });
-	
-	//var yasr = YASR(document.getElementById("showcase"), textXmlString);
+    
+    /**
+    * Set some of the hooks to link YASR and YASQE
+    */
+    yasr.options.getUsedPrefixes = yasqe.getPrefixesFromQuery;
+    yasqe.options.sparql.handlers.success =  function(data, status, response) {
+		yasr.setResponse({response: data, contentType: response.getResponseHeader("Content-Type")});
+	};
+	yasqe.options.sparql.handlers.error: function(xhr, textStatus, errorThrown) {
+		yasr.setResponse({exception: textStatus + ": " + errorThrown});
+	}
 </script>
   </body>
 </html>

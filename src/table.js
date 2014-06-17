@@ -109,6 +109,10 @@ var getRows = function(plugin) {
 	var rows = [];
 	var bindings = plugin.yasr.results.getBindings();
 	var vars = plugin.yasr.results.getVariables();
+	var usedPrefixes = null;
+	if (plugin.yasr.options.getUsedPrefixes) {
+		usedPrefixes = (typeof plugin.yasr.options.getUsedPrefixes == "function"? plugin.yasr.options.getUsedPrefixes(plugin.yasr):  plugin.yasr.options.getUsedPrefixes);
+	}
 	for (var rowId = 0; rowId < bindings.length; rowId++) {
 		var row = [];
 		row.push("");//row numbers
@@ -117,7 +121,7 @@ var getRows = function(plugin) {
 			var sparqlVar = vars[colId];
 			if (sparqlVar in binding) {
 				if (plugin.options.drawCellContent) {
-					row.push(plugin.options.drawCellContent(rowId, colId, binding[sparqlVar]));
+					row.push(plugin.options.drawCellContent(rowId, colId, binding[sparqlVar], usedPrefixes));
 				} else {
 					row.push("");
 				}
@@ -130,10 +134,20 @@ var getRows = function(plugin) {
 	return rows;
 };
 
-root.getFormattedValueFromBinding = function(rowId, colId, binding) {
+
+root.getFormattedValueFromBinding = function(rowId, colId, binding, usedPrefixes) {
 	var value = null;
 	if (binding.type == "uri") {
-		value = "<a class='uri' href='" + binding.value + "'>" + binding.value + "</a>";
+		var href = visibleString = binding.value;
+		if (usedPrefixes) {
+			for (var prefix in usedPrefixes) {
+				if (visibleString.indexOf(usedPrefixes[prefix]) == 0) {
+					visibleString = prefix + href.substring(usedPrefixes[prefix].length + 1);
+					break;
+				}
+			}
+		}
+		value = "<a class='uri' href='" + href + "'>" + visibleString + "</a>";
 	} else {
 		value = "<span class='nonUri'>" + binding.value + "</span>";
 	}

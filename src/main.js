@@ -70,6 +70,12 @@ var root = module.exports = function(parent, queryResults, options) {
 		}
 	};
 	
+//	yasr.setUsedPrefixes = function(prefixes) {
+//		if (typeof prefixes == "object") yasr.usedPrefixes = prefixes;
+//	};
+//	yasr.getUsedPrefixes = function() {
+//		return yasr.usedPrefixes;
+//	};
 	yasr.plugins = {};
 	for (var plugin in root.plugins) {
 		yasr.plugins[plugin] = root.plugins[plugin](yasr, yasr.resultsContainer);
@@ -232,6 +238,9 @@ root.defaults = {
 	 * @default true
 	 */
 	drawDownloadIcon: true,
+	
+	
+	getUsedPrefixes: null,
 	/**
 	 * Make certain settings and values of YASR persistent. Setting a key
 	 * to null, will disable persistancy: nothing is stored between browser

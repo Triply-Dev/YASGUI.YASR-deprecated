@@ -34,24 +34,9 @@
      	<h2>Main YASR methods</h2>
 		<div id="yasrDocs">
 			<div class="doc">
-				<code>YASR(parent: DOM-Element, settings: Object) → YASR
-					document: Doc</code>
+				<code>YASR(parent: DOM-Element, settings: Object) → YASR document: Doc</code>
 				<p>Main YASR constructor</p>
 			</div>
-<!-- 			<div class="doc" style="margin-left: 30px;"> -->
-<!-- 				<code>hideFromSelection: boolean (default: true)</code> -->
-<!-- 				<p>Hide this plugin from selection widget</p> -->
-<!-- 			</div> -->
-<!-- 			<div class="doc" style="margin-left: 30px;"> -->
-<!-- 				<code>canHandleResults: function (default: If resultset -->
-<!-- 					contains boolean val, return true)</code> -->
-<!-- 				<p>Check whether this plugin can handler the current results</p> -->
-<!-- 			</div> -->
-<!-- 			<div class="doc" style="margin-left: 30px;"> -->
-<!-- 				<code>getPriority: int|function (default: 10)</code> -->
-<!-- 				<p>If we need to dynamically check which plugin to use, we rank -->
-<!-- 					the possible plugins by priority, and select the highest one</p> -->
-<!-- 			</div> -->
 			<div class="doc">
 				<code>YASR.plugins: object</code>
 				<p>Registered plugins. Add a plugin by adding it to this object.
@@ -83,6 +68,12 @@
 				</ul>
 			
 			</div>
+<!-- 			<div class="doc"> -->
+<!-- 			<code>doc.getUsedPrefixes() → object</code> -->
+<!-- 			<p> -->
+<!-- 			Get the prefixes, in this object. Plugins may use this to create more human-readable URIs -->
+<!-- 			</p> -->
+<!-- 			</div> -->
 			<div class="doc">
 				<code>YASR.defaults</code>
 				<p>The default options of YASR. Either change the default
@@ -104,6 +95,12 @@
 					user to download results already queried for, such as a CSV when a
 					table is shown, or the original response when the raw response
 					output is selected</p>
+			</div>
+			<div class="doc" style="margin-left: 30px;">
+			<code>getUsedPrefixes: function() → object (default: null)</code>
+			<p>
+			Get the used prefixes. Plugins may use this to create more human-readable URIs
+			</p>
 			</div>
 			<div class="doc" style="margin-left: 30px;">
 				<code>persistency: object</code>
