@@ -142,14 +142,29 @@ root.getFormattedValueFromBinding = function(rowId, colId, binding, usedPrefixes
 		if (usedPrefixes) {
 			for (var prefix in usedPrefixes) {
 				if (visibleString.indexOf(usedPrefixes[prefix]) == 0) {
-					visibleString = prefix + href.substring(usedPrefixes[prefix].length + 1);
+					visibleString = prefix + href.substring(usedPrefixes[prefix].length);
 					break;
 				}
 			}
 		}
 		value = "<a class='uri' href='" + href + "'>" + visibleString + "</a>";
 	} else {
-		value = "<span class='nonUri'>" + binding.value + "</span>";
+		var stringRepresentation = binding.value;
+		if (binding["xml:lang"]) {
+			stringRepresentation = '"' + binding.value + '"@' + binding["xml:lang"];
+		} else if (binding.datatype) {
+			var xmlSchemaNs = "http://www.w3.org/2001/XMLSchema#";
+			var dataType = binding.datatype;
+			if (dataType.indexOf(xmlSchemaNs) == 0) {
+				dataType = "xsd:" + dataType.substring(xmlSchemaNs.length);
+			} else {
+				dataType = "<" + dataType + ">";
+			}
+			
+			stringRepresentation = '"' + stringRepresentation + '"^^' + dataType;
+		}
+		
+		value = "<span class='nonUri'>" + stringRepresentation + "</span>";
 	}
 	return value;
 };

@@ -420,6 +420,9 @@ table.dataTable td {
 	border-radius: .25em;
 	background-color: #d9534f;
 }
+.errorResult {
+	padding: 10px;
+}
 .yasr {
 	margin-top: 5px;
 }

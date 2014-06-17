@@ -11,3 +11,6 @@
 	border-radius: .25em;
 	background-color: #d9534f;
 }
+.errorResult {
+	padding: 10px;
+}
