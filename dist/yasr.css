@@ -423,6 +423,33 @@ table.dataTable td {
 .yasr {
 	margin-top: 5px;
 }
+
+
+.yasr a {
+	color: #428bca;
+	text-decoration: none;
+}
+
+.yasr a:hover,.yasr a:focus {
+	color: #2a6496;
+	text-decoration: underline;
+}
+
+.yasr a:active,.yasr a:hover {
+	outline: 0;
+}
+.yasr th {
+text-align: left;
+}
+.yasr {
+	font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+	font-size: 14px;
+	line-height: 1.428571429;
+	color: #333333;
+}
+
+
+
 .yasr_header {
 	/* use position relative, as this fixes issue where results div overflows the button (do this to align controls), and divs are not clickable anymore*/
 	position: relative;
