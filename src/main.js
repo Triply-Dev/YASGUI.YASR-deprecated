@@ -15,7 +15,7 @@ console = console || {"log":function(){}};//make sure any console statements don
  * @class YASR
  * @return {doc} YASR document
  */
-var root = module.exports = function(parent, queryResults, options) {
+var root = module.exports = function(parent, options, queryResults) {
 	var yasr = {};
 	yasr.options = $.extend(true, {}, root.defaults, options);
 	yasr.container = $("<div class='yasr'></div>").appendTo(parent);
