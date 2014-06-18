@@ -34,33 +34,38 @@
         </div><!--/.nav-collapse -->
       </div>
     </div>
-	<div class="jumbotron text-center">
-        <img width="30%" src="doc/imgs/yasgui.png">Resultset GUI
-        <p>
-			Yet Another SPARQL Resultset GUI, funded by <a href="http://data2semantics.org" target="_blank"><img width="30%" src="doc/imgs/data2semantics.png"></a>
-		</p>
-       <p>
-				<a class="btn btn-large btn-info" href="https://github.com/YASGUI/YASR" target="_blank">View
-					source on GitHub&nbsp;<img style="height: 22px;" src="doc/imgs/blacktocat.png">
-				</a>
-			</p>
-      </div>
     <div class="container" role="main">
-
+    
+    
+    <div class="jumbotron ">
+		<div class="row">
+	        <div class="col-md-3">
+	        <img class="img-responsive" src="doc/imgs/yasr.png">
+	        </div>
+	        <div class="col-md-9">
+	        	<h1>Yet Another Sparql Resultset GUI</h1>
+	        	<div style="text-align:right">Funded by <a href="http://data2semantics.org" target="_blank"><img width="30%" src="doc/imgs/data2semantics.png"></a></div>
+	        </div>
+      </div>
+      </div>
+    
+    
+    
 		
-      <!-- Main jumbotron for a primary marketing message or call to action -->
-      
-
 	
-      	<div id="aboutYQuery">
+      	<div class="row">
+      	<div class="col-md-12">
       	<h1>About YASR</h1>
       	YASR is part of the regular <a target="_blank" href='http://laurensrietveld.nl/yasgui'>YASGUI</a> web application. YASR provides a plugin-based visualizations for SPARQL resultsets.
       	<div id="yasqe"></div>
       	<div id="showcase"></div>
       	<code>var yasr = YASR(document.getElementById("showcase"));</code>
       	</div>
+      	</div>
       
-      	<div id="features">
+      
+      	<div class="row">
+      	<div class="col-md-12">
       	<h1>Features</h1>
       	YASR features:
       	<ul>
@@ -71,35 +76,40 @@
       		<li>Integration of <a href="http://preflabel.org" target="_blank">preflabel.org</a> for fetching URI labels</li>
       	</ul>
       	</div>
-      	<div id="releases">
-      	<h1>Download</h1>
-		<a class="btn btn-primary" href="https://github.com/YASGUI/YASR" target="_blank">Download latest release</a>
       	</div>
       	
-<!--       	<div id="keyboardShortcuts"> -->
-<!--       	<h1>Keyboard shortcuts</h1> -->
-<!--       	YASQE comes with some useful keyboard shortcuts. And even better, take a look at the <a href="doc/doc.html">documentation</a> on how to add your own. -->
-<!--       	Some examples: -->
-<!--       	<ul> -->
-<!--       	<li><code>[CTRL|CMD] - /</code>: Comment/uncomment line(s)</li> -->
-<!--       	<li><code>[CTRL|CMD] - D</code>: Delete line(s)</li> -->
-<!--       	<li><code>[CTRL|CMD] - ENTER</code>: Execute query</li> -->
-<!--       	<li><code>[CTRL|CMD] - SHIFT - f</code>: Auto-format selected lines</li> -->
-<!--       	<li><code>[CTRL|CMD] - [</code>: Move line(s) left (unindent)</li> -->
-<!--       	<li><code>[CTRL|CMD] - ]</code>: Move line(s) right (indent)</li> -->
-<!--       	<li><code>[CTRL|CMD] - ALT - down</code>: Copy line(s) down</li> -->
-<!--       	<li><code>[CTRL|CMD] - ALT - up</code>: Copy line(s) up</li> -->
-<!--       	<li><code>[CTRL|CMD] - Enter</code>: Execute query (if you have defined handlers in the configuration)</li> -->
-<!--       	</ul> -->
-<!--       	</div> -->
       	
-      	<div id="thanks">
-<!--       	<h1>Thanks!</h1> -->
-<!--       	A big thanks goes out to:  -->
-<!--       	<ul> -->
-<!--       	<li>The people behind the <a href="http://openuplabs.tso.co.uk/demos/sparqleditor" target="_blank">Flint SPARQL editor</a> for publishing the javascript SPARQL grammar</li> -->
-<!--       	<li>Marijn Haverbeke for his great work on the <a href="http://codemirror.net" target="_blank">CodeMirror library</a> syntax highlighting library</li> -->
-<!--       	</ul> -->
+      	<div class="row" id="releases">
+      	<div class="col-md-12">
+      	<h1>Download the latest release</h1>
+		
+      	</div>
+      	</div>
+      	<div class="row" id="downloads">
+      		<div class="col-md-6">
+      		<h3>GitHub</h3>
+      		Visit the GitHub page to download the YASR .css and .js files (find them in the <code>dist</code> directory). 
+      		<br><a class="btn btn-large btn-info" href="https://github.com/YASGUI/YASR" target="_blank">Download latest release from GitHub&nbsp;<img style="height: 22px;" src="doc/imgs/blacktocat.png"></a>
+      		</div>
+      		<div class="col-md-6">
+      		<h3><img style="height: 26px;" src="doc/imgs/npm.png"></h3>
+      		YASR is registered as a node package as well, so you'll be able to use the node package manager to keep your version of YASR up to date.
+      		<br><a class="btn btn-large btn-info" href="https://www.npmjs.org/package/yasgui-yasr" target="_blank">Show NPM Package</a>
+      		</div>
+      	</div>
+      	
+      	
+      	
+      	
+      	<div class="row">
+      	<div class="col-md-12">
+      	<h1>Thanks!</h1>
+      	A big thanks goes out to: 
+      	<ul>
+      	<li>Marijn Haverbeke for his great work on the <a href="http://codemirror.net" target="_blank">CodeMirror library</a> syntax highlighting library</li>
+      	<li>The work done by Marat Charlaganov on <a href="http://preflabel.org" target="_blank">PrefLabel.org</a>, which is used for fetching URI labels found in SPARQL result sets</li>
+      	</ul>
+      	</div>
       	</div>
       	
       
