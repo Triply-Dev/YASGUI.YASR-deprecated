@@ -147,7 +147,7 @@ root.getFormattedValueFromBinding = function(rowId, colId, binding, usedPrefixes
 				}
 			}
 		}
-		value = "<a class='uri' href='" + href + "'>" + visibleString + "</a>";
+		value = "<a class='uri' target='_blank' href='" + href + "'>" + visibleString + "</a>";
 	} else {
 		var stringRepresentation = binding.value;
 		if (binding["xml:lang"]) {
@@ -219,7 +219,7 @@ var addPrefLabel = function(td) {
 	var addEmptyTitle = function() {
 		td.attr("title","");//this avoids trying to fetch the label again on next hover
 	};
-	$.get("http://preflabel.org/api/label/" + encodeURIComponent(td.text()) + "?silent=true")
+	$.get("http://preflabel.org/api/v1/label/" + encodeURIComponent(td.text()) + "?silent=true")
 		.success(function(data) {
 			if (data && data.label) {
 				td.attr("title", data.label);
