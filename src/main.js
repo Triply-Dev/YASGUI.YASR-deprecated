@@ -299,5 +299,6 @@ root.defaults = {
 };
 root.version = {
 	"YASR" : require("../package.json").version,
-	"jquery": $.fn.jquery
+	"jquery": $.fn.jquery,
+	"yasgui-utils": require("yasgui-utils").version
 };
