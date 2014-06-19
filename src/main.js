@@ -297,8 +297,7 @@ root.defaults = {
 	
 	
 };
-
-//handlers in plugin:
-//drawInSelector: function(results){};
-//canHandleResults: function(results){};
-//priority: function(results){};
+root.version = {
+	"YASR" : require("../package.json").version,
+	"jquery": $.fn.jquery
+};

@@ -78,3 +78,9 @@ root.draw = function(plugin) {
 	
 	$("<span></span>").text(textVal).appendTo(plugin.container);
 };
+
+root.version = {
+	"YASR-boolean" : require("../package.json").version,
+	"jquery": $.fn.jquery,
+};
+

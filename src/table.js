@@ -344,3 +344,9 @@ root.defaults = {
 		],
 	},
 };
+
+root.version = {
+	"YASR-table" : require("../package.json").version,
+	"jquery": $.fn.jquery,
+	"jquery-datatables": $.fn.DataTable.version
+};

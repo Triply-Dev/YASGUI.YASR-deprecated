@@ -53,3 +53,9 @@ root.defaults = {
 		readOnly: true,
 	}
 };
+
+root.version = {
+	"YASR-rawresponse" : require("../package.json").version,
+	"jquery": $.fn.jquery,
+	"CodeMirror" : CodeMirror.version
+};
