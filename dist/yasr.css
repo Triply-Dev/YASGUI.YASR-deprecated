@@ -453,10 +453,10 @@ text-align: left;
 
 
 
-.yasr_header {
-	/* use position relative, as this fixes issue where results div overflows the button (do this to align controls), and divs are not clickable anymore*/
-	position: relative;
+.yasr_header * {
+	/* use position relative and z-index, as this fixes issue where results div overflows the button (do this to align controls), and divs are not clickable anymore*/
 	z-index: 8;
+	position: relative;
 }
 .yasr .yasr_btn {
 	color: #333;
