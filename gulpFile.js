@@ -7,8 +7,6 @@ var paths = {
 };
 var dest = "dist";
 var outputName = "yasr";
-var EXPRESS_PORT = 4000;
-
 
 var gulp = require('gulp');
 var watchify = require('watchify');
@@ -25,13 +23,13 @@ var jsValidate = require('gulp-jsvalidate');
 
 
 gulp.task('concatCss', function() {
-  return gulp.src(paths.style)
+  gulp.src(paths.style)
   	.pipe(concat(outputName + '.css'))
     .pipe(gulp.dest(dest))
     ;
 });
 gulp.task('minifyCss', ['concatCss'], function() {
-	return gulp.src(dest + "/" + outputName + ".css")
+	gulp.src(dest + "/" + outputName + ".css")
 	.pipe(concat(outputName + '.min.css'))
     .pipe(minifyCSS())
 	.pipe(gulp.dest(dest))
@@ -46,7 +44,7 @@ gulp.task('connect', function() {
 	});
 });
 gulp.task('browserify', function() {
-	return gulp.src("./src/*.js").pipe(jsValidate()).on('error', 
+	gulp.src("./src/*.js").pipe(jsValidate()).on('error', 
 		notify.onError({
 			message: "Error: <%= error.message %>",
 			title: "Failed running browserify"
@@ -83,8 +81,8 @@ gulp.task('watch', function() {
 });
 
 
-gulp.task('makeDocLib', function() {
-	return gulp.src("./doc/*.js").pipe(jsValidate()).on('error', 
+gulp.task('makeDocJs', function() {
+	gulp.src("./doc/*.js").pipe(jsValidate()).on('error', 
 			notify.onError({
 				message: "Error: <%= error.message %>",
 				title: "Failed running browserify"
@@ -99,13 +97,13 @@ gulp.task('makeDocLib', function() {
 			});
 });
 gulp.task('makeDocCss', function() {
-	return gulp.src(['node_modules/twitter-bootstrap-3.0.0/dist/css/bootstrap.css', './doc/main.css', 'node_modules/yasgui-yasqe/dist/yasqe.css'])
+	gulp.src(['node_modules/twitter-bootstrap-3.0.0/dist/css/bootstrap.css', './doc/main.css', 'node_modules/yasgui-yasqe/dist/yasqe.css'])
   	.pipe(concat('bundles.css'))
     .pipe(gulp.dest("doc"))
     ;
 	
 });
-gulp.task('makedoc', ['makeDocLib', 'makeDocCss']);
+gulp.task('makedoc', ['makeDocJs', 'makeDocCss']);
 	
 gulp.task('default', ['browserify', 'minifyJs', 'minifyCss', 'makedoc']);
 gulp.task('serve', ['browserify', 'minifyCss', 'watch', 'connect']);

@@ -51,6 +51,7 @@
   "dependencies": {
     "jquery": "~ 1.11.0",
     "codemirror": "^4.2.0",
-    "yasgui-utils": "^1.1.2"
+    "yasgui-utils": "^1.1.2",
+    "yasgui-yasqe": "^1.0.0"
   }
 }

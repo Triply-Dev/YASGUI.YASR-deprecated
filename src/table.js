@@ -203,9 +203,9 @@ var addEvents = function(plugin) {
 		}
 		var tdEl = $(this);
 		if (plugin.options.fetchTitlesFromPreflabel 
-				&& !tdEl.attr("title") 
+				&& tdEl.attr("title") === undefined
 				&& tdEl.text().trim().indexOf("http") == 0) {
-			addPrefLabelTo(tdEl);
+			addPrefLabel(tdEl);
 		}
 	}).delegate("td",'mouseleave', function(event) {
 		if (plugin.options.handlers && plugin.options.handlers.onCellMouseLeave) {
@@ -215,14 +215,20 @@ var addEvents = function(plugin) {
 	});
 };
 
-var addPrefLabelTo = function(td) {
-	$.get("http://preflabel.org/api/label/" + encodeURIComponent(td.text()))
+var addPrefLabel = function(td) {
+	var addEmptyTitle = function() {
+		td.attr("title","");//this avoids trying to fetch the label again on next hover
+	};
+	$.get("http://preflabel.org/api/label/" + encodeURIComponent(td.text()) + "?silent=true")
 		.success(function(data) {
-			td.attr("title", data.label);
+			if (data && data.label) {
+				td.attr("title", data.label);
+			} else {
+				addEmptyTitle();
+			}
+			
 		})
-		.fail(function() {
-			td.attr("title", "");//this avoids trying to fetch the label again on next hover
-		});
+		.fail(addEmptyTitle);
 };
 
 var drawSvgIcons = function(plugin) {
