@@ -110,18 +110,14 @@ gulp.task('makeDocLib', function() {
 				.bundle({debug: true}).on('error', notify.onError({
 			        message: "Error: <%= error.message %>",
 			        title: "Failed running browserify"
-			      })).on('prebundle', function(bundle) {
-			    	  console.log("prebundle!");
-			    	})
-			    .pipe(source('doc.js'))
-			    .pipe(embedlr())
+			      }))
+			    .pipe(source('bundles.js'))
 			    .pipe(gulp.dest('doc'));
-//			    .pipe(connect.reload());
 			});
 });
 gulp.task('makeDocCss', function() {
-	gulp.src(['node_modules/twitter-bootstrap-3.0.0/dist/css/bootstrap.css', './doc/main.css'])
-  	.pipe(concat('doc.css'))
+	gulp.src(['node_modules/twitter-bootstrap-3.0.0/dist/css/bootstrap.css', './doc/main.css', 'node_modules/yasgui-yasqe/dist/yasqe.css'])
+  	.pipe(concat('bundles.css'))
     .pipe(gulp.dest("doc"))
     ;
 	

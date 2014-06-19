@@ -7,8 +7,7 @@
     <title>YASR</title>
 
   <link href="dist/yasr.css" rel="stylesheet" type="text/css" />
-  <link href="yasqe.css" rel="stylesheet" type="text/css" />
-  <link href="doc/doc.css" rel="stylesheet" type="text/css" />
+  <link href="doc/bundles.css" rel="stylesheet" type="text/css" />
   </head>
   <body>
   
@@ -124,8 +123,7 @@
 
 
  <script src="dist/yasr.js"></script>
- <script src="yasqe.js"></script>
-<script src="doc/doc.js"></script>
+<script src="doc/bundles.js"></script>
 <script type="text/javascript">
 	var yasr, yasqe = {};
 	yasr = YASR(document.getElementById("showcase"));
@@ -143,7 +141,9 @@
 		yasr.setResponse({response: data, contentType: response.getResponseHeader("Content-Type")});
 	};
 	yasqe.options.sparql.handlers.error = function(xhr, textStatus, errorThrown) {
-		yasr.setResponse({exception: textStatus + ": " + errorThrown});
+		var exceptionMsg = textStatus + " (response status code " + xhr.status + ")";
+		if (errorThrown && errorThrown.length) exceptionMsg += ": " + errorThrown;
+		yasr.setResponse({exception: exceptionMsg});
 	}
 </script>
   </body>

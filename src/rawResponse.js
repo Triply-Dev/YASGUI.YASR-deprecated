@@ -13,7 +13,12 @@ var root = module.exports = function(yasr,parent, options) {
 		root.draw(plugin);
 	};
 	plugin.name = "Raw Response";
-	plugin.canHandleResults = function(){return true;};
+	plugin.canHandleResults = function(yasr){
+		if (!yasr.results) return false;
+		var response = yasr.results.getOriginalResponseAsString();
+		if ((!response || response.length == 0) && yasr.results.getException()) return false;//in this case, show exception instead, as we have nothing to show anyway
+		return true;
+	};
 	plugin.getPriority = 2;
 	
 	plugin.getDownloadInfo = function() {
@@ -55,7 +60,7 @@ root.defaults = {
 };
 
 root.version = {
-	"YASR-rawresponse" : require("../package.json").version,
+	"YASR-rawResponse" : require("../package.json").version,
 	"jquery": $.fn.jquery,
 	"CodeMirror" : CodeMirror.version
 };
