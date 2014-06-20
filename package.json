@@ -6,11 +6,11 @@
   "licenses": [
     {
       "type": "MIT",
-      "url": "http://yasgui.github.io/license.txt"
+      "url": "http://yasgui.org/license.txt"
     }
   ],
   "author": "Laurens Rietveld",
-  "homepage": "http://yasgui.github.io/YASR",
+  "homepage": "http://yasr.yasgui.org",
   "devDependencies": {
     "gulp": "~3.6.0",
     "vinyl-source-stream": "~0.1.1",

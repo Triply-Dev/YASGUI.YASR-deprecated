@@ -1,9 +1,7 @@
 YASR: Yet Another SPARQL Resultset visualizer
 ===
 
-YASR is part of the the YASGUI tool. For more information about YASR, its features, and how to include it in your web site, visit http://yasgui.github.io/YASR.
-Download the packaged YASR files from the `dist` directory 
-
+YASR is part of the the YASGUI tool. For more information about YASR, its features, and how to include it in your web site, visit http://yasr.yasgui.org.
 
 Developing YASR
 ==
