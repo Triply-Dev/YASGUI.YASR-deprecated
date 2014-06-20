@@ -129,6 +129,12 @@
 	var yasr, yasqe = {};
 	yasr = YASR(document.getElementById("showcase"));
     yasqe = YASQE(document.getElementById("yasqe"), {
+    	value: "PREFIX foaf: <http://xmlns.com/foaf/0.1/>\n"+
+    		"PREFIX dbpedia: <http://dbpedia.org/resource/>\n"+
+			"SELECT DISTINCT ?person WHERE {\n"+
+			"  ?person a foaf:Person .\n"+
+			"}\n"+ 
+			"LIMIT 10",
     	sparql: {
     		showQueryButton: true,
     	}
@@ -146,6 +152,8 @@
 		if (errorThrown && errorThrown.length) exceptionMsg += ": " + errorThrown;
 		yasr.setResponse({exception: exceptionMsg});
 	}
+	if(!yasr.somethingDrawn()) yasqe.query();
+	//yasqe.query();
 </script>
   </body>
 </html>

@@ -52,7 +52,9 @@ var root = module.exports = function(parent, options, queryResults) {
 		}
 		return false;
 	};
-	
+	yasr.somethingDrawn = function() {
+		return !yasr.resultsContainer.is(":empty");
+	};
 	yasr.setResponse = function(queryResults) {
 		try {
 			yasr.results = require("./parsers/wrapper.js")(queryResults);
@@ -70,12 +72,6 @@ var root = module.exports = function(parent, options, queryResults) {
 		}
 	};
 	
-//	yasr.setUsedPrefixes = function(prefixes) {
-//		if (typeof prefixes == "object") yasr.usedPrefixes = prefixes;
-//	};
-//	yasr.getUsedPrefixes = function() {
-//		return yasr.usedPrefixes;
-//	};
 	yasr.plugins = {};
 	for (var plugin in root.plugins) {
 		yasr.plugins[plugin] = root.plugins[plugin](yasr, yasr.resultsContainer);

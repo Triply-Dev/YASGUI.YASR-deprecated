@@ -221,8 +221,10 @@ var addPrefLabel = function(td) {
 	};
 	$.get("http://preflabel.org/api/v1/label/" + encodeURIComponent(td.text()) + "?silent=true")
 		.success(function(data) {
-			if (data && data.label) {
+			if (typeof data == "object" && data.label) {
 				td.attr("title", data.label);
+			} else if (typeof data == "string" && data.length > 0 ) {
+				td.attr("title", data);
 			} else {
 				addEmptyTitle();
 			}
