@@ -75,6 +75,9 @@
       		<li>Use of common libraries such as <a href="http://www.datatables.net/" target="_blank">jQuery Datatables</a> and <a href="http://codemirror.net/" target="_blank">CodeMirror</a></li>
       		<li>Integration of <a href="http://preflabel.org" target="_blank">preflabel.org</a> for fetching URI labels</li>
       	</ul>
+      	Combining YASR with the YASQE library (a SPARQL editor library) is easy: all you need to do is define YASR as a handler to the YASQE query method.
+      	See <a href="https://gist.github.com/LaurensRietveld/7d8beca5dbeb6b909b6f" target="_blank">this example gist</a>. 
+      	
       	</div>
       	</div>
       	
@@ -153,7 +156,6 @@
 		yasr.setResponse({exception: exceptionMsg});
 	}
 	if(!yasr.somethingDrawn()) yasqe.query();
-	//yasqe.query();
 </script>
   </body>
 </html>
