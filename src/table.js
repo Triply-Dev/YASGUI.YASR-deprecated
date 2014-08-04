@@ -192,14 +192,14 @@ var addEvents = function(plugin) {
 	    drawSvgIcons(plugin);
 	});
 	
-	plugin.table.delegate("td", "click", function() {
+	plugin.table.delegate("td", "click", function(event) {
 		if (plugin.options.handlers && plugin.options.handlers.onCellClick) {
-			var result = plugin.options.handlers.onCellClick(this);
+			var result = plugin.options.handlers.onCellClick(this, event);
 			if (result === false) return false;
 		}
 	}).delegate("td",'mouseenter', function(event) {
 		if (plugin.options.handlers && plugin.options.handlers.onCellMouseEnter) {
-			plugin.options.handlers.onCellMouseEnter(this);
+			plugin.options.handlers.onCellMouseEnter(this, event);
 		}
 		var tdEl = $(this);
 		if (plugin.options.fetchTitlesFromPreflabel 
@@ -209,7 +209,7 @@ var addEvents = function(plugin) {
 		}
 	}).delegate("td",'mouseleave', function(event) {
 		if (plugin.options.handlers && plugin.options.handlers.onCellMouseLeave) {
-			plugin.options.handlers.onCellMouseLeave(this);
+			plugin.options.handlers.onCellMouseLeave(this, event);
 			
 		}
 	});
