@@ -69,8 +69,9 @@ root.draw = function(plugin) {
 	$(plugin.parent).html(plugin.table);
 
 	var dataTableConfig = plugin.options.datatable;
-	dataTableConfig.aaData = getRows(plugin);
-	dataTableConfig.aoColumns = getVariablesAsCols(plugin),
+	dataTableConfig.data = getRows(plugin);
+	dataTableConfig.columns = getVariablesAsCols(plugin),
+	console.log(dataTableConfig);
 	plugin.table.dataTable(dataTableConfig); 
 	
 	
@@ -90,17 +91,17 @@ root.draw = function(plugin) {
 	
 	//make sure we redraw the table on resize
 	$(window).on('resize', function () {
-		if (plugin.table) plugin.table.fnAdjustColumnSizing();
+		if (plugin.table) plugin.table.columns.adjust();
 	});
 };
 
 
 var getVariablesAsCols = function(plugin) {
 	var cols = [];
-	cols.push({"sTitle": ""});//row numbers
+	cols.push({"title": ""});//row numbers
 	var sparqlVars = plugin.yasr.results.getVariables();
 	for (var i = 0; i < sparqlVars.length; i++) {
-		cols.push({"sTitle": sparqlVars[i]});
+		cols.push({"title": sparqlVars[i]});
 	}
 	return cols;
 };
@@ -312,7 +313,6 @@ root.defaults = {
 		 * @param td-element
 		 * @default null
 		 */
-//		onCellClick: root.openCellUriInNewWindow
 		onCellClick: null
 	},
 	/**
@@ -323,12 +323,12 @@ root.defaults = {
 	 * @type object
 	 */
 	datatable: {
-		"aaSorting": [],//disable initial sorting
-		"iDisplayLength": 50,//default page length
-    	"aLengthMenu": [[10, 50, 100, 1000, -1], [10, 50, 100, 1000, "All"]],//possible page lengths
-    	"bLengthChange": true,//allow changing page length
-    	"sPaginationType": "full_numbers",//how to show the pagination options
-        "fnDrawCallback": function ( oSettings ) {
+		"order": [],//disable initial sorting
+		"pageLength": 50,//default page length
+    	"lengthMenu": [[10, 50, 100, 1000, -1], [10, 50, 100, 1000, "All"]],//possible page lengths
+    	"lengthChange": true,//allow changing page length
+    	"pagingType": "full_numbers",//how to show the pagination options
+        "drawCallback": function ( oSettings ) {
         	//trick to show row numbers
         	for ( var i = 0; i < oSettings.aiDisplay.length; i++) {
 				$('td:eq(0)',oSettings.aoData[oSettings.aiDisplay[i]].nTr).html(i + 1);
@@ -347,8 +347,8 @@ root.defaults = {
         		$(oSettings.nTableWrapper).find(".dataTables_paginate").hide();
         	}
 		},
-		"aoColumnDefs": [
-			{ "sWidth": "12px", "bSortable": false, "aTargets": [ 0 ] }//disable row sorting for first col
+		"columnDefs": [
+			{ "width": "12px", "orderable": false, "targets": 0  }//disable row sorting for first col
 		],
 	},
 };
