@@ -28,7 +28,8 @@
     "gulp-embedlr": "^0.5.2",
     "connect": "^2.14.4",
     "twitter-bootstrap-3.0.0": "^3.0.0",
-    "gulp-jsvalidate": "^0.2.0"
+    "gulp-jsvalidate": "^0.2.0",
+    "require-dir": "^0.1.0"
   },
   "keywords": [
     "JavaScript",
