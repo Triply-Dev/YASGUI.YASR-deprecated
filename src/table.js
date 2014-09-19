@@ -70,9 +70,8 @@ root.draw = function(plugin) {
 
 	var dataTableConfig = plugin.options.datatable;
 	dataTableConfig.data = getRows(plugin);
-	dataTableConfig.columns = getVariablesAsCols(plugin),
-	console.log(dataTableConfig);
-	plugin.table.dataTable(dataTableConfig); 
+	dataTableConfig.columns = getVariablesAsCols(plugin);
+	plugin.table.DataTable($.extend(true, {}, dataTableConfig));//make copy. datatables adds properties for backwards compatability reasons, and don't want this cluttering our own 
 	
 	
 	drawSvgIcons(plugin);
@@ -89,10 +88,6 @@ root.draw = function(plugin) {
 	}
 	
 	
-	//make sure we redraw the table on resize
-	$(window).on('resize', function () {
-		if (plugin.table) plugin.table.columns.adjust();
-	});
 };
 
 

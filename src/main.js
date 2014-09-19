@@ -224,7 +224,7 @@ root.defaults = {
 	 * @type boolean
 	 * @default true
 	 */
-	drawOutputSelector: false,
+	drawOutputSelector: true,
 	/**
 	 * Draw download icon. This issues html5 download functionality to 'download' files created on the client-side.
 	 *  This allows the user to download results already queried for, such as a CSV when a table is shown, or the original response when the raw response output is selected
@@ -233,7 +233,7 @@ root.defaults = {
 	 * @type boolean
 	 * @default true
 	 */
-	drawDownloadIcon: false,
+	drawDownloadIcon: true,
 	
 	
 	getUsedPrefixes: null,
