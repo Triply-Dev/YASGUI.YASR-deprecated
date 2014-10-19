@@ -4,7 +4,6 @@ var gulp = require('gulp'),
 	paths = require('./paths.js'),
 	connect = require('gulp-connect');
 
-
 gulp.task('concatCss', function() {
   gulp.src(paths.style)
   	.pipe(concat(paths.bundleName + '.css'))
