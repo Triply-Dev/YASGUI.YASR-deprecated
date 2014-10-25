@@ -35284,7 +35284,7 @@ module.exports=require(8)
 },{}],11:[function(require,module,exports){
 module.exports={
   "name": "yasgui-utils",
-  "version": "1.3.1",
+  "version": "1.3.2",
   "description": "Utils for YASGUI libs",
   "main": "src/main.js",
   "repository": {
@@ -35420,7 +35420,7 @@ var root = module.exports = {
 module.exports={
   "name": "yasgui-yasr",
   "description": "Yet Another SPARQL Resultset GUI",
-  "version": "1.2.1",
+  "version": "1.2.2",
   "main": "src/main.js",
   "licenses": [
     {
