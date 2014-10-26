@@ -1,6 +1,9 @@
-var $ = require("jquery");
+var $ = require("jquery"),
+	yutils = require("yasgui-utils"),
+	imgs = require('./imgs.js');
 require("./../lib/DataTables/media/js/jquery.dataTables.js");
-var imgs = require("yasgui-utils").imgs;
+
+
 
 /**
  * Constructor of plugin which displays results as a table
@@ -164,24 +167,6 @@ root.getFormattedValueFromBinding = function(rowId, colId, binding, usedPrefixes
 	}
 	return value;
 };
-var getExternalLinkElement = function() {
-	var element = $("#externalLink");
-	if (element.length == 0) {
-		element = $("<img id='externalLink' src='" + Yasgui.constants.imgs.externalLink.get() + "'></img>")
-			.on("click", function(){
-				window.open($(this).parent().text());
-			});
-	}
-	return element;
-};
-var executeSnorqlQuery = function(uri) {
-	console.log("exec snorql");
-//	var newQuery = Yasgui.settings.defaults.tabularBrowsingTemplate;
-//	newQuery = newQuery.replace(/<URI>/g, "<" + uri + ">");
-//	Yasgui.settings.getCurrentTab().query = newQuery;
-//	Yasgui.tabs.getCurrentTab().cm.reloadFromSettings();
-//	Yasgui.sparql.query();
-};
 
 var addEvents = function(plugin) {
 	plugin.table.on( 'order.dt', function () {
@@ -238,7 +223,7 @@ var drawSvgIcons = function(plugin) {
 	plugin.table.find(".sortIcons").remove();
 	for (var sorting in sortings) {
 		var svgDiv = $("<div class='sortIcons'></div>").css("float", "right").css("margin-right", "-12px").width(10).height(15);
-		imgs.draw(svgDiv, {id: sortings[sorting], width: 12, height: 16});
+		yutils.svg.draw(svgDiv, imgs[sortings[sorting]], {width: 12, height: 16});
 		plugin.table.find("th." + sorting).append(svgDiv);
 	}
 };

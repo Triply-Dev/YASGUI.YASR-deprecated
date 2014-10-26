@@ -70,10 +70,9 @@ root.draw = function(plugin) {
 	}
 	
 	//add icon
-	if (imgId) require("yasgui-utils").imgs.draw(plugin.container, {
+	if (imgId) require("yasgui-utils").svg.draw(plugin.container, require('./imgs.js')[imgId], {
 		width: 25,
 		height: 25,
-		id: imgId,
 	});
 	
 	$("<span></span>").text(textVal).appendTo(plugin.container);

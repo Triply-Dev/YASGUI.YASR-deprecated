@@ -165,7 +165,7 @@ root.drawHeader = function(yasr) {
 			return url;
 		};
 		var button = $("<button class='yasr_btn yasr_downloadIcon'></button>")
-			.append(require("yasgui-utils").imgs.getElement({id: "download", width: "15px", height: "15px"}))
+			.append(require("yasgui-utils").svg.getElement(require('./imgs.js').download, {width: "15px", height: "15px"}))
 			.click(function() {
 				var currentPlugin = yasr.plugins[yasr.options.output];
 				if (currentPlugin && currentPlugin.getDownloadInfo) {
@@ -257,7 +257,7 @@ root.defaults = {
 		 * @default function (determine unique id)
 		 */
 		outputSelector: function(yasr) {
-			return "selector_" + utils.determineId(yasr.container);
+			return "selector_" + $(yasr.container).closest('[id]').attr('id');
 		},
 		/**
 		 * Persistency setting for query results.
@@ -274,7 +274,7 @@ root.defaults = {
 			 * @default function (determine unique id)
 			 */
 			id: function(yasr){
-				return "results_" + utils.determineId(yasr.container);
+				return "results_" +  $(yasr.container).closest('[id]').attr('id');
 			},
 			/**
 			 * The result set might too large to fit in local storage. 
