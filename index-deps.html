@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <title>YASR</title>
+    <link href='//cdnjs.cloudflare.com/ajax/libs/yasqe/1.5.2/yasqe.min.css' rel='stylesheet' type='text/css'/>
+  <link href="dist/yasr.css" rel="stylesheet" type="text/css" />
+  </head>
+  <body>
+  
+<div id="yasqe"></div>
+<div id="showcase"></div>
+
+<script src="//cdnjs.cloudflare.com/ajax/libs/codemirror/4.6.0/codemirror.min.js"></script>
+<script src="//ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
+<script src="//cdn.datatables.net/1.10.3/js/jquery.dataTables.min.js"></script>
+<script src="dist/yasr.js"></script>
+<script src='//cdnjs.cloudflare.com/ajax/libs/yasqe/1.5.2/yasqe.min.js'></script>
+<script type="text/javascript">
+	var yasr, yasqe = {};
+	yasr = YASR(document.getElementById("showcase"));
+    yasqe = YASQE(document.getElementById("yasqe"), {
+    	value: "PREFIX foaf: <http://xmlns.com/foaf/0.1/>\n"+
+    		"PREFIX dbpedia: <http://dbpedia.org/resource/>\n"+
+			"SELECT DISTINCT ?person WHERE {\n"+
+			"  ?person a foaf:Person .\n"+
+			"}\n"+ 
+			"LIMIT 10",
+    	sparql: {
+    		endpoint: "http://zbw.eu/beta/sparql/stwv/query",
+    		showQueryButton: true,
+    	}
+    });
+    
+    /**
+    * Set some of the hooks to link YASR and YASQE
+    */
+    yasr.options.getUsedPrefixes = yasqe.getPrefixesFromQuery;
+    yasqe.options.sparql.handlers.success =  function(data, status, response) {
+		yasr.setResponse({response: data, contentType: response.getResponseHeader("Content-Type")});
+	};
+	yasqe.options.sparql.handlers.error = function(xhr, textStatus, errorThrown) {
+		var exceptionMsg = textStatus + " (response status code " + xhr.status + ")";
+		if (errorThrown && errorThrown.length) exceptionMsg += ": " + errorThrown;
+		yasr.setResponse({exception: exceptionMsg});
+	}
+	if(!yasr.somethingDrawn()) yasqe.query();
+	
+	
+	
+</script>
+  </body>
+</html>
+
+
+
+
+
+
