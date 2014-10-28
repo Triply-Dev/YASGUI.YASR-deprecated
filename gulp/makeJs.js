@@ -16,11 +16,11 @@ var gulp = require('gulp'),
 
 
 gulp.task('browserify', function() {
-	var baseBundle = browserify({entries: ["./src/main.js"],standalone: "YASR", debug: true, global:true})
+	browserify({entries: ["./src/main.js"],standalone: "YASR", debug: true, global:true})
 		.transform({global:true},shim)
 		.exclude('jquery')
 		.exclude('codemirror')
-		.exclude('./../lib/DataTables/media/js/jquery.dataTables.js') 
+		.exclude('../lib/DataTables/media/js/jquery.dataTables.js') 
 		.bundle()
 		.pipe(exorcist(paths.bundleDir + '/' + paths.bundleName + '.js.map'))
 		.pipe(source(paths.bundleName + '.js'))

@@ -1,7 +1,7 @@
 var $ = require("jquery"),
 	yutils = require("yasgui-utils"),
 	imgs = require('./imgs.js');
-require("./../lib/DataTables/media/js/jquery.dataTables.js");
+require("../lib/DataTables/media/js/jquery.dataTables.js");
 
 
 
