@@ -1,0 +1,17 @@
+.yasr {
+	.dataTables_wrapper {
+		.dataTables_length {
+			float:right;
+			margin-left: 10px;
+			label, select {
+				vertical-align: middle;
+			}
+		}
+	}
+	table.dataTable thead th {
+		//hide icons (we use svg)
+		background:none !important;
+	}
+}
+
+

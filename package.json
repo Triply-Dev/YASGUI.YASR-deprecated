@@ -36,7 +36,10 @@
     "browserify-shim": "^3.8.0",
     "gulp-sourcemaps": "^1.2.4",
     "exorcist": "^0.1.6",
-    "vinyl-transform": "0.0.1"
+    "vinyl-transform": "0.0.1",
+    "gulp-sass": "^1.2.2",
+    "yasgui-yasqe": "^2.0.1",
+    "twitter-bootstrap-3.0.0": "^3.0.0"
   },
   "bugs": "https://github.com/YASGUI/YASR/issues/",
   "keywords": [
@@ -60,9 +63,7 @@
   "dependencies": {
     "jquery": "~ 1.11.0",
     "codemirror": "^4.2.0",
-    "twitter-bootstrap-3.0.0": "^3.0.0",
-    "yasgui-utils": "^1.4.1",
-    "yasgui-yasqe": "^1.5.1"
+    "yasgui-utils": "^1.4.1"
   },
   "browserify-shim": {
     "jquery": "global:jQuery",
