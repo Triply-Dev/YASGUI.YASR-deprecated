@@ -10,48 +10,26 @@ var $ = require("jquery");
  * @return yasr-erro (doc)
  * 
  */
-var root = module.exports = function(yasr, parent, options) {
-	var plugin = {};
-	plugin.container = $("<div class='errorResult'></div>");
-	plugin.options = $.extend(true, {}, root.defaults, options);
-	plugin.parent = parent;
-	plugin.yasr = yasr;
+var root = module.exports = function(yasr) {
+	var container = $("<div class='errorResult'></div>");
+	var options = $.extend(true, {}, root.defaults);
 	
-	plugin.draw = function() {
-		plugin.container.empty().appendTo(plugin.parent);
-		$("<span class='exception'>ERROR</span>").appendTo(plugin.container);
-		$("<p></p>").html(plugin.yasr.results.getException()).appendTo(plugin.container);
+	var draw = function() {
+		container.empty().appendTo(yasr.resultsContainer);
+		$("<span class='exception'>ERROR</span>").appendTo(container);
+		$("<p></p>").html(yasr.results.getException()).appendTo(container);
 	};
 	
-	plugin.name =  null;//don't need to set this: we don't show it in the selection widget anyway, so don't need a human-friendly name
-	/**
-	 * Hide this plugin from selection widget
-	 * 
-	 * @property hideFromSelection
-	 * @type boolean
-	 * @default true
-	 */
-	plugin.hideFromSelection = true;
-	/**
-	 * Check whether this plugin can handler the current results
-	 * 
-	 * @property canHandleResults
-	 * @type function
-	 * @default If resultset contains an exception, return true
-	 */
-	plugin.canHandleResults = function(yasr){return yasr.results.getException() || false;};
-	/**
-	 * If we need to dynamically check which plugin to use, we rank the possible plugins by priority, and select the highest one
-	 * 
-	 * @property getPriority
-	 * @param yasrDoc
-	 * @type int|function
-	 * @default 10
-	 */
-	plugin.getPriority = 20;
 	
+	var  canHandleResults = function(yasr){return yasr.results.getException() || false;};
 	
-	return plugin;
+	return {
+		name: null,//don't need to set this: we don't show it in the selection widget anyway, so don't need a human-friendly name
+		draw: draw,
+		getPriority: 20,
+		hideFromSelection: true,
+		canHandleResults: canHandleResults,
+	}
 };
 
 /**

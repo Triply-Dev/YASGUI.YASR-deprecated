@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>YASR</title>
+	<link rel="icon"  type="image/png" href="imgs/favicon.png">
+  <link href="doc.css" rel="stylesheet" type="text/css" />
+  </head>
+  <body data-spy="scroll" data-target="#sidebarmenu">
+  
+  <a href="https://github.com/YASGUI/YASR" target="_blank"><img style="z-index: 11111; position: absolute; top: 0; right: 0; border: 0;" src="https://s3.amazonaws.com/github/ribbons/forkme_right_gray_6d6d6d.png" alt="Fork me on GitHub"></a>
+    <div class="navbar navbar-inverse navbar-static-top" role="navigation">
+      <div class="container">
+      <a class="navbar-brand" href="#">YASR</a>
+        <div class="navbar-collapse collapse">
+          <ul class="nav navbar-nav">
+            <li><a href="../index.html">About</a></li>
+            <li class="active"><a href="#l">Documentation</a></li>
+            <li><a target="_blank" href="http://laurensrietveld.nl">About me</a></li>
+          </ul>
+        </div><!--/.nav-collapse -->
+      </div>
+    </div>
+    <div class="container" role="main">
+		<div class="row">
+		<div class="col-md-9">
+			<h1>Documentation</h1>
+			YASR is an extendable library which helps you present SPARQL results. The main class of YASR is responsible for gluing the different output plugins together, and providing utilities such as SPARQL results parsers.
+			<h2 id="gettingStarted">Getting Started</h2>
+			<p>Initialize YASQE via its constructor, which returns an instance (from now on referred to as <code>yasr</code> (lowercase).
+			
+			<div class="doc">
+				<code>YASR(parent: DOM-Element, settings: object, queryResponse: string|object) → YASR document: yasr</code>
+				<p>Main YASR constructor. The first argument, the DOM element to which to append YASR, is required.
+				Optional values are a settings object (see the <a href="#config">defaults</a> section for more information), and/or the query response you'd like to show directly on initialization (or alternatively, set this via the <code>doc.setResponse</code> function</code>)
+				</p>
+			</div>
+			
+			
+			<h2 id="api">API</h2>
+			<div class="doc">
+			<code>yasr.setresponse(response: string|object)</code>
+			<p>
+			Set and draw a SPARQL response. The parameter is either the response string (or SPARQL XML/JSON object of the response), or it is an object with the following keys:
+			</p>
+				<ul>
+					<li><code>response: string|object</code> (optional): the response string (or SPARQL XML/JSON object of the response)
+					<li><code>contentType: string</code> (optional)
+					<li><code>exception: string</code> (optional): YASR can display SPARQL errors as well (as plain text)
+				</ul>
+			</div>
+			<div class="doc">
+			<code>yasr.somethingDrawn() → boolean</code>
+			<p>
+			Check whether a result has been drawn
+			</p>
+			</div>
+			
+			
+			<h2 id="config">Configuration</h2>
+			<p>
+			This configuration object is accessible/changeable via <code>YASR.defaults</code> and <code>yasr.options</code>, and you can pass these along when initializing YASR as well. 
+			Output visualizations are <a href="#outputPlugins">defined separately</a>.			
+			</p>
+			<div class="doc" >
+				<code>outputPlugins: array (default: ["table", "error", "boolean", "rawResponse"])</code>
+				<p>List of enabled output plugins</p>
+			</div>
+			<div class="doc" >
+				<code>output: string (default: "table")</code>
+				<p>key of default plugin</p>
+			</div>
+			<div class="doc" >
+				<code>drawOutputSelector: boolean (default: true)</code>
+				<p>Draw the output selector widget</p>
+			</div>
+			<div class="doc" >
+				<code>drawDownloadIcon: boolean (default: true)</code>
+				<p>Draw download icon. Enabled HTML5 download functionality of query results, all on the client-side (i.e. without re-executing the query).
+					This allows the
+					user to download results already queried for, such as a CSV when a
+					table is shown, or the original response when the raw response
+					output is selected</p>
+			</div>
+			<div class="doc" >
+			<code>getUsedPrefixes: function() → object (default: null)</code>
+			<p>
+			Get the used prefixes. Plugins may use this to create more human-readable URIs
+			</p>
+			</div>
+			<div class="doc" >
+				<code>persistency: object</code>
+				<p>Make certain settings and values of YASR persistent. Setting
+					a key to null, will disable persistancy: nothing is stored between
+					browser sessions. Setting the values to a string (or a function
+					which returns a string), will store the values in localstorage using
+					the specified string. By default, the ID is dynamically generated
+					by finding the nearest DOM element with an "id" set, to avoid
+					collissions when using multiple YASR items on one page</p>
+			</div>
+			<div class="doc" style="margin-left: 30px;">
+				<code>outputSelector: string|function (default: function)</code>
+				<p>Persistency setting for the selected output.</p>
+			</div>
+			<div class="doc" style="margin-left: 30px;">
+				<code>results: object</code>
+				<p>Persistency setting for query results.</p>
+			</div>
+			<div class="doc" style="margin-left: 60px;">
+				<code>id: string|function (default: function)</code>
+				<p>Get the key to store results in. </p>
+			</div>
+			<div class="doc" style="margin-left: 60px;">
+				<code>maxSize: int (default: 100000)</code>
+				<p>The result set might too large to fit in local storage. It is
+					impossible to detect the free space in the client-side storage. Therefore, we
+					do not store all results in local storage, depending on a max
+					number of characters in the SPARQL result serialization. Set this
+					function conservatively. (especially when using multiple YASR
+					instances on one page)</p>
+			</div>
+<!-- 			<div class="doc" style="margin-left: 60px;"> -->
+<!-- 				<code>name: string (default: "Table")</code> -->
+<!-- 				<p>Human-readable name of this plugin (used in selection widget)</p> -->
+<!-- 			</div> -->
+<!-- 			<div class="doc" > -->
+<!-- 				<code>canHandleResults: function (default: If resultset -->
+<!-- 					contains variables in the resultset, return true)</code> -->
+<!-- 				<p>Check whether this plugin can handler the current results</p> -->
+<!-- 			</div> -->
+<!-- 			<div class="doc" > -->
+<!-- 				<code>getPriority: int|function (default: 10)</code> -->
+<!-- 				<p>If we need to dynamically check which plugin to use, we rank -->
+<!-- 					the possible plugins by priority, and select the highest one</p> -->
+<!-- 			</div> -->
+
+		<h2 id="outputPlugins"> Plugins</h2>
+		<h3 id="outputTable">Table</h3>
+		This plugin shows SPARQL results as a table, using the <a href="http://datatables.net" target="_blank">DataTables jQuery plugin</a>.
+		This plugin is defined at YASR.plugins.table. To configure this plugin, change the following settings:
+			<div class="doc">
+				<code>YASR.plugins.table.defaults: object</code>
+				<p>Defaults for table plugin</p>
+			</div>
+			<div class="doc" style="margin-left: 30px;">
+				<code>YASR.plugins.table.defaults.drawCellContent: function (default:
+					YASR.plugins.table.getFormattedValueFromBinding)</code>
+				<p>Draw the cell content, from a given binding</p>
+			</div>
+			<div class="doc" style="margin-left: 30px;">
+				<code>YASR.plugins.table.defaults.fetchTitlesFromPreflabel: boolean (default: true)</code>
+				<p>Try to fetch the label representation for each URI, using the
+					preflabel.org services. (fetching occurs when hovering over the
+					cell)</p>
+			</div>
+			<div class="doc" style="margin-left: 30px;">
+				<code>YASR.plugins.table.defaults.callbacks: object</code>
+				<p>Set a number of handlers for the table</p>
+			</div>
+			<div class="doc" style="margin-left: 60px;">
+				<code>YASR.plugins.table.defaults.onCellMouseEnter: function (default: null)</code>
+				<p>Mouse-enter-cell event. Params that are passed to this function are <code>td: domElement, event: event</code></p>
+			</div>
+			<div class="doc" style="margin-left: 60px;">
+				<code>YASR.plugins.table.defaults.onCellMouseLeave: function (default: null)</code>
+				<p>Mouse-leave-cell event. Params that are passed to this function are <code>td: domElement, event: event</code></p>
+			</div>
+			<div class="doc" style="margin-left: 60px;">
+				<code>YASR.plugins.table.defaults.onCellClick: function (default: null)</code>
+				<p>Cell clicked event. Params that are passed to this function are <code>td: domElement, event: event</code></p>
+			</div>
+			<div class="doc" style="margin-left: 30px;">
+				<code>YASR.plugins.table.defaults.datatable: object</code>
+				<p>Any additional DataTables-related settings. See the <a href="http://datatables.net/reference/option/">DataTables manual</a> for more information</p>
+			</div>
+			<h3 id="outputRawResponse">Raw Response</h3>
+			A plugin which uses <a href="http://codemirror.net/" target="_blank">CodeMirror</a> to present the SPARQL results as-is.
+			<div class="doc">
+				<code>YASR.plugins.rawResponse(yasr: Object, parent: DOM element) → yasr-rawResponse (doc): </code>
+				<p>Constructor of plugin which the query response as-is (highlighted using CodeMirror)</p>
+			</div>
+			<div class="doc">
+			<code>YASR.plugins.rawResponse.defaults</code>
+			<p>Settings object</p>
+			</div>
+			<div class="doc">
+			<code>YASR.plugins.rawResponse.CodeMirror</code>
+			<p>Any additional CodeMirror related settings. See the <a href="http://codemirror.net/doc/manual.html" target="_blank">CodeMirror manual</a> for more information.</p>
+			</div>
+			<h3 id="outputBoolean">Boolean results</h3>
+			<div class="doc">
+				<code>YASR.plugins.boolean(yasr: Object, parent: DOM element) → yasr-boolean (doc): </code>
+				<p>Constructor of plugin which displays boolean info (i.e., the result of ASK queries)</p>
+			</div>
+			<h3 id="outputException">Exceptions</h3>
+			<div class="doc">
+				<code>YASR.plugins.error(yasr: Object, parent: DOM element) → yasr-error (doc): </code>
+				<p>Constructor of plugin which displays query response errors</p>
+			</div>
+			
+
+		<h2 id="addingPlugin">Writing a plugin</h2>
+		<p>
+		To register an autocompletion, one needs to execute the YASQE.registerAutocompleter function. 
+			To register a plugin, add it to YASR by running <code>YASR.registerOutput(pluginName: string, plugin: constructor)</code>.
+			Below, we describe the autocompletion function in more detail, and the object it should return.
+			</p>
+			<div class="doc">
+				<code>constructor(doc: yasr) → configurationObject: Object</code>
+				<p>
+			The constructor should return an object with the following keys:</p>
+			</div>
+			
+			<div class="doc" style="margin-left: 30px">
+				<code>draw: function()</code><span class="label label-primary">Required</span>
+				<p>Draw the results. Use the <code>yasr</code> object to retrieve the SPARQL response</p>
+			</div>
+			<div class="doc" style="margin-left: 30px">
+				<code>canHandleResults: function() → boolean</code><span class="label label-primary">Required</span>
+				<p>Return whether this plugin is able to draw the current results</p>
+			</div>
+			<div class="doc" style="margin-left: 30px">
+				<code>getPriority: int|function</code><span class="label label-primary">Required</span>
+				<p>The priority of a plugin is used to select the output plugin when the currently selected plugin is not able to draw the results.</p>
+			</div>
+			<div class="doc" style="margin-left: 30px">
+				<code>hideFromSelection: boolean</code><span class="label label-default">Optional</span>
+				<p>Whether to show this plugin in the output selector.</p>
+			</div>
+			<div class="doc" style="margin-left: 30px">
+				<code>name: string</code><span class="label label-default">Optional</span>
+				<p>The human-readable name of the plugin, shown in the output selector.</p>
+			</div>
+		
+	
+		
+	</div><!-- col -->
+	<div class="col-md-3" id="sidebarmenu">
+		<div class="bs-docs-sidebar hidden-xs hidden-sm" data-spy="affix" data-offset-top="60">
+			<ul class="nav bs-docs-sidenav">
+				<li><a href="#gettingStarted">Getting Started</a></li>
+				<li><a href="#api">API</a></li>
+				<li><a href="#config">Configuration</a></li>
+				<li><a href="#outputPlugins">Output Plugins</a>
+					<ul class="nav">
+						<li><a href="#outputTable">Table</a></li>
+						<li><a href="#outputRawResponse">Raw Response</a></li>
+						<li><a href="#outputBoolean">Boolean</a></li>
+						<li><a href="#outputException">Exception</a></li>
+					</ul>
+				
+				</li>
+				<li><a href="#addingPlugin">Writing a plugin</a></li>
+			</ul>
+		</div>
+	</div>
+	</div><!-- row -->
+	</div> <!-- /container -->
+
+
+
+
+<script src="doc.js"></script>
+  </body>
+</html>
+
+
+
+
+
+
