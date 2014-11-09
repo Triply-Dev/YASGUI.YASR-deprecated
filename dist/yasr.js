@@ -2565,7 +2565,7 @@ module.exports = {
 module.exports={
   "name": "yasgui-yasr",
   "description": "Yet Another SPARQL Resultset GUI",
-  "version": "2.0.0",
+  "version": "2.0.1",
   "main": "src/main.js",
   "licenses": [
     {
@@ -2632,7 +2632,8 @@ module.exports={
   "browserify-shim": {
     "jquery": "global:jQuery",
     "codemirror": "global:CodeMirror",
-    "../../lib/codemirror": "global:CodeMirror"
+    "../../lib/codemirror": "global:CodeMirror",
+    "../lib/DataTables/media/js/jquery.dataTables.js": "global:jQuery"
   }
 }
 
@@ -3312,7 +3313,7 @@ root.version = {
 var $ = (typeof window !== "undefined" ? window.jQuery : typeof global !== "undefined" ? global.jQuery : null),
 	yutils = require("yasgui-utils"),
 	imgs = require('./imgs.js');
-require("../lib/DataTables/media/js/jquery.dataTables.js");
+(typeof window !== "undefined" ? window.jQuery : typeof global !== "undefined" ? global.jQuery : null);
 
 
 
@@ -3642,7 +3643,7 @@ root.version = {
 };
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"../lib/DataTables/media/js/jquery.dataTables.js":undefined,"../package.json":11,"./bindingsToCsv.js":12,"./imgs.js":16,"yasgui-utils":8}]},{},[1])(1)
+},{"../package.json":11,"./bindingsToCsv.js":12,"./imgs.js":16,"yasgui-utils":8}]},{},[1])(1)
 });
 
 

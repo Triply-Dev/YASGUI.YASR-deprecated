@@ -35323,7 +35323,7 @@ module.exports = {
 module.exports={
   "name": "yasgui-yasr",
   "description": "Yet Another SPARQL Resultset GUI",
-  "version": "2.0.0",
+  "version": "2.0.1",
   "main": "src/main.js",
   "licenses": [
     {
@@ -35390,7 +35390,8 @@ module.exports={
   "browserify-shim": {
     "jquery": "global:jQuery",
     "codemirror": "global:CodeMirror",
-    "../../lib/codemirror": "global:CodeMirror"
+    "../../lib/codemirror": "global:CodeMirror",
+    "../lib/DataTables/media/js/jquery.dataTables.js": "global:jQuery"
   }
 }
 
