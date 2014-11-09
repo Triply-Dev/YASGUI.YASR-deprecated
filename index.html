@@ -91,10 +91,10 @@
       	
       	<div id="downloads">
 	      	<div class="row">
-	      		<div class="row">
+	      		<div id="cdnDownload" class="row">
 	      			<div class="well col-md-12" style="margin-bottom: 0px">
 			      		<h3>CDN</h3>
-			      		<p>The YASR files are hosted via <a href="https://cdnjs.com/libraries/yasr" target="_blank">cdnjs</a>. This is the easiest way to include YASR in your website.</p>
+			      		<p>The YASR files are hosted via <a href="http://www.jsdelivr.com/#!yasr" target="_blank">JsDelivr</a>. This CDN is the easiest way to include YASR in your website.</p>
 			      		<strong>CSS</strong>
 			      		<div><code id="yasrCss"></code></div>
 			      		<strong>JS</strong> <small>Choose either the bundled or the core version</small>
@@ -168,16 +168,6 @@
 		yasr.setResponse({exception: exceptionMsg});
 	}
 	if(!yasr.somethingDrawn()) yasqe.query();
-	
-	
-	
-	var setLinkVal = function(id, href) {
-		var el = document.getElementById(id);
-		el.appendChild(document.createTextNode(href));
-	}
-	setLinkVal('yasrCss', "<link href='//cdnjs.cloudflare.com/ajax/libs/yasr/" + YASR.version.YASR + "/yasr.min.css' rel='stylesheet' type='text/css'/>");
-	setLinkVal('yasrJsBundled', "<script src='//cdnjs.cloudflare.com/ajax/libs/yasr/" + YASR.version.YASR + "/yasr.bundled.min.js'></script" + ">");
-	setLinkVal('yasrJs', "<script src='//cdnjs.cloudflare.com/ajax/libs/yasr/" + YASR.version.YASR + "/yasr.min.js'></script" + ">");
 </script>
   </body>
 </html>
