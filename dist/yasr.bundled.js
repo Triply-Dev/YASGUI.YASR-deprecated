@@ -35323,7 +35323,7 @@ module.exports = {
 module.exports={
   "name": "yasgui-yasr",
   "description": "Yet Another SPARQL Resultset GUI",
-  "version": "2.0.1",
+  "version": "2.0.2",
   "main": "src/main.js",
   "licenses": [
     {
@@ -36065,7 +36065,7 @@ require("../lib/DataTables/media/js/jquery.dataTables.js");
  * 
  */
 var root = module.exports = function(yasr) {
-	var table = $('<table cellpadding="0" cellspacing="0" border="0" class="resultsTable"></table>');
+	var table = null;
 	var options = $.extend(true, {}, root.defaults);
 	
 	var getVariablesAsCols = function() {
@@ -36138,6 +36138,7 @@ var root = module.exports = function(yasr) {
 	};
 	
 	var draw = function() {
+		table = $('<table cellpadding="0" cellspacing="0" border="0" class="resultsTable"></table>');
 		$(yasr.resultsContainer).html(table);
 
 		var dataTableConfig = options.datatable;
