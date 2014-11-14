@@ -16,7 +16,7 @@ require("../lib/DataTables/media/js/jquery.dataTables.js");
  * 
  */
 var root = module.exports = function(yasr) {
-	var table = $('<table cellpadding="0" cellspacing="0" border="0" class="resultsTable"></table>');
+	var table = null;
 	var options = $.extend(true, {}, root.defaults);
 	
 	var getVariablesAsCols = function() {
@@ -89,6 +89,7 @@ var root = module.exports = function(yasr) {
 	};
 	
 	var draw = function() {
+		table = $('<table cellpadding="0" cellspacing="0" border="0" class="resultsTable"></table>');
 		$(yasr.resultsContainer).html(table);
 
 		var dataTableConfig = options.datatable;
