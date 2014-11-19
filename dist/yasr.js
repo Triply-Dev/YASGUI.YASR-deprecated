@@ -1,7 +1,6 @@
 !function(e){if("object"==typeof exports&&"undefined"!=typeof module)module.exports=e();else if("function"==typeof define&&define.amd)define([],e);else{var f;"undefined"!=typeof window?f=window:"undefined"!=typeof global?f=global:"undefined"!=typeof self&&(f=self),f.YASR=e()}}(function(){var define,module,exports;return (function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);var f=new Error("Cannot find module '"+o+"'");throw f.code="MODULE_NOT_FOUND",f}var l=n[o]={exports:{}};t[o][0].call(l.exports,function(e){var n=t[o][1][e];return s(n?n:e)},l,l.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(require,module,exports){
-(function (global){
 'use strict';
-var $ = (typeof window !== "undefined" ? window.jQuery : typeof global !== "undefined" ? global.jQuery : null);
+var $ = (function(){try{return require('jquery')}catch(e){return window.jQuery}})();
 var utils = require("yasgui-utils");
 console = console || {"log":function(){}};//make sure any console statements don't break in IE
 
@@ -219,8 +218,7 @@ root.version = {
 	"yasgui-utils": require("yasgui-utils").version
 };
 
-}).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"../package.json":11,"./boolean.js":13,"./defaults.js":14,"./error.js":15,"./imgs.js":16,"./parsers/wrapper.js":21,"./rawResponse.js":23,"./table.js":24,"yasgui-utils":8}],2:[function(require,module,exports){
+},{"../package.json":11,"./boolean.js":13,"./defaults.js":14,"./error.js":15,"./imgs.js":16,"./parsers/wrapper.js":21,"./rawResponse.js":23,"./table.js":24,"jquery":undefined,"yasgui-utils":8}],2:[function(require,module,exports){
 /**
  * jQuery-csv (jQuery Plugin)
  * version: 0.71 (2012-11-19)
@@ -1071,13 +1069,12 @@ RegExp.escape= function(s) {
 })( jQuery );
 
 },{}],3:[function(require,module,exports){
-(function (global){
 // CodeMirror, copyright (c) by Marijn Haverbeke and others
 // Distributed under an MIT license: http://codemirror.net/LICENSE
 
 (function(mod) {
   if (typeof exports == "object" && typeof module == "object") // CommonJS
-    mod((typeof window !== "undefined" ? window.CodeMirror : typeof global !== "undefined" ? global.CodeMirror : null));
+    mod((function(){try{return require('codemirror')}catch(e){return window.CodeMirror}})());
   else if (typeof define == "function" && define.amd) // AMD
     define(["../../lib/codemirror"], mod);
   else // Plain browser env
@@ -1193,9 +1190,7 @@ RegExp.escape= function(s) {
   });
 });
 
-}).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{}],4:[function(require,module,exports){
-(function (global){
+},{"codemirror":undefined}],4:[function(require,module,exports){
 // CodeMirror, copyright (c) by Marijn Haverbeke and others
 // Distributed under an MIT license: http://codemirror.net/LICENSE
 
@@ -1203,7 +1198,7 @@ RegExp.escape= function(s) {
 
 (function(mod) {
   if (typeof exports == "object" && typeof module == "object") // CommonJS
-    mod((typeof window !== "undefined" ? window.CodeMirror : typeof global !== "undefined" ? global.CodeMirror : null));
+    mod((function(){try{return require('codemirror')}catch(e){return window.CodeMirror}})());
   else if (typeof define == "function" && define.amd) // AMD
     define(["../../lib/codemirror"], mod);
   else // Plain browser env
@@ -1881,15 +1876,13 @@ CodeMirror.defineMIME("application/typescript", { name: "javascript", typescript
 
 });
 
-}).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{}],5:[function(require,module,exports){
-(function (global){
+},{"codemirror":undefined}],5:[function(require,module,exports){
 // CodeMirror, copyright (c) by Marijn Haverbeke and others
 // Distributed under an MIT license: http://codemirror.net/LICENSE
 
 (function(mod) {
   if (typeof exports == "object" && typeof module == "object") // CommonJS
-    mod((typeof window !== "undefined" ? window.CodeMirror : typeof global !== "undefined" ? global.CodeMirror : null));
+    mod((function(){try{return require('codemirror')}catch(e){return window.CodeMirror}})());
   else if (typeof define == "function" && define.amd) // AMD
     define(["../../lib/codemirror"], mod);
   else // Plain browser env
@@ -2269,8 +2262,7 @@ if (!CodeMirror.mimeModes.hasOwnProperty("text/html"))
 
 });
 
-}).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{}],6:[function(require,module,exports){
+},{"codemirror":undefined}],6:[function(require,module,exports){
 ;(function(win){
 	var store = {},
 		doc = win.document,
@@ -2565,7 +2557,7 @@ module.exports = {
 module.exports={
   "name": "yasgui-yasr",
   "description": "Yet Another SPARQL Resultset GUI",
-  "version": "2.0.2",
+  "version": "2.1.0",
   "main": "src/main.js",
   "licenses": [
     {
@@ -2597,13 +2589,13 @@ module.exports={
     "vinyl-buffer": "^1.0.0",
     "vinyl-source-stream": "~0.1.1",
     "watchify": "^0.6.4",
-    "browserify-shim": "^3.8.0",
     "gulp-sourcemaps": "^1.2.4",
     "exorcist": "^0.1.6",
     "vinyl-transform": "0.0.1",
     "gulp-sass": "^1.2.2",
     "yasgui-yasqe": "^2.0.1",
-    "twitter-bootstrap-3.0.0": "^3.0.0"
+    "twitter-bootstrap-3.0.0": "^3.0.0",
+    "browserify-transform-tools": "^1.2.1"
   },
   "bugs": "https://github.com/YASGUI/YASR/issues/",
   "keywords": [
@@ -2629,11 +2621,23 @@ module.exports={
     "codemirror": "^4.2.0",
     "yasgui-utils": "^1.4.1"
   },
-  "browserify-shim": {
-    "jquery": "global:jQuery",
-    "codemirror": "global:CodeMirror",
-    "../../lib/codemirror": "global:CodeMirror",
-    "../lib/DataTables/media/js/jquery.dataTables.js": "global:jQuery"
+  "optionalShim": {
+    "codemirror": {
+      "require": "codemirror",
+      "global": "CodeMirror"
+    },
+    "jquery": {
+      "require": "jquery",
+      "global": "jQuery"
+    },
+    "../../lib/codemirror": {
+      "require": "codemirror",
+      "global": "CodeMirror"
+    },
+    "../lib/DataTables/media/js/jquery.dataTables.js": {
+      "require": "jquery.dataTables",
+      "global": "jQuery"
+    }
   }
 }
 
@@ -2697,8 +2701,7 @@ module.exports = function(result) {
 	return csvString;
 };
 },{}],13:[function(require,module,exports){
-(function (global){
-var $ = (typeof window !== "undefined" ? window.jQuery : typeof global !== "undefined" ? global.jQuery : null);
+var $ = (function(){try{return require('jquery')}catch(e){return window.jQuery}})();
 
 /**
  * Constructor of plugin which displays boolean info
@@ -2759,10 +2762,8 @@ root.version = {
 };
 
 
-}).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"../package.json":11,"./imgs.js":16,"yasgui-utils":8}],14:[function(require,module,exports){
-(function (global){
-var $ = (typeof window !== "undefined" ? window.jQuery : typeof global !== "undefined" ? global.jQuery : null);
+},{"../package.json":11,"./imgs.js":16,"jquery":undefined,"yasgui-utils":8}],14:[function(require,module,exports){
+var $ = (function(){try{return require('jquery')}catch(e){return window.jQuery}})();
 module.exports = {
 	/**
 	 * key of default plugin to use
@@ -2851,10 +2852,8 @@ module.exports = {
 	
 	
 };
-}).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{}],15:[function(require,module,exports){
-(function (global){
-var $ = (typeof window !== "undefined" ? window.jQuery : typeof global !== "undefined" ? global.jQuery : null);
+},{"jquery":undefined}],15:[function(require,module,exports){
+var $ = (function(){try{return require('jquery')}catch(e){return window.jQuery}})();
 
 /**
  * Constructor of plugin which displays SPARQL errors
@@ -2897,8 +2896,7 @@ var root = module.exports = function(yasr) {
 root.defaults = {
 	
 };
-}).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{}],16:[function(require,module,exports){
+},{"jquery":undefined}],16:[function(require,module,exports){
 module.exports = {
 	cross: '<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" x="0px" y="0px" width="30px" height="30px" viewBox="0 0 100 100" enable-background="new 0 0 100 100" xml:space="preserve"><g>	<path d="M83.288,88.13c-2.114,2.112-5.575,2.112-7.689,0L53.659,66.188c-2.114-2.112-5.573-2.112-7.687,0L24.251,87.907   c-2.113,2.114-5.571,2.114-7.686,0l-4.693-4.691c-2.114-2.114-2.114-5.573,0-7.688l21.719-21.721c2.113-2.114,2.113-5.573,0-7.686   L11.872,24.4c-2.114-2.113-2.114-5.571,0-7.686l4.842-4.842c2.113-2.114,5.571-2.114,7.686,0L46.12,33.591   c2.114,2.114,5.572,2.114,7.688,0l21.721-21.719c2.114-2.114,5.573-2.114,7.687,0l4.695,4.695c2.111,2.113,2.111,5.571-0.003,7.686   L66.188,45.973c-2.112,2.114-2.112,5.573,0,7.686L88.13,75.602c2.112,2.111,2.112,5.572,0,7.687L83.288,88.13z"/></g></svg>',
 	check: '<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" x="0px" y="0px" width="30px" height="30px" viewBox="0 0 100 100" enable-background="new 0 0 100 100" xml:space="preserve"><path fill="#000000" d="M14.301,49.982l22.606,17.047L84.361,4.903c2.614-3.733,7.76-4.64,11.493-2.026l0.627,0.462  c3.732,2.614,4.64,7.758,2.025,11.492l-51.783,79.77c-1.955,2.791-3.896,3.762-7.301,3.988c-3.405,0.225-5.464-1.039-7.508-3.084  L2.447,61.814c-3.263-3.262-3.263-8.553,0-11.814l0.041-0.019C5.75,46.718,11.039,46.718,14.301,49.982z"/></svg>',
@@ -2908,15 +2906,12 @@ module.exports = {
 	download: '<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" baseProfile="tiny" x="0px" y="0px" width="100%" height="100%" viewBox="0 0 100 100" xml:space="preserve"><g id="Captions"></g><g id="Your_Icon">	<path fill-rule="evenodd" fill="#000000" d="M88,84v-2c0-2.961-0.859-4-4-4H16c-2.961,0-4,0.98-4,4v2c0,3.102,1.039,4,4,4h68   C87.02,88,88,87.039,88,84z M58,12H42c-5,0-6,0.941-6,6v22H16l34,34l34-34H64V18C64,12.941,62.939,12,58,12z"/></g></svg>',
 };
 },{}],17:[function(require,module,exports){
-(function (global){
-var $ = (typeof window !== "undefined" ? window.jQuery : typeof global !== "undefined" ? global.jQuery : null);
+var $ = (function(){try{return require('jquery')}catch(e){return window.jQuery}})();
 var root = module.exports = function(queryResponse) {
 	return require("./dlv.js")(queryResponse, ",");
 };
-}).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"./dlv.js":18}],18:[function(require,module,exports){
-(function (global){
-var $ = jQuery = (typeof window !== "undefined" ? window.jQuery : typeof global !== "undefined" ? global.jQuery : null);
+},{"./dlv.js":18,"jquery":undefined}],18:[function(require,module,exports){
+var $ = jQuery = (function(){try{return require('jquery')}catch(e){return window.jQuery}})();
 require("../../lib/jquery.csv-0.71.js");
 var root = module.exports = function(queryResponse, separator) {
 	var json = {};
@@ -2976,10 +2971,8 @@ var root = module.exports = function(queryResponse, separator) {
 	
 	return json;
 };
-}).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"../../lib/jquery.csv-0.71.js":2}],19:[function(require,module,exports){
-(function (global){
-var $ = (typeof window !== "undefined" ? window.jQuery : typeof global !== "undefined" ? global.jQuery : null);
+},{"../../lib/jquery.csv-0.71.js":2,"jquery":undefined}],19:[function(require,module,exports){
+var $ = (function(){try{return require('jquery')}catch(e){return window.jQuery}})();
 var root = module.exports = function(queryResponse) {
 	
 	if (typeof queryResponse == "string") {
@@ -2995,17 +2988,13 @@ var root = module.exports = function(queryResponse) {
 	return false;
 	
 };
-}).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{}],20:[function(require,module,exports){
-(function (global){
-var $ = (typeof window !== "undefined" ? window.jQuery : typeof global !== "undefined" ? global.jQuery : null);
+},{"jquery":undefined}],20:[function(require,module,exports){
+var $ = (function(){try{return require('jquery')}catch(e){return window.jQuery}})();
 var root = module.exports = function(queryResponse) {
 	return require("./dlv.js")(queryResponse, "\t");
 };
-}).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"./dlv.js":18}],21:[function(require,module,exports){
-(function (global){
-var $ = (typeof window !== "undefined" ? window.jQuery : typeof global !== "undefined" ? global.jQuery : null);
+},{"./dlv.js":18,"jquery":undefined}],21:[function(require,module,exports){
+var $ = (function(){try{return require('jquery')}catch(e){return window.jQuery}})();
 
 var root = module.exports = function(queryResponse) {
 	var parsers = {
@@ -3150,10 +3139,8 @@ var root = module.exports = function(queryResponse) {
 
 
 
-}).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"./csv.js":17,"./json.js":19,"./tsv.js":20,"./xml.js":22}],22:[function(require,module,exports){
-(function (global){
-var $ = (typeof window !== "undefined" ? window.jQuery : typeof global !== "undefined" ? global.jQuery : null);
+},{"./csv.js":17,"./json.js":19,"./tsv.js":20,"./xml.js":22,"jquery":undefined}],22:[function(require,module,exports){
+var $ = (function(){try{return require('jquery')}catch(e){return window.jQuery}})();
 var root = module.exports = function(xml) {
 
 	
@@ -3237,11 +3224,9 @@ var root = module.exports = function(xml) {
 	return json;
 };
 
-}).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{}],23:[function(require,module,exports){
-(function (global){
-var $ = (typeof window !== "undefined" ? window.jQuery : typeof global !== "undefined" ? global.jQuery : null),
-	CodeMirror = (typeof window !== "undefined" ? window.CodeMirror : typeof global !== "undefined" ? global.CodeMirror : null);
+},{"jquery":undefined}],23:[function(require,module,exports){
+var $ = (function(){try{return require('jquery')}catch(e){return window.jQuery}})(),
+	CodeMirror = (function(){try{return require('codemirror')}catch(e){return window.CodeMirror}})();
 
 require('codemirror/addon/edit/matchbrackets.js');
 require('codemirror/mode/xml/xml.js');
@@ -3307,13 +3292,11 @@ root.version = {
 	"jquery": $.fn.jquery,
 	"CodeMirror" : CodeMirror.version
 };
-}).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"../package.json":11,"codemirror/addon/edit/matchbrackets.js":3,"codemirror/mode/javascript/javascript.js":4,"codemirror/mode/xml/xml.js":5}],24:[function(require,module,exports){
-(function (global){
-var $ = (typeof window !== "undefined" ? window.jQuery : typeof global !== "undefined" ? global.jQuery : null),
+},{"../package.json":11,"codemirror":undefined,"codemirror/addon/edit/matchbrackets.js":3,"codemirror/mode/javascript/javascript.js":4,"codemirror/mode/xml/xml.js":5,"jquery":undefined}],24:[function(require,module,exports){
+var $ = (function(){try{return require('jquery')}catch(e){return window.jQuery}})(),
 	yutils = require("yasgui-utils"),
 	imgs = require('./imgs.js');
-(typeof window !== "undefined" ? window.jQuery : typeof global !== "undefined" ? global.jQuery : null);
+(function(){try{return require('jquery.dataTables')}catch(e){return window.jQuery}})();
 
 
 
@@ -3330,16 +3313,6 @@ var $ = (typeof window !== "undefined" ? window.jQuery : typeof global !== "unde
 var root = module.exports = function(yasr) {
 	var table = null;
 	var options = $.extend(true, {}, root.defaults);
-	
-	var getVariablesAsCols = function() {
-		var cols = [];
-		cols.push({"title": ""});//row numbers
-		var sparqlVars = yasr.results.getVariables();
-		for (var i = 0; i < sparqlVars.length; i++) {
-			cols.push({"title": sparqlVars[i]});
-		}
-		return cols;
-	};
 	
 
 	var getRows = function() {
@@ -3358,7 +3331,7 @@ var root = module.exports = function(yasr) {
 				var sparqlVar = vars[colId];
 				if (sparqlVar in binding) {
 					if (options.drawCellContent) {
-						row.push(options.drawCellContent(rowId, colId, binding[sparqlVar], usedPrefixes));
+						row.push(options.drawCellContent(yasr, rowId, colId, binding, sparqlVar, usedPrefixes));
 					} else {
 						row.push("");
 					}
@@ -3406,7 +3379,7 @@ var root = module.exports = function(yasr) {
 
 		var dataTableConfig = options.datatable;
 		dataTableConfig.data = getRows();
-		dataTableConfig.columns = getVariablesAsCols();
+		dataTableConfig.columns = options.getColumns(yasr);
 		table.DataTable($.extend(true, {}, dataTableConfig));//make copy. datatables adds properties for backwards compatability reasons, and don't want this cluttering our own 
 		
 		
@@ -3473,8 +3446,8 @@ var root = module.exports = function(yasr) {
 };
 
 
-
-var getFormattedValueFromBinding = function(rowId, colId, binding, usedPrefixes) {
+var getFormattedValueFromBinding = function(yasr, rowId, colId, bindings, sparqlVar, usedPrefixes) {
+	var binding = bindings[sparqlVar];
 	var value = null;
 	if (binding.type == "uri") {
 		var href = visibleString = binding.value;
@@ -3556,6 +3529,15 @@ root.defaults = {
 	 */
 	drawCellContent: getFormattedValueFromBinding,
 	
+	getColumns: function(yasr) {
+		var cols = [];
+		cols.push({"title": ""});//row numbers
+		var sparqlVars = yasr.results.getVariables();
+		for (var i = 0; i < sparqlVars.length; i++) {
+			cols.push({"title": sparqlVars[i]});
+		}
+		return cols;
+	},
 	/**
 	 * Try to fetch the label representation for each URI, using the preflabel.org services. (fetching occurs when hovering over the cell)
 	 * 
@@ -3643,8 +3625,7 @@ root.version = {
 	"jquery-datatables": $.fn.DataTable.version
 };
 
-}).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"../package.json":11,"./bindingsToCsv.js":12,"./imgs.js":16,"yasgui-utils":8}]},{},[1])(1)
+},{"../package.json":11,"./bindingsToCsv.js":12,"./imgs.js":16,"jquery":undefined,"jquery.dataTables":undefined,"yasgui-utils":8}]},{},[1])(1)
 });
 
 

@@ -35323,7 +35323,7 @@ module.exports = {
 module.exports={
   "name": "yasgui-yasr",
   "description": "Yet Another SPARQL Resultset GUI",
-  "version": "2.0.2",
+  "version": "2.1.0",
   "main": "src/main.js",
   "licenses": [
     {
@@ -35355,13 +35355,13 @@ module.exports={
     "vinyl-buffer": "^1.0.0",
     "vinyl-source-stream": "~0.1.1",
     "watchify": "^0.6.4",
-    "browserify-shim": "^3.8.0",
     "gulp-sourcemaps": "^1.2.4",
     "exorcist": "^0.1.6",
     "vinyl-transform": "0.0.1",
     "gulp-sass": "^1.2.2",
     "yasgui-yasqe": "^2.0.1",
-    "twitter-bootstrap-3.0.0": "^3.0.0"
+    "twitter-bootstrap-3.0.0": "^3.0.0",
+    "browserify-transform-tools": "^1.2.1"
   },
   "bugs": "https://github.com/YASGUI/YASR/issues/",
   "keywords": [
@@ -35387,11 +35387,23 @@ module.exports={
     "codemirror": "^4.2.0",
     "yasgui-utils": "^1.4.1"
   },
-  "browserify-shim": {
-    "jquery": "global:jQuery",
-    "codemirror": "global:CodeMirror",
-    "../../lib/codemirror": "global:CodeMirror",
-    "../lib/DataTables/media/js/jquery.dataTables.js": "global:jQuery"
+  "optionalShim": {
+    "codemirror": {
+      "require": "codemirror",
+      "global": "CodeMirror"
+    },
+    "jquery": {
+      "require": "jquery",
+      "global": "jQuery"
+    },
+    "../../lib/codemirror": {
+      "require": "codemirror",
+      "global": "CodeMirror"
+    },
+    "../lib/DataTables/media/js/jquery.dataTables.js": {
+      "require": "jquery.dataTables",
+      "global": "jQuery"
+    }
   }
 }
 
@@ -36068,16 +36080,6 @@ var root = module.exports = function(yasr) {
 	var table = null;
 	var options = $.extend(true, {}, root.defaults);
 	
-	var getVariablesAsCols = function() {
-		var cols = [];
-		cols.push({"title": ""});//row numbers
-		var sparqlVars = yasr.results.getVariables();
-		for (var i = 0; i < sparqlVars.length; i++) {
-			cols.push({"title": sparqlVars[i]});
-		}
-		return cols;
-	};
-	
 
 	var getRows = function() {
 		var rows = [];
@@ -36095,7 +36097,7 @@ var root = module.exports = function(yasr) {
 				var sparqlVar = vars[colId];
 				if (sparqlVar in binding) {
 					if (options.drawCellContent) {
-						row.push(options.drawCellContent(rowId, colId, binding[sparqlVar], usedPrefixes));
+						row.push(options.drawCellContent(yasr, rowId, colId, binding, sparqlVar, usedPrefixes));
 					} else {
 						row.push("");
 					}
@@ -36143,7 +36145,7 @@ var root = module.exports = function(yasr) {
 
 		var dataTableConfig = options.datatable;
 		dataTableConfig.data = getRows();
-		dataTableConfig.columns = getVariablesAsCols();
+		dataTableConfig.columns = options.getColumns(yasr);
 		table.DataTable($.extend(true, {}, dataTableConfig));//make copy. datatables adds properties for backwards compatability reasons, and don't want this cluttering our own 
 		
 		
@@ -36210,8 +36212,8 @@ var root = module.exports = function(yasr) {
 };
 
 
-
-var getFormattedValueFromBinding = function(rowId, colId, binding, usedPrefixes) {
+var getFormattedValueFromBinding = function(yasr, rowId, colId, bindings, sparqlVar, usedPrefixes) {
+	var binding = bindings[sparqlVar];
 	var value = null;
 	if (binding.type == "uri") {
 		var href = visibleString = binding.value;
@@ -36293,6 +36295,15 @@ root.defaults = {
 	 */
 	drawCellContent: getFormattedValueFromBinding,
 	
+	getColumns: function(yasr) {
+		var cols = [];
+		cols.push({"title": ""});//row numbers
+		var sparqlVars = yasr.results.getVariables();
+		for (var i = 0; i < sparqlVars.length; i++) {
+			cols.push({"title": sparqlVars[i]});
+		}
+		return cols;
+	},
 	/**
 	 * Try to fetch the label representation for each URI, using the preflabel.org services. (fetching occurs when hovering over the cell)
 	 * 
