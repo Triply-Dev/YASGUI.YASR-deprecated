@@ -1,7 +1,7 @@
 {
   "name": "yasgui-yasr",
   "description": "Yet Another SPARQL Resultset GUI",
-  "version": "2.0.2",
+  "version": "2.1.0",
   "main": "src/main.js",
   "licenses": [
     {
@@ -39,7 +39,7 @@
     "gulp-sass": "^1.2.2",
     "yasgui-yasqe": "^2.0.1",
     "twitter-bootstrap-3.0.0": "^3.0.0",
-	"browserify-transform-tools": "^1.2.1"
+    "browserify-transform-tools": "^1.2.1"
   },
   "bugs": "https://github.com/YASGUI/YASR/issues/",
   "keywords": [
@@ -78,9 +78,9 @@
       "require": "codemirror",
       "global": "CodeMirror"
     },
-	"../lib/DataTables/media/js/jquery.dataTables.js": {
-		"require": "jquery.dataTables",
-		"global": "jQuery"
-	}
+    "../lib/DataTables/media/js/jquery.dataTables.js": {
+      "require": "jquery.dataTables",
+      "global": "jQuery"
+    }
   }
 }
