@@ -148,15 +148,19 @@
 				<p>Defaults for table plugin</p>
 			</div>
 			<div class="doc" style="margin-left: 30px;">
-				<code>YASR.plugins.table.defaults.drawCellContent: function (default:
-					YASR.plugins.table.getFormattedValueFromBinding)</code>
-				<p>Draw the cell content, from a given binding</p>
+				<code style="display: inline-block; white-space:normal;">YASR.plugins.table.defaults.drawCellContent: <br>function (yasr: doc, rowId: int, colId: int, bindings: object, var: string, usedPrefixes: object)<br>  → string <Br>(default: YASR.plugins.table.getFormattedValueFromBinding)</code>
+				<p>Draw the cell content, for a given binding</p>
 			</div>
 			<div class="doc" style="margin-left: 30px;">
 				<code>YASR.plugins.table.defaults.fetchTitlesFromPreflabel: boolean (default: true)</code>
 				<p>Try to fetch the label representation for each URI, using the
 					preflabel.org services. (fetching occurs when hovering over the
 					cell)</p>
+			</div>
+			
+			<div class="doc" style="margin-left: 30px;">
+				<code >YASR.plugins.table.defaults.getColumns: function(yasr: doc) → array</code>
+				<p>Return the columns you'd like to draw. The output array should be in a format supports by DataTables (for more info see <a href="https://datatables.net/reference/option/columns.data" target="_blank">this</a>)</p>
 			</div>
 			<div class="doc" style="margin-left: 30px;">
 				<code>YASR.plugins.table.defaults.callbacks: object</code>

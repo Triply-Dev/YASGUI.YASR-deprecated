@@ -19,16 +19,6 @@ var root = module.exports = function(yasr) {
 	var table = null;
 	var options = $.extend(true, {}, root.defaults);
 	
-	var getVariablesAsCols = function() {
-		var cols = [];
-		cols.push({"title": ""});//row numbers
-		var sparqlVars = yasr.results.getVariables();
-		for (var i = 0; i < sparqlVars.length; i++) {
-			cols.push({"title": sparqlVars[i]});
-		}
-		return cols;
-	};
-	
 
 	var getRows = function() {
 		var rows = [];
@@ -46,7 +36,7 @@ var root = module.exports = function(yasr) {
 				var sparqlVar = vars[colId];
 				if (sparqlVar in binding) {
 					if (options.drawCellContent) {
-						row.push(options.drawCellContent(rowId, colId, binding[sparqlVar], usedPrefixes));
+						row.push(options.drawCellContent(yasr, rowId, colId, binding, sparqlVar, usedPrefixes));
 					} else {
 						row.push("");
 					}
@@ -94,7 +84,7 @@ var root = module.exports = function(yasr) {
 
 		var dataTableConfig = options.datatable;
 		dataTableConfig.data = getRows();
-		dataTableConfig.columns = getVariablesAsCols();
+		dataTableConfig.columns = options.getColumns(yasr);
 		table.DataTable($.extend(true, {}, dataTableConfig));//make copy. datatables adds properties for backwards compatability reasons, and don't want this cluttering our own 
 		
 		
@@ -161,8 +151,8 @@ var root = module.exports = function(yasr) {
 };
 
 
-
-var getFormattedValueFromBinding = function(rowId, colId, binding, usedPrefixes) {
+var getFormattedValueFromBinding = function(yasr, rowId, colId, bindings, sparqlVar, usedPrefixes) {
+	var binding = bindings[sparqlVar];
 	var value = null;
 	if (binding.type == "uri") {
 		var href = visibleString = binding.value;
@@ -244,6 +234,15 @@ root.defaults = {
 	 */
 	drawCellContent: getFormattedValueFromBinding,
 	
+	getColumns: function(yasr) {
+		var cols = [];
+		cols.push({"title": ""});//row numbers
+		var sparqlVars = yasr.results.getVariables();
+		for (var i = 0; i < sparqlVars.length; i++) {
+			cols.push({"title": sparqlVars[i]});
+		}
+		return cols;
+	},
 	/**
 	 * Try to fetch the label representation for each URI, using the preflabel.org services. (fetching occurs when hovering over the cell)
 	 * 
