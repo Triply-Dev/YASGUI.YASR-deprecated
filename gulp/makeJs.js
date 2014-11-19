@@ -8,19 +8,19 @@ var gulp = require('gulp'),
 	uglify = require("gulp-uglify"),
 	rename = require("gulp-rename"),
 	streamify = require('gulp-streamify'),
-	shim = require('browserify-shim'),
 	paths = require("./paths.js"),
 	buffer = require('vinyl-buffer'),
 	exorcist = require('exorcist'),
+	optionalShim = require('./optionalShim.js'),
 	sourcemaps = require('gulp-sourcemaps');
 
-
 gulp.task('browserify', function() {
-	browserify({entries: ["./src/main.js"],standalone: "YASR", debug: true, global:true})
-		.transform({global:true},shim)
+	browserify({entries: ["./src/main.js"],standalone: "YASR", debug: true})
+		.transform({global:true}, optionalShim)
 		.exclude('jquery')
 		.exclude('codemirror')
-		.exclude('../lib/DataTables/media/js/jquery.dataTables.js') 
+		.exclude('../lib/DataTables/media/js/jquery.dataTables.js')
+		.exclude('jquery.dataTables')
 		.bundle()
 		.pipe(exorcist(paths.bundleDir + '/' + paths.bundleName + '.js.map'))
 		.pipe(source(paths.bundleName + '.js'))

@@ -33,13 +33,13 @@
     "vinyl-buffer": "^1.0.0",
     "vinyl-source-stream": "~0.1.1",
     "watchify": "^0.6.4",
-    "browserify-shim": "^3.8.0",
     "gulp-sourcemaps": "^1.2.4",
     "exorcist": "^0.1.6",
     "vinyl-transform": "0.0.1",
     "gulp-sass": "^1.2.2",
     "yasgui-yasqe": "^2.0.1",
-    "twitter-bootstrap-3.0.0": "^3.0.0"
+    "twitter-bootstrap-3.0.0": "^3.0.0",
+	"browserify-transform-tools": "^1.2.1"
   },
   "bugs": "https://github.com/YASGUI/YASR/issues/",
   "keywords": [
@@ -65,10 +65,22 @@
     "codemirror": "^4.2.0",
     "yasgui-utils": "^1.4.1"
   },
-  "browserify-shim": {
-    "jquery": "global:jQuery",
-    "codemirror": "global:CodeMirror",
-    "../../lib/codemirror": "global:CodeMirror",
-    "../lib/DataTables/media/js/jquery.dataTables.js": "global:jQuery"
+  "optionalShim": {
+    "codemirror": {
+      "require": "codemirror",
+      "global": "CodeMirror"
+    },
+    "jquery": {
+      "require": "jquery",
+      "global": "jQuery"
+    },
+    "../../lib/codemirror": {
+      "require": "codemirror",
+      "global": "CodeMirror"
+    },
+	"../lib/DataTables/media/js/jquery.dataTables.js": {
+		"require": "jquery.dataTables",
+		"global": "jQuery"
+	}
   }
 }
