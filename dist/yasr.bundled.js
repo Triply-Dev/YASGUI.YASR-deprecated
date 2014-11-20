@@ -35323,7 +35323,7 @@ module.exports = {
 module.exports={
   "name": "yasgui-yasr",
   "description": "Yet Another SPARQL Resultset GUI",
-  "version": "2.1.0",
+  "version": "2.2.0",
   "main": "src/main.js",
   "licenses": [
     {
@@ -36078,7 +36078,11 @@ require("../lib/DataTables/media/js/jquery.dataTables.js");
  */
 var root = module.exports = function(yasr) {
 	var table = null;
-	var options = $.extend(true, {}, root.defaults);
+	var plugin = {
+		name: "Table",
+		getPriority: 10,
+	};
+	var options = plugin.options = $.extend(true, {}, root.defaults);
 	
 
 	var getRows = function() {
@@ -36096,8 +36100,9 @@ var root = module.exports = function(yasr) {
 			for (var colId = 0; colId < vars.length; colId++) {
 				var sparqlVar = vars[colId];
 				if (sparqlVar in binding) {
-					if (options.drawCellContent) {
-						row.push(options.drawCellContent(yasr, rowId, colId, binding, sparqlVar, usedPrefixes));
+					if (options.getCellContent) {
+						
+						row.push(options.getCellContent(yasr, plugin, binding, sparqlVar, {'rowId': rowId, 'colId': colId, 'usedPrefixes': usedPrefixes}));
 					} else {
 						row.push("");
 					}
@@ -36139,13 +36144,13 @@ var root = module.exports = function(yasr) {
 		});
 	};
 	
-	var draw = function() {
+	plugin.draw = function() {
 		table = $('<table cellpadding="0" cellspacing="0" border="0" class="resultsTable"></table>');
 		$(yasr.resultsContainer).html(table);
 
 		var dataTableConfig = options.datatable;
 		dataTableConfig.data = getRows();
-		dataTableConfig.columns = options.getColumns(yasr);
+		dataTableConfig.columns = options.getColumns(yasr, plugin);
 		table.DataTable($.extend(true, {}, dataTableConfig));//make copy. datatables adds properties for backwards compatability reasons, and don't want this cluttering our own 
 		
 		
@@ -36187,12 +36192,12 @@ var root = module.exports = function(yasr) {
 	 * @type function
 	 * @default If resultset contains variables in the resultset, return true
 	 */
-	var canHandleResults = function(){
+	plugin.canHandleResults = function(){
 		return yasr.results && yasr.results.getVariables() && yasr.results.getVariables().length > 0;
 	};
 
 	
-	var getDownloadInfo = function() {
+	plugin.getDownloadInfo = function() {
 		if (!yasr.results) return null;
 		return {
 			getContent: function(){return require("./bindingsToCsv.js")(yasr.results.getAsJson());},
@@ -36202,47 +36207,53 @@ var root = module.exports = function(yasr) {
 		};
 	};
 	
-	return {
-		name: "Table",
-		draw: draw,
-		getPriority: 10,
-		getDownloadInfo: getDownloadInfo,
-		canHandleResults: canHandleResults,
-	}
+	return plugin;
 };
 
 
-var getFormattedValueFromBinding = function(yasr, rowId, colId, bindings, sparqlVar, usedPrefixes) {
+var formatLiteral = function(yasr, plugin, literalBinding) {
+	var stringRepresentation = literalBinding.value;
+	if (literalBinding["xml:lang"]) {
+		stringRepresentation = '"' + literalBinding.value + '"@' + literalBinding["xml:lang"];
+	} else if (literalBinding.datatype) {
+		var xmlSchemaNs = "http://www.w3.org/2001/XMLSchema#";
+		var dataType = literalBinding.datatype;
+		if (dataType.indexOf(xmlSchemaNs) == 0) {
+			dataType = "xsd:" + dataType.substring(xmlSchemaNs.length);
+		} else {
+			dataType = "<" + dataType + ">";
+		}
+		
+		stringRepresentation = '"' + stringRepresentation + '"^^' + dataType;
+	}
+	return stringRepresentation;
+};
+var getCellContent = function(yasr, plugin, bindings, sparqlVar, context) {
 	var binding = bindings[sparqlVar];
 	var value = null;
+	console.log(bindings, sparqlVar);
 	if (binding.type == "uri") {
+		var title = null;
 		var href = visibleString = binding.value;
-		if (usedPrefixes) {
-			for (var prefix in usedPrefixes) {
-				if (visibleString.indexOf(usedPrefixes[prefix]) == 0) {
-					visibleString = prefix + href.substring(usedPrefixes[prefix].length);
+		if (context.usedPrefixes) {
+			for (var prefix in context.usedPrefixes) {
+				if (visibleString.indexOf(context.usedPrefixes[prefix]) == 0) {
+					visibleString = prefix + href.substring(context.usedPrefixes[prefix].length);
 					break;
 				}
 			}
 		}
-		value = "<a class='uri' target='_blank' href='" + href + "'>" + visibleString + "</a>";
-	} else {
-		var stringRepresentation = binding.value;
-		if (binding["xml:lang"]) {
-			stringRepresentation = '"' + binding.value + '"@' + binding["xml:lang"];
-		} else if (binding.datatype) {
-			var xmlSchemaNs = "http://www.w3.org/2001/XMLSchema#";
-			var dataType = binding.datatype;
-			if (dataType.indexOf(xmlSchemaNs) == 0) {
-				dataType = "xsd:" + dataType.substring(xmlSchemaNs.length);
-			} else {
-				dataType = "<" + dataType + ">";
+		if (plugin.options.mergeLabelsWithUris) {
+			var postFix = (typeof plugin.options.mergeLabelsWithUris == "string"? plugin.options.mergeLabelsWithUris: "Label");
+			if (bindings[sparqlVar + postFix]) {
+				visibleString = formatLiteral(yasr, plugin, bindings[sparqlVar + postFix]);
+				title = href;
 			}
-			
-			stringRepresentation = '"' + stringRepresentation + '"^^' + dataType;
 		}
 		
-		value = "<span class='nonUri'>" + stringRepresentation + "</span>";
+		value = "<a " + (title? "title='" + href + "' ": "") + "class='uri' target='_blank' href='" + href + "'>" + visibleString + "</a>";
+	} else {
+		value = "<span class='nonUri'>" + formatLiteral(yasr, plugin, binding) + "</span>";
 	}
 	return value;
 };
@@ -36293,15 +36304,27 @@ root.defaults = {
 	 * @return string
 	 * @default YASR.plugins.table.getFormattedValueFromBinding
 	 */
-	drawCellContent: getFormattedValueFromBinding,
+	getCellContent: getCellContent,
 	
-	getColumns: function(yasr) {
-		var cols = [];
-		cols.push({"title": ""});//row numbers
-		var sparqlVars = yasr.results.getVariables();
-		for (var i = 0; i < sparqlVars.length; i++) {
-			cols.push({"title": sparqlVars[i]});
+	getColumns: function(yasr, plugin) {
+		var vars = yasr.results.getVariables().slice();
+		if (plugin.options.mergeLabelsWithUris) {
+			var postFix = (typeof plugin.options.mergeLabelsWithUris == "string"? plugin.options.mergeLabelsWithUris: "Label");
+			yasr.results.getVariables().forEach(function(variable) {
+				var labelIndex = vars.indexOf(variable + postFix);
+				if (labelIndex >= 0) {
+					//ah, a label equivalent for this variable exists. remove it
+					vars.splice(labelIndex, 1);
+				}
+			});
 		}
+		
+		//Now convert array to one that is used as input for the datatables plugin 
+		var cols = [];
+		cols.push({"title": ""});//row numbers column
+		vars.forEach(function(variable) {
+			cols.push({"title": variable});
+		});
 		return cols;
 	},
 	/**
@@ -36312,6 +36335,8 @@ root.defaults = {
 	 * @default true
 	 */
 	fetchTitlesFromPreflabel: true,
+	
+	mergeLabelsWithUris: false,
 	/**
 	 * Set a number of handlers for the table
 	 * 
