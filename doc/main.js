@@ -59,7 +59,7 @@ $(document).ready(function() {
 			};
 			data.forEach(function(gist) {
 				if (gist.description.indexOf("#YASR") >= 0) {
-					var gistDiv = $("<div>").addClass("gist").appendTo(gistContainer);
+					var gistDiv = $("<div>").addClass("gist").addClass("well").appendTo(gistContainer);
 					$("<h4>").text(processLabel(gist.description)).appendTo(gistDiv);
 					if (gist.files["README.md"]) {
 						var description = $("<p>").appendTo(gistDiv);
