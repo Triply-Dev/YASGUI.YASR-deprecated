@@ -2557,7 +2557,7 @@ module.exports = {
 module.exports={
   "name": "yasgui-yasr",
   "description": "Yet Another SPARQL Resultset GUI",
-  "version": "2.2.0",
+  "version": "2.2.1",
   "main": "src/main.js",
   "licenses": [
     {
@@ -3335,7 +3335,6 @@ var root = module.exports = function(yasr) {
 				var sparqlVar = vars[colId];
 				if (sparqlVar in binding) {
 					if (options.getCellContent) {
-						
 						row.push(options.getCellContent(yasr, plugin, binding, sparqlVar, {'rowId': rowId, 'colId': colId, 'usedPrefixes': usedPrefixes}));
 					} else {
 						row.push("");
@@ -3465,7 +3464,6 @@ var formatLiteral = function(yasr, plugin, literalBinding) {
 var getCellContent = function(yasr, plugin, bindings, sparqlVar, context) {
 	var binding = bindings[sparqlVar];
 	var value = null;
-	console.log(bindings, sparqlVar);
 	if (binding.type == "uri") {
 		var title = null;
 		var href = visibleString = binding.value;
@@ -3484,7 +3482,6 @@ var getCellContent = function(yasr, plugin, bindings, sparqlVar, context) {
 				title = href;
 			}
 		}
-		
 		value = "<a " + (title? "title='" + href + "' ": "") + "class='uri' target='_blank' href='" + href + "'>" + visibleString + "</a>";
 	} else {
 		value = "<span class='nonUri'>" + formatLiteral(yasr, plugin, binding) + "</span>";
@@ -3541,23 +3538,23 @@ root.defaults = {
 	getCellContent: getCellContent,
 	
 	getColumns: function(yasr, plugin) {
-		var vars = yasr.results.getVariables().slice();
-		if (plugin.options.mergeLabelsWithUris) {
+		var includeVariable = function(variableToCheck) {
+			if (!plugin.options.mergeLabelsWithUris) return true;
 			var postFix = (typeof plugin.options.mergeLabelsWithUris == "string"? plugin.options.mergeLabelsWithUris: "Label");
-			yasr.results.getVariables().forEach(function(variable) {
-				var labelIndex = vars.indexOf(variable + postFix);
-				if (labelIndex >= 0) {
-					//ah, a label equivalent for this variable exists. remove it
-					vars.splice(labelIndex, 1);
+			if (variableToCheck.indexOf(postFix, variableToCheck.length - postFix.length) !== -1) {
+				//this one ends with a postfix
+				if (yasr.results.getVariables().indexOf(variableToCheck.substring(0, variableToCheck.length - postFix.length)) >= 0) {
+					//we have a shorter version of this variable. So, do not include the ..<postfix> variable in the table
+					return false;
 				}
-			});
-		}
+			}
+			return true;
+		};
 		
-		//Now convert array to one that is used as input for the datatables plugin 
 		var cols = [];
 		cols.push({"title": ""});//row numbers column
-		vars.forEach(function(variable) {
-			cols.push({"title": variable});
+		yasr.results.getVariables().forEach(function(variable) {
+			cols.push({"title": variable, "visible": includeVariable(variable)});
 		});
 		return cols;
 	},
@@ -3570,7 +3567,7 @@ root.defaults = {
 	 */
 	fetchTitlesFromPreflabel: true,
 	
-	mergeLabelsWithUris: false,
+	mergeLabelsWithUris: true,
 	/**
 	 * Set a number of handlers for the table
 	 * 
