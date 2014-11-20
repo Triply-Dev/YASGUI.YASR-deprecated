@@ -272,7 +272,7 @@ root.defaults = {
 	 */
 	fetchTitlesFromPreflabel: true,
 	
-	mergeLabelsWithUris: true,
+	mergeLabelsWithUris: false,
 	/**
 	 * Set a number of handlers for the table
 	 * 
