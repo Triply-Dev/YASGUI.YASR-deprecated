@@ -59,6 +59,12 @@ var root = module.exports = function(yasr) {
 		table.on( 'order.dt', function () {
 		    drawSvgIcons();
 		});
+		if (options.persistency && options.persistency.tableLength) {
+			table.on('length.dt', function(e, settings, len) {
+				var persistencyId = (typeof options.persistency.tableLength == "string" ? options.persistency.tableLength: options.persistency.tableLength(yasr));
+				yutils.storage.set(persistencyId, len, "month");
+			});
+		}
 		$.extend(true, options.callbacks, options.handlers);
 		table.delegate("td", "click", function(event) {
 			if (options.callbacks && options.callbacks.onCellClick) {
@@ -81,6 +87,7 @@ var root = module.exports = function(yasr) {
 				
 			}
 		});
+		
 	};
 	
 	plugin.draw = function() {
@@ -90,6 +97,15 @@ var root = module.exports = function(yasr) {
 		var dataTableConfig = options.datatable;
 		dataTableConfig.data = getRows();
 		dataTableConfig.columns = options.getColumns(yasr, plugin);
+		
+		//fetch stored datatables length value
+		if (options.persistency && options.persistency.tableLength) {
+			var persistencyId = (typeof options.persistency.tableLength == "string" ? options.persistency.tableLength: options.persistency.tableLength(yasr));
+			dataTableConfig.pageLength = yutils.storage.get(persistencyId);
+		}
+		
+		
+		
 		table.DataTable($.extend(true, {}, dataTableConfig));//make copy. datatables adds properties for backwards compatability reasons, and don't want this cluttering our own 
 		
 		
@@ -243,6 +259,12 @@ root.defaults = {
 	 * @default YASR.plugins.table.getFormattedValueFromBinding
 	 */
 	getCellContent: getCellContent,
+	
+	persistency: {
+		tableLength: function (yasr){
+			return "tableLength_" + $(yasr.container).closest('[id]').attr('id');
+		},
+	},
 	
 	getColumns: function(yasr, plugin) {
 		var includeVariable = function(variableToCheck) {
