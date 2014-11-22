@@ -1,3 +1,4 @@
+'use strict';
 module.exports = function(result) {
 	var quote = "\"";
 	var delimiter = ",";

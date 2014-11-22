@@ -1,3 +1,4 @@
+'use strict';
 var $ = require("jquery"),
 	yutils = require("yasgui-utils"),
 	imgs = require('./imgs.js');
@@ -171,7 +172,8 @@ var getCellContent = function(yasr, plugin, bindings, sparqlVar, context) {
 	var value = null;
 	if (binding.type == "uri") {
 		var title = null;
-		var href = visibleString = binding.value;
+		var href = binding.value;
+		var visibleString = href;  
 		if (context.usedPrefixes) {
 			for (var prefix in context.usedPrefixes) {
 				if (visibleString.indexOf(context.usedPrefixes[prefix]) == 0) {
