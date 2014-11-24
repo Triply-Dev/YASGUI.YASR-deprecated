@@ -218,7 +218,7 @@ root.version = {
 	"yasgui-utils": require("yasgui-utils").version
 };
 
-},{"../package.json":14,"./boolean.js":16,"./defaults.js":17,"./error.js":18,"./imgs.js":19,"./parsers/wrapper.js":24,"./rawResponse.js":26,"./table.js":27,"jquery":8,"yasgui-utils":11}],2:[function(require,module,exports){
+},{"../package.json":18,"./boolean.js":20,"./defaults.js":21,"./error.js":22,"./imgs.js":23,"./parsers/wrapper.js":28,"./rawResponse.js":30,"./table.js":31,"jquery":12,"yasgui-utils":15}],2:[function(require,module,exports){
 /*! DataTables 1.10.2
  * ©2008-2014 SpryMedia Ltd - datatables.net/license
  */
@@ -14842,7 +14842,7 @@ root.version = {
 }(window, document));
 
 
-},{"jquery":8}],3:[function(require,module,exports){
+},{"jquery":12}],3:[function(require,module,exports){
 /**
  * jQuery-csv (jQuery Plugin)
  * version: 0.71 (2012-11-19)
@@ -15814,7 +15814,581 @@ RegExp.escape= function(s) {
   });
 });
 
-},{"../../lib/codemirror":5}],5:[function(require,module,exports){
+},{"../../lib/codemirror":9}],5:[function(require,module,exports){
+// CodeMirror, copyright (c) by Marijn Haverbeke and others
+// Distributed under an MIT license: http://codemirror.net/LICENSE
+
+(function(mod) {
+  if (typeof exports == "object" && typeof module == "object") // CommonJS
+    mod(require("../../lib/codemirror"));
+  else if (typeof define == "function" && define.amd) // AMD
+    define(["../../lib/codemirror"], mod);
+  else // Plain browser env
+    mod(CodeMirror);
+})(function(CodeMirror) {
+"use strict";
+
+CodeMirror.registerHelper("fold", "brace", function(cm, start) {
+  var line = start.line, lineText = cm.getLine(line);
+  var startCh, tokenType;
+
+  function findOpening(openCh) {
+    for (var at = start.ch, pass = 0;;) {
+      var found = at <= 0 ? -1 : lineText.lastIndexOf(openCh, at - 1);
+      if (found == -1) {
+        if (pass == 1) break;
+        pass = 1;
+        at = lineText.length;
+        continue;
+      }
+      if (pass == 1 && found < start.ch) break;
+      tokenType = cm.getTokenTypeAt(CodeMirror.Pos(line, found + 1));
+      if (!/^(comment|string)/.test(tokenType)) return found + 1;
+      at = found - 1;
+    }
+  }
+
+  var startToken = "{", endToken = "}", startCh = findOpening("{");
+  if (startCh == null) {
+    startToken = "[", endToken = "]";
+    startCh = findOpening("[");
+  }
+
+  if (startCh == null) return;
+  var count = 1, lastLine = cm.lastLine(), end, endCh;
+  outer: for (var i = line; i <= lastLine; ++i) {
+    var text = cm.getLine(i), pos = i == line ? startCh : 0;
+    for (;;) {
+      var nextOpen = text.indexOf(startToken, pos), nextClose = text.indexOf(endToken, pos);
+      if (nextOpen < 0) nextOpen = text.length;
+      if (nextClose < 0) nextClose = text.length;
+      pos = Math.min(nextOpen, nextClose);
+      if (pos == text.length) break;
+      if (cm.getTokenTypeAt(CodeMirror.Pos(i, pos + 1)) == tokenType) {
+        if (pos == nextOpen) ++count;
+        else if (!--count) { end = i; endCh = pos; break outer; }
+      }
+      ++pos;
+    }
+  }
+  if (end == null || line == end && endCh == startCh) return;
+  return {from: CodeMirror.Pos(line, startCh),
+          to: CodeMirror.Pos(end, endCh)};
+});
+
+CodeMirror.registerHelper("fold", "import", function(cm, start) {
+  function hasImport(line) {
+    if (line < cm.firstLine() || line > cm.lastLine()) return null;
+    var start = cm.getTokenAt(CodeMirror.Pos(line, 1));
+    if (!/\S/.test(start.string)) start = cm.getTokenAt(CodeMirror.Pos(line, start.end + 1));
+    if (start.type != "keyword" || start.string != "import") return null;
+    // Now find closing semicolon, return its position
+    for (var i = line, e = Math.min(cm.lastLine(), line + 10); i <= e; ++i) {
+      var text = cm.getLine(i), semi = text.indexOf(";");
+      if (semi != -1) return {startCh: start.end, end: CodeMirror.Pos(i, semi)};
+    }
+  }
+
+  var start = start.line, has = hasImport(start), prev;
+  if (!has || hasImport(start - 1) || ((prev = hasImport(start - 2)) && prev.end.line == start - 1))
+    return null;
+  for (var end = has.end;;) {
+    var next = hasImport(end.line + 1);
+    if (next == null) break;
+    end = next.end;
+  }
+  return {from: cm.clipPos(CodeMirror.Pos(start, has.startCh + 1)), to: end};
+});
+
+CodeMirror.registerHelper("fold", "include", function(cm, start) {
+  function hasInclude(line) {
+    if (line < cm.firstLine() || line > cm.lastLine()) return null;
+    var start = cm.getTokenAt(CodeMirror.Pos(line, 1));
+    if (!/\S/.test(start.string)) start = cm.getTokenAt(CodeMirror.Pos(line, start.end + 1));
+    if (start.type == "meta" && start.string.slice(0, 8) == "#include") return start.start + 8;
+  }
+
+  var start = start.line, has = hasInclude(start);
+  if (has == null || hasInclude(start - 1) != null) return null;
+  for (var end = start;;) {
+    var next = hasInclude(end + 1);
+    if (next == null) break;
+    ++end;
+  }
+  return {from: CodeMirror.Pos(start, has + 1),
+          to: cm.clipPos(CodeMirror.Pos(end))};
+});
+
+});
+
+},{"../../lib/codemirror":9}],6:[function(require,module,exports){
+// CodeMirror, copyright (c) by Marijn Haverbeke and others
+// Distributed under an MIT license: http://codemirror.net/LICENSE
+
+(function(mod) {
+  if (typeof exports == "object" && typeof module == "object") // CommonJS
+    mod(require("../../lib/codemirror"));
+  else if (typeof define == "function" && define.amd) // AMD
+    define(["../../lib/codemirror"], mod);
+  else // Plain browser env
+    mod(CodeMirror);
+})(function(CodeMirror) {
+  "use strict";
+
+  function doFold(cm, pos, options, force) {
+    if (options && options.call) {
+      var finder = options;
+      options = null;
+    } else {
+      var finder = getOption(cm, options, "rangeFinder");
+    }
+    if (typeof pos == "number") pos = CodeMirror.Pos(pos, 0);
+    var minSize = getOption(cm, options, "minFoldSize");
+
+    function getRange(allowFolded) {
+      var range = finder(cm, pos);
+      if (!range || range.to.line - range.from.line < minSize) return null;
+      var marks = cm.findMarksAt(range.from);
+      for (var i = 0; i < marks.length; ++i) {
+        if (marks[i].__isFold && force !== "fold") {
+          if (!allowFolded) return null;
+          range.cleared = true;
+          marks[i].clear();
+        }
+      }
+      return range;
+    }
+
+    var range = getRange(true);
+    if (getOption(cm, options, "scanUp")) while (!range && pos.line > cm.firstLine()) {
+      pos = CodeMirror.Pos(pos.line - 1, 0);
+      range = getRange(false);
+    }
+    if (!range || range.cleared || force === "unfold") return;
+
+    var myWidget = makeWidget(cm, options);
+    CodeMirror.on(myWidget, "mousedown", function(e) {
+      myRange.clear();
+      CodeMirror.e_preventDefault(e);
+    });
+    var myRange = cm.markText(range.from, range.to, {
+      replacedWith: myWidget,
+      clearOnEnter: true,
+      __isFold: true
+    });
+    myRange.on("clear", function(from, to) {
+      CodeMirror.signal(cm, "unfold", cm, from, to);
+    });
+    CodeMirror.signal(cm, "fold", cm, range.from, range.to);
+  }
+
+  function makeWidget(cm, options) {
+    var widget = getOption(cm, options, "widget");
+    if (typeof widget == "string") {
+      var text = document.createTextNode(widget);
+      widget = document.createElement("span");
+      widget.appendChild(text);
+      widget.className = "CodeMirror-foldmarker";
+    }
+    return widget;
+  }
+
+  // Clumsy backwards-compatible interface
+  CodeMirror.newFoldFunction = function(rangeFinder, widget) {
+    return function(cm, pos) { doFold(cm, pos, {rangeFinder: rangeFinder, widget: widget}); };
+  };
+
+  // New-style interface
+  CodeMirror.defineExtension("foldCode", function(pos, options, force) {
+    doFold(this, pos, options, force);
+  });
+
+  CodeMirror.defineExtension("isFolded", function(pos) {
+    var marks = this.findMarksAt(pos);
+    for (var i = 0; i < marks.length; ++i)
+      if (marks[i].__isFold) return true;
+  });
+
+  CodeMirror.commands.toggleFold = function(cm) {
+    cm.foldCode(cm.getCursor());
+  };
+  CodeMirror.commands.fold = function(cm) {
+    cm.foldCode(cm.getCursor(), null, "fold");
+  };
+  CodeMirror.commands.unfold = function(cm) {
+    cm.foldCode(cm.getCursor(), null, "unfold");
+  };
+  CodeMirror.commands.foldAll = function(cm) {
+    cm.operation(function() {
+      for (var i = cm.firstLine(), e = cm.lastLine(); i <= e; i++)
+        cm.foldCode(CodeMirror.Pos(i, 0), null, "fold");
+    });
+  };
+  CodeMirror.commands.unfoldAll = function(cm) {
+    cm.operation(function() {
+      for (var i = cm.firstLine(), e = cm.lastLine(); i <= e; i++)
+        cm.foldCode(CodeMirror.Pos(i, 0), null, "unfold");
+    });
+  };
+
+  CodeMirror.registerHelper("fold", "combine", function() {
+    var funcs = Array.prototype.slice.call(arguments, 0);
+    return function(cm, start) {
+      for (var i = 0; i < funcs.length; ++i) {
+        var found = funcs[i](cm, start);
+        if (found) return found;
+      }
+    };
+  });
+
+  CodeMirror.registerHelper("fold", "auto", function(cm, start) {
+    var helpers = cm.getHelpers(start, "fold");
+    for (var i = 0; i < helpers.length; i++) {
+      var cur = helpers[i](cm, start);
+      if (cur) return cur;
+    }
+  });
+
+  var defaultOptions = {
+    rangeFinder: CodeMirror.fold.auto,
+    widget: "\u2194",
+    minFoldSize: 0,
+    scanUp: false
+  };
+
+  CodeMirror.defineOption("foldOptions", null);
+
+  function getOption(cm, options, name) {
+    if (options && options[name] !== undefined)
+      return options[name];
+    var editorOptions = cm.options.foldOptions;
+    if (editorOptions && editorOptions[name] !== undefined)
+      return editorOptions[name];
+    return defaultOptions[name];
+  }
+});
+
+},{"../../lib/codemirror":9}],7:[function(require,module,exports){
+// CodeMirror, copyright (c) by Marijn Haverbeke and others
+// Distributed under an MIT license: http://codemirror.net/LICENSE
+
+(function(mod) {
+  if (typeof exports == "object" && typeof module == "object") // CommonJS
+    mod(require("../../lib/codemirror"), require("./foldcode"));
+  else if (typeof define == "function" && define.amd) // AMD
+    define(["../../lib/codemirror", "./foldcode"], mod);
+  else // Plain browser env
+    mod(CodeMirror);
+})(function(CodeMirror) {
+  "use strict";
+
+  CodeMirror.defineOption("foldGutter", false, function(cm, val, old) {
+    if (old && old != CodeMirror.Init) {
+      cm.clearGutter(cm.state.foldGutter.options.gutter);
+      cm.state.foldGutter = null;
+      cm.off("gutterClick", onGutterClick);
+      cm.off("change", onChange);
+      cm.off("viewportChange", onViewportChange);
+      cm.off("fold", onFold);
+      cm.off("unfold", onFold);
+      cm.off("swapDoc", updateInViewport);
+    }
+    if (val) {
+      cm.state.foldGutter = new State(parseOptions(val));
+      updateInViewport(cm);
+      cm.on("gutterClick", onGutterClick);
+      cm.on("change", onChange);
+      cm.on("viewportChange", onViewportChange);
+      cm.on("fold", onFold);
+      cm.on("unfold", onFold);
+      cm.on("swapDoc", updateInViewport);
+    }
+  });
+
+  var Pos = CodeMirror.Pos;
+
+  function State(options) {
+    this.options = options;
+    this.from = this.to = 0;
+  }
+
+  function parseOptions(opts) {
+    if (opts === true) opts = {};
+    if (opts.gutter == null) opts.gutter = "CodeMirror-foldgutter";
+    if (opts.indicatorOpen == null) opts.indicatorOpen = "CodeMirror-foldgutter-open";
+    if (opts.indicatorFolded == null) opts.indicatorFolded = "CodeMirror-foldgutter-folded";
+    return opts;
+  }
+
+  function isFolded(cm, line) {
+    var marks = cm.findMarksAt(Pos(line));
+    for (var i = 0; i < marks.length; ++i)
+      if (marks[i].__isFold && marks[i].find().from.line == line) return true;
+  }
+
+  function marker(spec) {
+    if (typeof spec == "string") {
+      var elt = document.createElement("div");
+      elt.className = spec + " CodeMirror-guttermarker-subtle";
+      return elt;
+    } else {
+      return spec.cloneNode(true);
+    }
+  }
+
+  function updateFoldInfo(cm, from, to) {
+    var opts = cm.state.foldGutter.options, cur = from;
+    cm.eachLine(from, to, function(line) {
+      var mark = null;
+      if (isFolded(cm, cur)) {
+        mark = marker(opts.indicatorFolded);
+      } else {
+        var pos = Pos(cur, 0), func = opts.rangeFinder || CodeMirror.fold.auto;
+        var range = func && func(cm, pos);
+        if (range && range.from.line + 1 < range.to.line)
+          mark = marker(opts.indicatorOpen);
+      }
+      cm.setGutterMarker(line, opts.gutter, mark);
+      ++cur;
+    });
+  }
+
+  function updateInViewport(cm) {
+    var vp = cm.getViewport(), state = cm.state.foldGutter;
+    if (!state) return;
+    cm.operation(function() {
+      updateFoldInfo(cm, vp.from, vp.to);
+    });
+    state.from = vp.from; state.to = vp.to;
+  }
+
+  function onGutterClick(cm, line, gutter) {
+    var opts = cm.state.foldGutter.options;
+    if (gutter != opts.gutter) return;
+    cm.foldCode(Pos(line, 0), opts.rangeFinder);
+  }
+
+  function onChange(cm) {
+    var state = cm.state.foldGutter, opts = cm.state.foldGutter.options;
+    state.from = state.to = 0;
+    clearTimeout(state.changeUpdate);
+    state.changeUpdate = setTimeout(function() { updateInViewport(cm); }, opts.foldOnChangeTimeSpan || 600);
+  }
+
+  function onViewportChange(cm) {
+    var state = cm.state.foldGutter, opts = cm.state.foldGutter.options;
+    clearTimeout(state.changeUpdate);
+    state.changeUpdate = setTimeout(function() {
+      var vp = cm.getViewport();
+      if (state.from == state.to || vp.from - state.to > 20 || state.from - vp.to > 20) {
+        updateInViewport(cm);
+      } else {
+        cm.operation(function() {
+          if (vp.from < state.from) {
+            updateFoldInfo(cm, vp.from, state.from);
+            state.from = vp.from;
+          }
+          if (vp.to > state.to) {
+            updateFoldInfo(cm, state.to, vp.to);
+            state.to = vp.to;
+          }
+        });
+      }
+    }, opts.updateViewportTimeSpan || 400);
+  }
+
+  function onFold(cm, from) {
+    var state = cm.state.foldGutter, line = from.line;
+    if (line >= state.from && line < state.to)
+      updateFoldInfo(cm, line, line + 1);
+  }
+});
+
+},{"../../lib/codemirror":9,"./foldcode":6}],8:[function(require,module,exports){
+// CodeMirror, copyright (c) by Marijn Haverbeke and others
+// Distributed under an MIT license: http://codemirror.net/LICENSE
+
+(function(mod) {
+  if (typeof exports == "object" && typeof module == "object") // CommonJS
+    mod(require("../../lib/codemirror"));
+  else if (typeof define == "function" && define.amd) // AMD
+    define(["../../lib/codemirror"], mod);
+  else // Plain browser env
+    mod(CodeMirror);
+})(function(CodeMirror) {
+  "use strict";
+
+  var Pos = CodeMirror.Pos;
+  function cmp(a, b) { return a.line - b.line || a.ch - b.ch; }
+
+  var nameStartChar = "A-Z_a-z\\u00C0-\\u00D6\\u00D8-\\u00F6\\u00F8-\\u02FF\\u0370-\\u037D\\u037F-\\u1FFF\\u200C-\\u200D\\u2070-\\u218F\\u2C00-\\u2FEF\\u3001-\\uD7FF\\uF900-\\uFDCF\\uFDF0-\\uFFFD";
+  var nameChar = nameStartChar + "\-\:\.0-9\\u00B7\\u0300-\\u036F\\u203F-\\u2040";
+  var xmlTagStart = new RegExp("<(/?)([" + nameStartChar + "][" + nameChar + "]*)", "g");
+
+  function Iter(cm, line, ch, range) {
+    this.line = line; this.ch = ch;
+    this.cm = cm; this.text = cm.getLine(line);
+    this.min = range ? range.from : cm.firstLine();
+    this.max = range ? range.to - 1 : cm.lastLine();
+  }
+
+  function tagAt(iter, ch) {
+    var type = iter.cm.getTokenTypeAt(Pos(iter.line, ch));
+    return type && /\btag\b/.test(type);
+  }
+
+  function nextLine(iter) {
+    if (iter.line >= iter.max) return;
+    iter.ch = 0;
+    iter.text = iter.cm.getLine(++iter.line);
+    return true;
+  }
+  function prevLine(iter) {
+    if (iter.line <= iter.min) return;
+    iter.text = iter.cm.getLine(--iter.line);
+    iter.ch = iter.text.length;
+    return true;
+  }
+
+  function toTagEnd(iter) {
+    for (;;) {
+      var gt = iter.text.indexOf(">", iter.ch);
+      if (gt == -1) { if (nextLine(iter)) continue; else return; }
+      if (!tagAt(iter, gt + 1)) { iter.ch = gt + 1; continue; }
+      var lastSlash = iter.text.lastIndexOf("/", gt);
+      var selfClose = lastSlash > -1 && !/\S/.test(iter.text.slice(lastSlash + 1, gt));
+      iter.ch = gt + 1;
+      return selfClose ? "selfClose" : "regular";
+    }
+  }
+  function toTagStart(iter) {
+    for (;;) {
+      var lt = iter.ch ? iter.text.lastIndexOf("<", iter.ch - 1) : -1;
+      if (lt == -1) { if (prevLine(iter)) continue; else return; }
+      if (!tagAt(iter, lt + 1)) { iter.ch = lt; continue; }
+      xmlTagStart.lastIndex = lt;
+      iter.ch = lt;
+      var match = xmlTagStart.exec(iter.text);
+      if (match && match.index == lt) return match;
+    }
+  }
+
+  function toNextTag(iter) {
+    for (;;) {
+      xmlTagStart.lastIndex = iter.ch;
+      var found = xmlTagStart.exec(iter.text);
+      if (!found) { if (nextLine(iter)) continue; else return; }
+      if (!tagAt(iter, found.index + 1)) { iter.ch = found.index + 1; continue; }
+      iter.ch = found.index + found[0].length;
+      return found;
+    }
+  }
+  function toPrevTag(iter) {
+    for (;;) {
+      var gt = iter.ch ? iter.text.lastIndexOf(">", iter.ch - 1) : -1;
+      if (gt == -1) { if (prevLine(iter)) continue; else return; }
+      if (!tagAt(iter, gt + 1)) { iter.ch = gt; continue; }
+      var lastSlash = iter.text.lastIndexOf("/", gt);
+      var selfClose = lastSlash > -1 && !/\S/.test(iter.text.slice(lastSlash + 1, gt));
+      iter.ch = gt + 1;
+      return selfClose ? "selfClose" : "regular";
+    }
+  }
+
+  function findMatchingClose(iter, tag) {
+    var stack = [];
+    for (;;) {
+      var next = toNextTag(iter), end, startLine = iter.line, startCh = iter.ch - (next ? next[0].length : 0);
+      if (!next || !(end = toTagEnd(iter))) return;
+      if (end == "selfClose") continue;
+      if (next[1]) { // closing tag
+        for (var i = stack.length - 1; i >= 0; --i) if (stack[i] == next[2]) {
+          stack.length = i;
+          break;
+        }
+        if (i < 0 && (!tag || tag == next[2])) return {
+          tag: next[2],
+          from: Pos(startLine, startCh),
+          to: Pos(iter.line, iter.ch)
+        };
+      } else { // opening tag
+        stack.push(next[2]);
+      }
+    }
+  }
+  function findMatchingOpen(iter, tag) {
+    var stack = [];
+    for (;;) {
+      var prev = toPrevTag(iter);
+      if (!prev) return;
+      if (prev == "selfClose") { toTagStart(iter); continue; }
+      var endLine = iter.line, endCh = iter.ch;
+      var start = toTagStart(iter);
+      if (!start) return;
+      if (start[1]) { // closing tag
+        stack.push(start[2]);
+      } else { // opening tag
+        for (var i = stack.length - 1; i >= 0; --i) if (stack[i] == start[2]) {
+          stack.length = i;
+          break;
+        }
+        if (i < 0 && (!tag || tag == start[2])) return {
+          tag: start[2],
+          from: Pos(iter.line, iter.ch),
+          to: Pos(endLine, endCh)
+        };
+      }
+    }
+  }
+
+  CodeMirror.registerHelper("fold", "xml", function(cm, start) {
+    var iter = new Iter(cm, start.line, 0);
+    for (;;) {
+      var openTag = toNextTag(iter), end;
+      if (!openTag || iter.line != start.line || !(end = toTagEnd(iter))) return;
+      if (!openTag[1] && end != "selfClose") {
+        var start = Pos(iter.line, iter.ch);
+        var close = findMatchingClose(iter, openTag[2]);
+        return close && {from: start, to: close.from};
+      }
+    }
+  });
+  CodeMirror.findMatchingTag = function(cm, pos, range) {
+    var iter = new Iter(cm, pos.line, pos.ch, range);
+    if (iter.text.indexOf(">") == -1 && iter.text.indexOf("<") == -1) return;
+    var end = toTagEnd(iter), to = end && Pos(iter.line, iter.ch);
+    var start = end && toTagStart(iter);
+    if (!end || !start || cmp(iter, pos) > 0) return;
+    var here = {from: Pos(iter.line, iter.ch), to: to, tag: start[2]};
+    if (end == "selfClose") return {open: here, close: null, at: "open"};
+
+    if (start[1]) { // closing tag
+      return {open: findMatchingOpen(iter, start[2]), close: here, at: "close"};
+    } else { // opening tag
+      iter = new Iter(cm, to.line, to.ch, range);
+      return {open: here, close: findMatchingClose(iter, start[2]), at: "open"};
+    }
+  };
+
+  CodeMirror.findEnclosingTag = function(cm, pos, range) {
+    var iter = new Iter(cm, pos.line, pos.ch, range);
+    for (;;) {
+      var open = findMatchingOpen(iter);
+      if (!open) break;
+      var forward = new Iter(cm, pos.line, pos.ch, range);
+      var close = findMatchingClose(forward, open.tag);
+      if (close) return {open: open, close: close};
+    }
+  };
+
+  // Used by addon/edit/closetag.js
+  CodeMirror.scanForClosingTag = function(cm, pos, name, end) {
+    var iter = new Iter(cm, pos.line, pos.ch, end ? {from: 0, to: end} : null);
+    return findMatchingClose(iter, name);
+  };
+});
+
+},{"../../lib/codemirror":9}],9:[function(require,module,exports){
 // CodeMirror, copyright (c) by Marijn Haverbeke and others
 // Distributed under an MIT license: http://codemirror.net/LICENSE
 
@@ -15903,7 +16477,8 @@ RegExp.escape= function(s) {
       suppressEdits: false, // used to disable editing during key handlers when in readOnly mode
       pasteIncoming: false, cutIncoming: false, // help recognize paste/cut edits in readInput
       draggingText: false,
-      highlight: new Delayed() // stores highlight worker timeout
+      highlight: new Delayed(), // stores highlight worker timeout
+      keySeq: null  // Unfinished key sequence
     };
 
     // Override magic textarea content restore that IE sometimes does
@@ -16001,8 +16576,10 @@ RegExp.escape= function(s) {
     // Need to set a minimum width to see the scrollbar on IE7 (but must not set it on IE8).
     if (ie && ie_version < 8) d.scrollbarH.style.minHeight = d.scrollbarV.style.minWidth = "18px";
 
-    if (place.appendChild) place.appendChild(d.wrapper);
-    else place(d.wrapper);
+    if (place) {
+      if (place.appendChild) place.appendChild(d.wrapper);
+      else place(d.wrapper);
+    }
 
     // Current rendered range (may be bigger than the view window).
     d.viewFrom = d.viewTo = doc.first;
@@ -16013,7 +16590,7 @@ RegExp.escape= function(s) {
     d.externalMeasured = null;
     // Empty space (in pixels) above the view
     d.viewOffset = 0;
-    d.lastSizeC = 0;
+    d.lastWrapHeight = d.lastWrapWidth = 0;
     d.updateLineNumbers = null;
 
     // Used to only resize the line number gutter when necessary (when
@@ -16116,12 +16693,6 @@ RegExp.escape= function(s) {
       var estHeight = est(line);
       if (estHeight != line.height) updateLineHeight(line, estHeight);
     });
-  }
-
-  function keyMapChanged(cm) {
-    var map = keyMap[cm.options.keyMap], style = map.style;
-    cm.display.wrapper.className = cm.display.wrapper.className.replace(/\s*cm-keymap-\S+/g, "") +
-      (style ? " cm-keymap-" + style : "");
   }
 
   function themeChanged(cm) {
@@ -16368,6 +16939,7 @@ RegExp.escape= function(s) {
     this.visible = visibleLines(display, cm.doc, viewport);
     this.editorIsHidden = !display.wrapper.offsetWidth;
     this.wrapperHeight = display.wrapper.clientHeight;
+    this.wrapperWidth = display.wrapper.clientWidth;
     this.oldViewFrom = display.viewFrom; this.oldViewTo = display.viewTo;
     this.oldScrollerWidth = display.scroller.clientWidth;
     this.force = force;
@@ -16408,7 +16980,7 @@ RegExp.escape= function(s) {
     }
 
     var different = from != display.viewFrom || to != display.viewTo ||
-      display.lastSizeC != update.wrapperHeight;
+      display.lastWrapHeight != update.wrapperHeight || display.lastWrapWidth != update.wrapperWidth;
     adjustView(cm, from, to);
 
     display.viewOffset = heightAtLine(getLine(cm.doc, display.viewFrom));
@@ -16436,7 +17008,8 @@ RegExp.escape= function(s) {
     removeChildren(display.selectionDiv);
 
     if (different) {
-      display.lastSizeC = update.wrapperHeight;
+      display.lastWrapHeight = update.wrapperHeight;
+      display.lastWrapWidth = update.wrapperWidth;
       startWorker(cm, 400);
     }
 
@@ -16685,9 +17258,12 @@ RegExp.escape= function(s) {
     if (cm.options.lineNumbers || markers) {
       var wrap = ensureLineWrapped(lineView);
       var gutterWrap = lineView.gutter =
-        wrap.insertBefore(elt("div", null, "CodeMirror-gutter-wrapper", "position: absolute; left: " +
-                              (cm.options.fixedGutter ? dims.fixedPos : -dims.gutterTotalWidth) + "px"),
+        wrap.insertBefore(elt("div", null, "CodeMirror-gutter-wrapper", "left: " +
+                              (cm.options.fixedGutter ? dims.fixedPos : -dims.gutterTotalWidth) +
+                              "px; width: " + dims.gutterTotalWidth + "px"),
                           lineView.text);
+      if (lineView.line.gutterClass)
+        gutterWrap.className += " " + lineView.line.gutterClass;
       if (cm.options.lineNumbers && (!markers || !markers["CodeMirror-linenumbers"]))
         lineView.lineNumber = gutterWrap.appendChild(
           elt("div", lineNumberFor(cm.options, lineN),
@@ -18214,7 +18790,7 @@ RegExp.escape= function(s) {
     // possible when it is clear that nothing happened. hasSelection
     // will be the case when there is a lot of text in the textarea,
     // in which case reading its value would be expensive.
-    if (!cm.state.focused || (hasSelection(input) && !prevInput) || isReadOnly(cm) || cm.options.disableInput)
+    if (!cm.state.focused || (hasSelection(input) && !prevInput) || isReadOnly(cm) || cm.options.disableInput || cm.state.keySeq)
       return false;
     // See paste handler for more on the fakedLastChar kludge
     if (cm.state.pasteIncoming && cm.state.fakedLastChar) {
@@ -18469,8 +19045,10 @@ RegExp.escape= function(s) {
 
   // Called when the window resizes
   function onResize(cm) {
-    // Might be a text scaling operation, clear size caches.
     var d = cm.display;
+    if (d.lastWrapHeight == d.wrapper.clientHeight && d.lastWrapWidth == d.wrapper.clientWidth)
+      return;
+    // Might be a text scaling operation, clear size caches.
     d.cachedCharWidth = d.cachedTextHeight = d.cachedPaddingH = null;
     cm.setSize();
   }
@@ -18984,62 +19562,70 @@ RegExp.escape= function(s) {
     return done;
   }
 
-  // Collect the currently active keymaps.
-  function allKeyMaps(cm) {
-    var maps = cm.state.keyMaps.slice(0);
-    if (cm.options.extraKeys) maps.push(cm.options.extraKeys);
-    maps.push(cm.options.keyMap);
-    return maps;
+  function lookupKeyForEditor(cm, name, handle) {
+    for (var i = 0; i < cm.state.keyMaps.length; i++) {
+      var result = lookupKey(name, cm.state.keyMaps[i], handle);
+      if (result) return result;
+    }
+    return (cm.options.extraKeys && lookupKey(name, cm.options.extraKeys, handle))
+      || lookupKey(name, cm.options.keyMap, handle);
   }
 
-  var maybeTransition;
+  var stopSeq = new Delayed;
+  function dispatchKey(cm, name, e, handle) {
+    var seq = cm.state.keySeq;
+    if (seq) {
+      if (isModifierKey(name)) return "handled";
+      stopSeq.set(50, function() {
+        if (cm.state.keySeq == seq) {
+          cm.state.keySeq = null;
+          resetInput(cm);
+        }
+      });
+      name = seq + " " + name;
+    }
+    var result = lookupKeyForEditor(cm, name, handle);
+
+    if (result == "multi")
+      cm.state.keySeq = name;
+    if (result == "handled")
+      signalLater(cm, "keyHandled", cm, name, e);
+
+    if (result == "handled" || result == "multi") {
+      e_preventDefault(e);
+      restartBlink(cm);
+    }
+
+    if (seq && !result && /\'$/.test(name)) {
+      e_preventDefault(e);
+      return true;
+    }
+    return !!result;
+  }
+
   // Handle a key from the keydown event.
   function handleKeyBinding(cm, e) {
-    // Handle automatic keymap transitions
-    var startMap = getKeyMap(cm.options.keyMap), next = startMap.auto;
-    clearTimeout(maybeTransition);
-    if (next && !isModifierKey(e)) maybeTransition = setTimeout(function() {
-      if (getKeyMap(cm.options.keyMap) == startMap) {
-        cm.options.keyMap = (next.call ? next.call(null, cm) : next);
-        keyMapChanged(cm);
-      }
-    }, 50);
-
-    var name = keyName(e, true), handled = false;
+    var name = keyName(e, true);
     if (!name) return false;
-    var keymaps = allKeyMaps(cm);
 
-    if (e.shiftKey) {
+    if (e.shiftKey && !cm.state.keySeq) {
       // First try to resolve full name (including 'Shift-'). Failing
       // that, see if there is a cursor-motion command (starting with
       // 'go') bound to the keyname without 'Shift-'.
-      handled = lookupKey("Shift-" + name, keymaps, function(b) {return doHandleBinding(cm, b, true);})
-             || lookupKey(name, keymaps, function(b) {
-                  if (typeof b == "string" ? /^go[A-Z]/.test(b) : b.motion)
-                    return doHandleBinding(cm, b);
-                });
+      return dispatchKey(cm, "Shift-" + name, e, function(b) {return doHandleBinding(cm, b, true);})
+          || dispatchKey(cm, name, e, function(b) {
+               if (typeof b == "string" ? /^go[A-Z]/.test(b) : b.motion)
+                 return doHandleBinding(cm, b);
+             });
     } else {
-      handled = lookupKey(name, keymaps, function(b) { return doHandleBinding(cm, b); });
+      return dispatchKey(cm, name, e, function(b) { return doHandleBinding(cm, b); });
     }
-
-    if (handled) {
-      e_preventDefault(e);
-      restartBlink(cm);
-      signalLater(cm, "keyHandled", cm, name, e);
-    }
-    return handled;
   }
 
   // Handle a key from the keypress event
   function handleCharBinding(cm, e, ch) {
-    var handled = lookupKey("'" + ch + "'", allKeyMaps(cm),
-                            function(b) { return doHandleBinding(cm, b, true); });
-    if (handled) {
-      e_preventDefault(e);
-      restartBlink(cm);
-      signalLater(cm, "keyHandled", cm, "'" + ch + "'", e);
-    }
-    return handled;
+    return dispatchKey(cm, "'" + ch + "'", e,
+                       function(b) { return doHandleBinding(cm, b, true); });
   }
 
   var lastStoppedKey = null;
@@ -19518,6 +20104,8 @@ RegExp.escape= function(s) {
   // If an editor sits on the top or bottom of the window, partially
   // scrolled out of view, this ensures that the cursor is visible.
   function maybeScrollWindow(cm, coords) {
+    if (signalDOMEvent(cm, "scrollCursorIntoView")) return;
+
     var display = cm.display, box = display.sizer.getBoundingClientRect(), doScroll = null;
     if (coords.top + box.top < 0) doScroll = true;
     else if (coords.bottom + box.top > (window.innerHeight || document.documentElement.clientHeight)) doScroll = false;
@@ -19841,12 +20429,12 @@ RegExp.escape= function(s) {
     getDoc: function() {return this.doc;},
 
     addKeyMap: function(map, bottom) {
-      this.state.keyMaps[bottom ? "push" : "unshift"](map);
+      this.state.keyMaps[bottom ? "push" : "unshift"](getKeyMap(map));
     },
     removeKeyMap: function(map) {
       var maps = this.state.keyMaps;
       for (var i = 0; i < maps.length; ++i)
-        if (maps[i] == map || (typeof maps[i] != "string" && maps[i].name == map)) {
+        if (maps[i] == map || maps[i].name == map) {
           maps.splice(i, 1);
           return true;
         }
@@ -19903,20 +20491,11 @@ RegExp.escape= function(s) {
     // Fetch the parser token for a given character. Useful for hacks
     // that want to inspect the mode state (say, for completion).
     getTokenAt: function(pos, precise) {
-      var doc = this.doc;
-      pos = clipPos(doc, pos);
-      var state = getStateBefore(this, pos.line, precise), mode = this.doc.mode;
-      var line = getLine(doc, pos.line);
-      var stream = new StringStream(line.text, this.options.tabSize);
-      while (stream.pos < pos.ch && !stream.eol()) {
-        stream.start = stream.pos;
-        var style = readToken(mode, stream, state);
-      }
-      return {start: stream.start,
-              end: stream.pos,
-              string: stream.current(),
-              type: style || null,
-              state: state};
+      return takeToken(this, pos, precise);
+    },
+
+    getLineTokens: function(line, precise) {
+      return takeToken(this, Pos(line), precise, true);
     },
 
     getTokenTypeAt: function(pos) {
@@ -20319,7 +20898,12 @@ RegExp.escape= function(s) {
     themeChanged(cm);
     guttersChanged(cm);
   }, true);
-  option("keyMap", "default", keyMapChanged);
+  option("keyMap", "default", function(cm, val, old) {
+    var next = getKeyMap(val);
+    var prev = old != CodeMirror.Init && getKeyMap(old);
+    if (prev && prev.detach) prev.detach(cm, next);
+    if (next.attach) next.attach(cm, prev || null);
+  });
   option("extraKeys", null);
 
   option("lineWrapping", false, wrappingChanged, true);
@@ -20664,9 +21248,11 @@ RegExp.escape= function(s) {
     toggleOverwrite: function(cm) {cm.toggleOverwrite();}
   };
 
+
   // STANDARD KEYMAPS
 
   var keyMap = CodeMirror.keyMap = {};
+
   keyMap.basic = {
     "Left": "goCharLeft", "Right": "goCharRight", "Up": "goLineUp", "Down": "goLineDown",
     "End": "goLineEnd", "Home": "goLineStartSmart", "PageUp": "goPageUp", "PageDown": "goPageDown",
@@ -20688,6 +21274,13 @@ RegExp.escape= function(s) {
     "Ctrl-U": "undoSelection", "Shift-Ctrl-U": "redoSelection", "Alt-U": "redoSelection",
     fallthrough: "basic"
   };
+  // Very basic readline/emacs-style bindings, which are standard on Mac.
+  keyMap.emacsy = {
+    "Ctrl-F": "goCharRight", "Ctrl-B": "goCharLeft", "Ctrl-P": "goLineUp", "Ctrl-N": "goLineDown",
+    "Alt-F": "goWordRight", "Alt-B": "goWordLeft", "Ctrl-A": "goLineStart", "Ctrl-E": "goLineEnd",
+    "Ctrl-V": "goPageDown", "Shift-Ctrl-V": "goPageUp", "Ctrl-D": "delCharAfter", "Ctrl-H": "delCharBefore",
+    "Alt-D": "delWordAfter", "Alt-Backspace": "delWordBefore", "Ctrl-K": "killLine", "Ctrl-T": "transposeChars"
+  };
   keyMap.macDefault = {
     "Cmd-A": "selectAll", "Cmd-D": "deleteLine", "Cmd-Z": "undo", "Shift-Cmd-Z": "redo", "Cmd-Y": "redo",
     "Cmd-Home": "goDocStart", "Cmd-Up": "goDocStart", "Cmd-End": "goDocEnd", "Cmd-Down": "goDocEnd", "Alt-Left": "goGroupLeft",
@@ -20698,69 +21291,99 @@ RegExp.escape= function(s) {
     "Cmd-U": "undoSelection", "Shift-Cmd-U": "redoSelection", "Ctrl-Up": "goDocStart", "Ctrl-Down": "goDocEnd",
     fallthrough: ["basic", "emacsy"]
   };
-  // Very basic readline/emacs-style bindings, which are standard on Mac.
-  keyMap.emacsy = {
-    "Ctrl-F": "goCharRight", "Ctrl-B": "goCharLeft", "Ctrl-P": "goLineUp", "Ctrl-N": "goLineDown",
-    "Alt-F": "goWordRight", "Alt-B": "goWordLeft", "Ctrl-A": "goLineStart", "Ctrl-E": "goLineEnd",
-    "Ctrl-V": "goPageDown", "Shift-Ctrl-V": "goPageUp", "Ctrl-D": "delCharAfter", "Ctrl-H": "delCharBefore",
-    "Alt-D": "delWordAfter", "Alt-Backspace": "delWordBefore", "Ctrl-K": "killLine", "Ctrl-T": "transposeChars"
-  };
   keyMap["default"] = mac ? keyMap.macDefault : keyMap.pcDefault;
 
   // KEYMAP DISPATCH
 
-  function getKeyMap(val) {
-    if (typeof val == "string") return keyMap[val];
-    else return val;
+  function normalizeKeyName(name) {
+    var parts = name.split(/-(?!$)/), name = parts[parts.length - 1];
+    var alt, ctrl, shift, cmd;
+    for (var i = 0; i < parts.length - 1; i++) {
+      var mod = parts[i];
+      if (/^(cmd|meta|m)$/i.test(mod)) cmd = true;
+      else if (/^a(lt)?$/i.test(mod)) alt = true;
+      else if (/^(c|ctrl|control)$/i.test(mod)) ctrl = true;
+      else if (/^s(hift)$/i.test(mod)) shift = true;
+      else throw new Error("Unrecognized modifier name: " + mod);
+    }
+    if (alt) name = "Alt-" + name;
+    if (ctrl) name = "Ctrl-" + name;
+    if (cmd) name = "Cmd-" + name;
+    if (shift) name = "Shift-" + name;
+    return name;
   }
 
-  // Given an array of keymaps and a key name, call handle on any
-  // bindings found, until that returns a truthy value, at which point
-  // we consider the key handled. Implements things like binding a key
-  // to false stopping further handling and keymap fallthrough.
-  var lookupKey = CodeMirror.lookupKey = function(name, maps, handle) {
-    function lookup(map) {
-      map = getKeyMap(map);
-      var found = map[name];
-      if (found === false) return "stop";
-      if (found != null && handle(found)) return true;
-      if (map.nofallthrough) return "stop";
+  // This is a kludge to keep keymaps mostly working as raw objects
+  // (backwards compatibility) while at the same time support features
+  // like normalization and multi-stroke key bindings. It compiles a
+  // new normalized keymap, and then updates the old object to reflect
+  // this.
+  CodeMirror.normalizeKeyMap = function(keymap) {
+    var copy = {};
+    for (var keyname in keymap) if (keymap.hasOwnProperty(keyname)) {
+      var value = keymap[keyname];
+      if (/^(name|fallthrough|(de|at)tach)$/.test(keyname)) continue;
+      if (value == "...") { delete keymap[keyname]; continue; }
 
-      var fallthrough = map.fallthrough;
-      if (fallthrough == null) return false;
-      if (Object.prototype.toString.call(fallthrough) != "[object Array]")
-        return lookup(fallthrough);
-      for (var i = 0; i < fallthrough.length; ++i) {
-        var done = lookup(fallthrough[i]);
-        if (done) return done;
+      var keys = map(keyname.split(" "), normalizeKeyName);
+      for (var i = 0; i < keys.length; i++) {
+        var val, name;
+        if (i == keys.length - 1) {
+          name = keyname;
+          val = value;
+        } else {
+          name = keys.slice(0, i + 1).join(" ");
+          val = "...";
+        }
+        var prev = copy[name];
+        if (!prev) copy[name] = val;
+        else if (prev != val) throw new Error("Inconsistent bindings for " + name);
       }
-      return false;
+      delete keymap[keyname];
     }
+    for (var prop in copy) keymap[prop] = copy[prop];
+    return keymap;
+  };
 
-    for (var i = 0; i < maps.length; ++i) {
-      var done = lookup(maps[i]);
-      if (done) return done != "stop";
+  var lookupKey = CodeMirror.lookupKey = function(key, map, handle) {
+    map = getKeyMap(map);
+    var found = map.call ? map.call(key) : map[key];
+    if (found === false) return "nothing";
+    if (found === "...") return "multi";
+    if (found != null && handle(found)) return "handled";
+
+    if (map.fallthrough) {
+      if (Object.prototype.toString.call(map.fallthrough) != "[object Array]")
+        return lookupKey(key, map.fallthrough, handle);
+      for (var i = 0; i < map.fallthrough.length; i++) {
+        var result = lookupKey(key, map.fallthrough[i], handle);
+        if (result) return result;
+      }
     }
   };
 
   // Modifier key presses don't count as 'real' key presses for the
   // purpose of keymap fallthrough.
-  var isModifierKey = CodeMirror.isModifierKey = function(event) {
-    var name = keyNames[event.keyCode];
+  var isModifierKey = CodeMirror.isModifierKey = function(value) {
+    var name = typeof value == "string" ? value : keyNames[value.keyCode];
     return name == "Ctrl" || name == "Alt" || name == "Shift" || name == "Mod";
   };
 
   // Look up the name of a key as indicated by an event object.
   var keyName = CodeMirror.keyName = function(event, noShift) {
     if (presto && event.keyCode == 34 && event["char"]) return false;
-    var name = keyNames[event.keyCode];
+    var base = keyNames[event.keyCode], name = base;
     if (name == null || event.altGraphKey) return false;
-    if (event.altKey) name = "Alt-" + name;
-    if (flipCtrlCmd ? event.metaKey : event.ctrlKey) name = "Ctrl-" + name;
-    if (flipCtrlCmd ? event.ctrlKey : event.metaKey) name = "Cmd-" + name;
-    if (!noShift && event.shiftKey) name = "Shift-" + name;
+    if (event.altKey && base != "Alt") name = "Alt-" + name;
+    if ((flipCtrlCmd ? event.metaKey : event.ctrlKey) && base != "Ctrl") name = "Ctrl-" + name;
+    if ((flipCtrlCmd ? event.ctrlKey : event.metaKey) && base != "Cmd") name = "Cmd-" + name;
+    if (!noShift && event.shiftKey && base != "Shift") name = "Shift-" + name;
     return name;
   };
+
+  function getKeyMap(val) {
+    return typeof val == "string" ? keyMap[val] : val;
+  }
 
   // FROMTEXTAREA
 
@@ -21611,12 +22234,35 @@ RegExp.escape= function(s) {
     if (inner.mode.blankLine) return inner.mode.blankLine(inner.state);
   }
 
-  function readToken(mode, stream, state) {
+  function readToken(mode, stream, state, inner) {
     for (var i = 0; i < 10; i++) {
+      if (inner) inner[0] = CodeMirror.innerMode(mode, state).mode;
       var style = mode.token(stream, state);
       if (stream.pos > stream.start) return style;
     }
     throw new Error("Mode " + mode.name + " failed to advance stream.");
+  }
+
+  // Utility for getTokenAt and getLineTokens
+  function takeToken(cm, pos, precise, asArray) {
+    function getObj(copy) {
+      return {start: stream.start, end: stream.pos,
+              string: stream.current(),
+              type: style || null,
+              state: copy ? copyState(doc.mode, state) : state};
+    }
+
+    var doc = cm.doc, mode = doc.mode, style;
+    pos = clipPos(doc, pos);
+    var line = getLine(doc, pos.line), state = getStateBefore(cm, pos.line, precise);
+    var stream = new StringStream(line.text, cm.options.tabSize), tokens;
+    if (asArray) tokens = [];
+    while ((asArray || stream.pos < pos.ch) && !stream.eol()) {
+      stream.start = stream.pos;
+      style = readToken(mode, stream, state);
+      if (asArray) tokens.push(getObj(true));
+    }
+    return asArray ? tokens : getObj();
   }
 
   // Run the given mode's parser over a line, calling f for each token.
@@ -21625,6 +22271,7 @@ RegExp.escape= function(s) {
     if (flattenSpans == null) flattenSpans = cm.options.flattenSpans;
     var curStart = 0, curStyle = null;
     var stream = new StringStream(text, cm.options.tabSize), style;
+    var inner = cm.options.addModeClass && [null];
     if (text == "") extractLineClasses(callBlankLine(mode, state), lineClasses);
     while (!stream.eol()) {
       if (stream.pos > cm.options.maxHighlightLength) {
@@ -21633,10 +22280,10 @@ RegExp.escape= function(s) {
         stream.pos = text.length;
         style = null;
       } else {
-        style = extractLineClasses(readToken(mode, stream, state), lineClasses);
+        style = extractLineClasses(readToken(mode, stream, state, inner), lineClasses);
       }
-      if (cm.options.addModeClass) {
-        var mName = CodeMirror.innerMode(mode, state).mode.name;
+      if (inner) {
+        var mName = inner[0].name;
         if (mName) style = "m-" + (style ? mName + " " + style : mName);
       }
       if (!flattenSpans || curStyle != style) {
@@ -21695,12 +22342,13 @@ RegExp.escape= function(s) {
     return {styles: st, classes: lineClasses.bgClass || lineClasses.textClass ? lineClasses : null};
   }
 
-  function getLineStyles(cm, line) {
+  function getLineStyles(cm, line, updateFrontier) {
     if (!line.styles || line.styles[0] != cm.state.modeGen) {
       var result = highlightLine(cm, line, line.stateAfter = getStateBefore(cm, lineNo(line)));
       line.styles = result.styles;
       if (result.classes) line.styleClasses = result.classes;
       else if (line.styleClasses) line.styleClasses = null;
+      if (updateFrontier === cm.doc.frontier) cm.doc.frontier++;
     }
     return line.styles;
   }
@@ -21755,7 +22403,8 @@ RegExp.escape= function(s) {
       if (hasBadBidiRects(cm.display.measure) && (order = getOrder(line)))
         builder.addToken = buildTokenBadBidi(builder.addToken, order);
       builder.map = [];
-      insertLineContent(line, builder, getLineStyles(cm, line));
+      var allowFrontierUpdate = lineView != cm.display.externalMeasured && lineNo(line);
+      insertLineContent(line, builder, getLineStyles(cm, line, allowFrontierUpdate));
       if (line.styleClasses) {
         if (line.styleClasses.bgClass)
           builder.bgClass = joinClasses(line.styleClasses.bgClass, builder.bgClass || "");
@@ -21777,9 +22426,14 @@ RegExp.escape= function(s) {
       }
     }
 
+    // See issue #2901
+    if (webkit && /\bcm-tab\b/.test(builder.content.lastChild.className))
+      builder.content.className = "cm-tab-wrap-hack";
+
     signal(cm, "renderLine", cm, lineView.line, builder.pre);
     if (builder.pre.className)
       builder.textClass = joinClasses(builder.pre.className, builder.textClass || "");
+
     return builder;
   }
 
@@ -22348,22 +23002,26 @@ RegExp.escape= function(s) {
     },
 
     addLineClass: docMethodOp(function(handle, where, cls) {
-      return changeLine(this, handle, "class", function(line) {
-        var prop = where == "text" ? "textClass" : where == "background" ? "bgClass" : "wrapClass";
+      return changeLine(this, handle, where == "gutter" ? "gutter" : "class", function(line) {
+        var prop = where == "text" ? "textClass"
+                 : where == "background" ? "bgClass"
+                 : where == "gutter" ? "gutterClass" : "wrapClass";
         if (!line[prop]) line[prop] = cls;
-        else if (new RegExp("(?:^|\\s)" + cls + "(?:$|\\s)").test(line[prop])) return false;
+        else if (classTest(cls).test(line[prop])) return false;
         else line[prop] += " " + cls;
         return true;
       });
     }),
     removeLineClass: docMethodOp(function(handle, where, cls) {
       return changeLine(this, handle, "class", function(line) {
-        var prop = where == "text" ? "textClass" : where == "background" ? "bgClass" : "wrapClass";
+        var prop = where == "text" ? "textClass"
+                 : where == "background" ? "bgClass"
+                 : where == "gutter" ? "gutterClass" : "wrapClass";
         var cur = line[prop];
         if (!cur) return false;
         else if (cls == null) line[prop] = null;
         else {
-          var found = cur.match(new RegExp("(?:^|\\s+)" + cls + "(?:$|\\s+)"));
+          var found = cur.match(classTest(cls));
           if (!found) return false;
           var end = found.index + found[0].length;
           line[prop] = cur.slice(0, found.index) + (!found.index || end == cur.length ? "" : " ") + cur.slice(end) || null;
@@ -22982,6 +23640,8 @@ RegExp.escape= function(s) {
   // registering a (non-DOM) handler on the editor for the event name,
   // and preventDefault-ing the event in that handler.
   function signalDOMEvent(cm, e, override) {
+    if (typeof e == "string")
+      e = {type: e, preventDefault: function() { this.defaultPrevented = true; }};
     signal(cm, override || e.type, cm, e);
     return e_defaultPrevented(e) || e.codemirrorIgnore;
   }
@@ -23155,7 +23815,8 @@ RegExp.escape= function(s) {
   };
   else range = function(node, start, end) {
     var r = document.body.createTextRange();
-    r.moveToElementText(node.parentNode);
+    try { r.moveToElementText(node.parentNode); }
+    catch(e) { return r; }
     r.collapse(true);
     r.moveEnd("character", end);
     r.moveStart("character", start);
@@ -23187,14 +23848,19 @@ RegExp.escape= function(s) {
     catch(e) { return document.body; }
   };
 
-  function classTest(cls) { return new RegExp("\\b" + cls + "\\b\\s*"); }
-  function rmClass(node, cls) {
-    var test = classTest(cls);
-    if (test.test(node.className)) node.className = node.className.replace(test, "");
-  }
-  function addClass(node, cls) {
-    if (!classTest(cls).test(node.className)) node.className += " " + cls;
-  }
+  function classTest(cls) { return new RegExp("(^|\\s)" + cls + "(?:$|\\s)\\s*"); }
+  var rmClass = CodeMirror.rmClass = function(node, cls) {
+    var current = node.className;
+    var match = classTest(cls).exec(current);
+    if (match) {
+      var after = current.slice(match.index + match[0].length);
+      node.className = current.slice(0, match.index) + (after ? match[1] + after : "");
+    }
+  };
+  var addClass = CodeMirror.addClass = function(node, cls) {
+    var current = node.className;
+    if (!classTest(cls).test(current)) node.className += (current ? " " : "") + cls;
+  };
   function joinClasses(a, b) {
     var as = a.split(" ");
     for (var i = 0; i < as.length; i++)
@@ -23641,12 +24307,12 @@ RegExp.escape= function(s) {
 
   // THE END
 
-  CodeMirror.version = "4.7.0";
+  CodeMirror.version = "4.8.0";
 
   return CodeMirror;
 });
 
-},{}],6:[function(require,module,exports){
+},{}],10:[function(require,module,exports){
 // CodeMirror, copyright (c) by Marijn Haverbeke and others
 // Distributed under an MIT license: http://codemirror.net/LICENSE
 
@@ -24332,7 +24998,7 @@ CodeMirror.defineMIME("application/typescript", { name: "javascript", typescript
 
 });
 
-},{"../../lib/codemirror":5}],7:[function(require,module,exports){
+},{"../../lib/codemirror":9}],11:[function(require,module,exports){
 // CodeMirror, copyright (c) by Marijn Haverbeke and others
 // Distributed under an MIT license: http://codemirror.net/LICENSE
 
@@ -24718,7 +25384,7 @@ if (!CodeMirror.mimeModes.hasOwnProperty("text/html"))
 
 });
 
-},{"../../lib/codemirror":5}],8:[function(require,module,exports){
+},{"../../lib/codemirror":9}],12:[function(require,module,exports){
 /*!
  * jQuery JavaScript Library v1.11.1
  * http://jquery.com/
@@ -35028,7 +35694,7 @@ return jQuery;
 
 }));
 
-},{}],9:[function(require,module,exports){
+},{}],13:[function(require,module,exports){
 ;(function(win){
 	var store = {},
 		doc = win.document,
@@ -35197,7 +35863,7 @@ return jQuery;
 
 })(Function('return this')());
 
-},{}],10:[function(require,module,exports){
+},{}],14:[function(require,module,exports){
 module.exports={
   "name": "yasgui-utils",
   "version": "1.4.1",
@@ -35236,7 +35902,7 @@ module.exports={
   "_from": "yasgui-utils@^1.4.1"
 }
 
-},{}],11:[function(require,module,exports){
+},{}],15:[function(require,module,exports){
 window.console = window.console || {"log":function(){}};//make sure any console statements don't break IE
 module.exports = {
 	storage: require("./storage.js"),
@@ -35246,7 +35912,7 @@ module.exports = {
 	}
 };
 
-},{"../package.json":10,"./storage.js":12,"./svg.js":13}],12:[function(require,module,exports){
+},{"../package.json":14,"./storage.js":16,"./svg.js":17}],16:[function(require,module,exports){
 var store = require("store");
 var times = {
 	day: function() {
@@ -35286,7 +35952,7 @@ var root = module.exports = {
 
 };
 
-},{"store":9}],13:[function(require,module,exports){
+},{"store":13}],17:[function(require,module,exports){
 module.exports = {
 	draw: function(parent, svgString, config) {
 		if (!parent) return;
@@ -35319,11 +35985,11 @@ module.exports = {
 		return false;
 	}
 };
-},{}],14:[function(require,module,exports){
+},{}],18:[function(require,module,exports){
 module.exports={
   "name": "yasgui-yasr",
   "description": "Yet Another SPARQL Resultset GUI",
-  "version": "2.2.1",
+  "version": "2.2.2",
   "main": "src/main.js",
   "licenses": [
     {
@@ -35349,17 +36015,16 @@ module.exports={
     "gulp-rename": "^1.2.0",
     "gulp-streamify": "0.0.5",
     "gulp-tag-version": "^1.1.0",
-    "gulp-uglify": "^0.2.1",
+    "gulp-uglify": "^1.0.1",
     "require-dir": "^0.1.0",
     "run-sequence": "^1.0.1",
     "vinyl-buffer": "^1.0.0",
     "vinyl-source-stream": "~0.1.1",
     "watchify": "^0.6.4",
-    "gulp-sourcemaps": "^1.2.4",
+    "gulp-sourcemaps": "^1.2.8",
     "exorcist": "^0.1.6",
     "vinyl-transform": "0.0.1",
     "gulp-sass": "^1.2.2",
-    "yasgui-yasqe": "^2.0.1",
     "twitter-bootstrap-3.0.0": "^3.0.0",
     "browserify-transform-tools": "^1.2.1"
   },
@@ -35385,7 +36050,8 @@ module.exports={
   "dependencies": {
     "jquery": "~ 1.11.0",
     "codemirror": "^4.2.0",
-    "yasgui-utils": "^1.4.1"
+    "yasgui-utils": "^1.4.1",
+    "n3": "^0.3.4"
   },
   "optionalShim": {
     "codemirror": {
@@ -35407,7 +36073,8 @@ module.exports={
   }
 }
 
-},{}],15:[function(require,module,exports){
+},{}],19:[function(require,module,exports){
+'use strict';
 module.exports = function(result) {
 	var quote = "\"";
 	var delimiter = ",";
@@ -35466,7 +36133,8 @@ module.exports = function(result) {
 	createBody();
 	return csvString;
 };
-},{}],16:[function(require,module,exports){
+},{}],20:[function(require,module,exports){
+'use strict';
 var $ = require("jquery");
 
 /**
@@ -35528,7 +36196,8 @@ root.version = {
 };
 
 
-},{"../package.json":14,"./imgs.js":19,"jquery":8,"yasgui-utils":11}],17:[function(require,module,exports){
+},{"../package.json":18,"./imgs.js":23,"jquery":12,"yasgui-utils":15}],21:[function(require,module,exports){
+'use strict';
 var $ = require('jquery');
 module.exports = {
 	/**
@@ -35618,7 +36287,8 @@ module.exports = {
 	
 	
 };
-},{"jquery":8}],18:[function(require,module,exports){
+},{"jquery":12}],22:[function(require,module,exports){
+'use strict';
 var $ = require("jquery");
 
 /**
@@ -35662,7 +36332,8 @@ var root = module.exports = function(yasr) {
 root.defaults = {
 	
 };
-},{"jquery":8}],19:[function(require,module,exports){
+},{"jquery":12}],23:[function(require,module,exports){
+'use strict';
 module.exports = {
 	cross: '<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" x="0px" y="0px" width="30px" height="30px" viewBox="0 0 100 100" enable-background="new 0 0 100 100" xml:space="preserve"><g>	<path d="M83.288,88.13c-2.114,2.112-5.575,2.112-7.689,0L53.659,66.188c-2.114-2.112-5.573-2.112-7.687,0L24.251,87.907   c-2.113,2.114-5.571,2.114-7.686,0l-4.693-4.691c-2.114-2.114-2.114-5.573,0-7.688l21.719-21.721c2.113-2.114,2.113-5.573,0-7.686   L11.872,24.4c-2.114-2.113-2.114-5.571,0-7.686l4.842-4.842c2.113-2.114,5.571-2.114,7.686,0L46.12,33.591   c2.114,2.114,5.572,2.114,7.688,0l21.721-21.719c2.114-2.114,5.573-2.114,7.687,0l4.695,4.695c2.111,2.113,2.111,5.571-0.003,7.686   L66.188,45.973c-2.112,2.114-2.112,5.573,0,7.686L88.13,75.602c2.112,2.111,2.112,5.572,0,7.687L83.288,88.13z"/></g></svg>',
 	check: '<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" x="0px" y="0px" width="30px" height="30px" viewBox="0 0 100 100" enable-background="new 0 0 100 100" xml:space="preserve"><path fill="#000000" d="M14.301,49.982l22.606,17.047L84.361,4.903c2.614-3.733,7.76-4.64,11.493-2.026l0.627,0.462  c3.732,2.614,4.64,7.758,2.025,11.492l-51.783,79.77c-1.955,2.791-3.896,3.762-7.301,3.988c-3.405,0.225-5.464-1.039-7.508-3.084  L2.447,61.814c-3.263-3.262-3.263-8.553,0-11.814l0.041-0.019C5.75,46.718,11.039,46.718,14.301,49.982z"/></svg>',
@@ -35671,12 +36342,14 @@ module.exports = {
 	sortAsc: '<svg   xmlns:dc="http://purl.org/dc/elements/1.1/"   xmlns:cc="http://creativecommons.org/ns#"   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"   xmlns:svg="http://www.w3.org/2000/svg"   xmlns="http://www.w3.org/2000/svg"   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"   version="1.1"   id="Layer_1"   x="0px"   y="0px"   width="100%"   height="100%"   viewBox="0 0 54.552711 113.78478"   enable-background="new 0 0 100 100"   xml:space="preserve"><g     id="g5"     transform="matrix(-0.70522156,0.70898699,-0.70898699,-0.70522156,97.988199,58.704807)"><path       style="fill:#000000"       inkscape:connector-curvature="0"       id="path7"       d="M 57.911,66.915 45.808,55.063 42.904,52.238 31.661,41.25 31.435,41.083 31.131,40.775 30.794,40.523 30.486,40.3 30.069,40.05 29.815,39.911 29.285,39.659 29.089,39.576 28.474,39.326 28.363,39.297 H 28.336 L 27.665,39.128 27.526,39.1 26.94,38.99 26.714,38.961 26.212,38.934 h -0.31 -0.444 l -0.339,0.027 c -1.45,0.139 -2.876,0.671 -4.11,1.564 l -0.223,0.141 -0.279,0.25 -0.335,0.308 -0.054,0.029 -0.171,0.194 -0.334,0.364 -0.224,0.279 -0.25,0.336 -0.225,0.362 -0.192,0.308 -0.197,0.421 -0.142,0.279 -0.193,0.477 -0.084,0.222 -12.441,38.414 c -0.814,2.458 -0.313,5.029 1.115,6.988 v 0.026 l 0.418,0.532 0.17,0.165 0.251,0.281 0.084,0.079 0.283,0.281 0.25,0.194 0.474,0.367 0.083,0.053 c 2.015,1.371 4.641,1.874 7.131,1.094 L 55.228,80.776 c 4.303,-1.342 6.679,-5.814 5.308,-10.006 -0.387,-1.259 -1.086,-2.35 -1.979,-3.215 l -0.368,-0.337 -0.278,-0.303 z m -6.318,5.896 0.079,0.114 -37.369,11.57 11.854,-36.538 10.565,10.317 2.876,2.825 11.995,11.712 z" /></g><path     style="fill:#000000"     inkscape:connector-curvature="0"     id="path9"     d="m 27.813273,113.65778 0.09753,-0.0201 c 2.39093,-0.45821 4.599455,-1.96811 5.80244,-4.28639 L 52.785897,72.891487 c 2.088044,-4.002139 0.590949,-8.836902 -3.348692,-10.821875 -1.329078,-0.688721 -2.766603,-0.943695 -4.133174,-0.841768 l -0.454018,-0.02 -16.939621,0.223997 -4.055079,0.07232 -15.711383,0.220024 -0.281322,0.04035 -0.432752,-2.61e-4 -0.415615,0.06192 -0.376025,0.05898 -0.47344,0.121469 -0.27556,0.07993 -0.550309,0.198748 -0.199188,0.08114 -0.594655,0.274528 -0.114446,0.0399 -0.02045,0.02056 -0.59303,0.35372 -0.123523,0.08306 -0.486301,0.337172 -0.179243,0.136242 -0.375276,0.340412 -0.219324,0.220495 -0.293372,0.294939 -0.238972,0.277116 C 0.97781,65.869953 0.347935,67.257564 0.11153,68.764336 L 0.05352,69.019757 0.05172,69.414329 0.01894,69.849995 0,69.908735 l 0.01836,0.255217 0.0183,0.499171 0.03984,0.356984 0.06262,0.413492 0.09656,0.411988 0.0872,0.351908 0.158141,0.436572 0.09837,0.298139 0.194299,0.472538 0.102407,0.218932 18.462772,35.908054 c 1.172169,2.30842 3.34759,3.76847 5.740829,4.17717 l 0.01975,-0.0199 0.69605,0.0957 0.218437,-0.0225 0.490791,0.0213 0.39809,-0.005 0.315972,-0.0397 0.594462,-0.0815 z" /></svg>',
 	download: '<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" baseProfile="tiny" x="0px" y="0px" width="100%" height="100%" viewBox="0 0 100 100" xml:space="preserve"><g id="Captions"></g><g id="Your_Icon">	<path fill-rule="evenodd" fill="#000000" d="M88,84v-2c0-2.961-0.859-4-4-4H16c-2.961,0-4,0.98-4,4v2c0,3.102,1.039,4,4,4h68   C87.02,88,88,87.039,88,84z M58,12H42c-5,0-6,0.941-6,6v22H16l34,34l34-34H64V18C64,12.941,62.939,12,58,12z"/></g></svg>',
 };
-},{}],20:[function(require,module,exports){
+},{}],24:[function(require,module,exports){
+'use strict';
 var $ = require("jquery");
 var root = module.exports = function(queryResponse) {
 	return require("./dlv.js")(queryResponse, ",");
 };
-},{"./dlv.js":21,"jquery":8}],21:[function(require,module,exports){
+},{"./dlv.js":25,"jquery":12}],25:[function(require,module,exports){
+'use strict';
 var $ = jQuery = require('jquery');
 require("../../lib/jquery.csv-0.71.js");
 var root = module.exports = function(queryResponse, separator) {
@@ -35737,7 +36410,8 @@ var root = module.exports = function(queryResponse, separator) {
 	
 	return json;
 };
-},{"../../lib/jquery.csv-0.71.js":3,"jquery":8}],22:[function(require,module,exports){
+},{"../../lib/jquery.csv-0.71.js":3,"jquery":12}],26:[function(require,module,exports){
+'use strict';
 var $ = require("jquery");
 var root = module.exports = function(queryResponse) {
 	
@@ -35754,12 +36428,14 @@ var root = module.exports = function(queryResponse) {
 	return false;
 	
 };
-},{"jquery":8}],23:[function(require,module,exports){
+},{"jquery":12}],27:[function(require,module,exports){
+'use strict';
 var $ = require("jquery");
 var root = module.exports = function(queryResponse) {
 	return require("./dlv.js")(queryResponse, "\t");
 };
-},{"./dlv.js":21,"jquery":8}],24:[function(require,module,exports){
+},{"./dlv.js":25,"jquery":12}],28:[function(require,module,exports){
+'use strict';
 var $ = require("jquery");
 
 var root = module.exports = function(queryResponse) {
@@ -35905,7 +36581,8 @@ var root = module.exports = function(queryResponse) {
 
 
 
-},{"./csv.js":20,"./json.js":22,"./tsv.js":23,"./xml.js":25,"jquery":8}],25:[function(require,module,exports){
+},{"./csv.js":24,"./json.js":26,"./tsv.js":27,"./xml.js":29,"jquery":12}],29:[function(require,module,exports){
+'use strict';
 var $ = require("jquery");
 var root = module.exports = function(xml) {
 
@@ -35990,9 +36667,15 @@ var root = module.exports = function(xml) {
 	return json;
 };
 
-},{"jquery":8}],26:[function(require,module,exports){
+},{"jquery":12}],30:[function(require,module,exports){
+'use strict';
 var $ = require("jquery"),
 	CodeMirror = require("codemirror");
+
+require('codemirror/addon/fold/foldcode.js');
+require('codemirror/addon/fold/foldgutter.js');
+require('codemirror/addon/fold/xml-fold.js');
+require('codemirror/addon/fold/brace-fold.js');
 
 require('codemirror/addon/edit/matchbrackets.js');
 require('codemirror/mode/xml/xml.js');
@@ -36001,6 +36684,7 @@ require('codemirror/mode/javascript/javascript.js');
 var root = module.exports = function(yasr) {
 	var plugin = {};
 	var options = $.extend(true, {}, root.defaults);
+	var cm = null;
 	var draw = function() {
 		var cmOptions = options.CodeMirror;
 		cmOptions.value = yasr.results.getOriginalResponseAsString();
@@ -36013,7 +36697,16 @@ var root = module.exports = function(yasr) {
 			cmOptions.mode = mode;
 		}
 		
-		CodeMirror(yasr.resultsContainer.get()[0], cmOptions);
+		cm = CodeMirror(yasr.resultsContainer.get()[0], cmOptions);
+		
+		//CM has some issues with folding and unfolding (blank parts in the codemirror area, which are only filled after clicking it)
+		//so, refresh cm after folding/unfolding
+		cm.on('fold', function() {
+			cm.refresh();
+		});
+		cm.on('unfold', function() {
+			cm.refresh();
+		});
 		
 	};
 	var canHandleResults = function(){
@@ -36050,6 +36743,10 @@ var root = module.exports = function(yasr) {
 root.defaults = {
 	CodeMirror: {
 		readOnly: true,
+		lineNumbers: true,
+	    lineWrapping: true,
+	    foldGutter: true,
+	    gutters: ["CodeMirror-linenumbers", "CodeMirror-foldgutter"]
 	}
 };
 
@@ -36058,7 +36755,8 @@ root.version = {
 	"jquery": $.fn.jquery,
 	"CodeMirror" : CodeMirror.version
 };
-},{"../package.json":14,"codemirror":5,"codemirror/addon/edit/matchbrackets.js":4,"codemirror/mode/javascript/javascript.js":6,"codemirror/mode/xml/xml.js":7,"jquery":8}],27:[function(require,module,exports){
+},{"../package.json":18,"codemirror":9,"codemirror/addon/edit/matchbrackets.js":4,"codemirror/addon/fold/brace-fold.js":5,"codemirror/addon/fold/foldcode.js":6,"codemirror/addon/fold/foldgutter.js":7,"codemirror/addon/fold/xml-fold.js":8,"codemirror/mode/javascript/javascript.js":10,"codemirror/mode/xml/xml.js":11,"jquery":12}],31:[function(require,module,exports){
+'use strict';
 var $ = require("jquery"),
 	yutils = require("yasgui-utils"),
 	imgs = require('./imgs.js');
@@ -36119,6 +36817,12 @@ var root = module.exports = function(yasr) {
 		table.on( 'order.dt', function () {
 		    drawSvgIcons();
 		});
+		if (options.persistency && options.persistency.tableLength) {
+			table.on('length.dt', function(e, settings, len) {
+				var persistencyId = (typeof options.persistency.tableLength == "string" ? options.persistency.tableLength: options.persistency.tableLength(yasr));
+				yutils.storage.set(persistencyId, len, "month");
+			});
+		}
 		$.extend(true, options.callbacks, options.handlers);
 		table.delegate("td", "click", function(event) {
 			if (options.callbacks && options.callbacks.onCellClick) {
@@ -36141,6 +36845,7 @@ var root = module.exports = function(yasr) {
 				
 			}
 		});
+		
 	};
 	
 	plugin.draw = function() {
@@ -36150,6 +36855,15 @@ var root = module.exports = function(yasr) {
 		var dataTableConfig = options.datatable;
 		dataTableConfig.data = getRows();
 		dataTableConfig.columns = options.getColumns(yasr, plugin);
+		
+		//fetch stored datatables length value
+		if (options.persistency && options.persistency.tableLength) {
+			var persistencyId = (typeof options.persistency.tableLength == "string" ? options.persistency.tableLength: options.persistency.tableLength(yasr));
+			dataTableConfig.pageLength = yutils.storage.get(persistencyId);
+		}
+		
+		
+		
 		table.DataTable($.extend(true, {}, dataTableConfig));//make copy. datatables adds properties for backwards compatability reasons, and don't want this cluttering our own 
 		
 		
@@ -36232,7 +36946,8 @@ var getCellContent = function(yasr, plugin, bindings, sparqlVar, context) {
 	var value = null;
 	if (binding.type == "uri") {
 		var title = null;
-		var href = visibleString = binding.value;
+		var href = binding.value;
+		var visibleString = href;  
 		if (context.usedPrefixes) {
 			for (var prefix in context.usedPrefixes) {
 				if (visibleString.indexOf(context.usedPrefixes[prefix]) == 0) {
@@ -36303,6 +37018,12 @@ root.defaults = {
 	 */
 	getCellContent: getCellContent,
 	
+	persistency: {
+		tableLength: function (yasr){
+			return "tableLength_" + $(yasr.container).closest('[id]').attr('id');
+		},
+	},
+	
 	getColumns: function(yasr, plugin) {
 		var includeVariable = function(variableToCheck) {
 			if (!plugin.options.mergeLabelsWithUris) return true;
@@ -36333,7 +37054,7 @@ root.defaults = {
 	 */
 	fetchTitlesFromPreflabel: true,
 	
-	mergeLabelsWithUris: true,
+	mergeLabelsWithUris: false,
 	/**
 	 * Set a number of handlers for the table
 	 * 
@@ -36413,7 +37134,7 @@ root.version = {
 	"jquery-datatables": $.fn.DataTable.version
 };
 
-},{"../lib/DataTables/media/js/jquery.dataTables.js":2,"../package.json":14,"./bindingsToCsv.js":15,"./imgs.js":19,"jquery":8,"yasgui-utils":11}]},{},[1])(1)
+},{"../lib/DataTables/media/js/jquery.dataTables.js":2,"../package.json":18,"./bindingsToCsv.js":19,"./imgs.js":23,"jquery":12,"yasgui-utils":15}]},{},[1])(1)
 });
 
 
