@@ -193,7 +193,7 @@ var getCellContent = function(yasr, plugin, bindings, sparqlVar, context) {
 		if (context.usedPrefixes) {
 			for (var prefix in context.usedPrefixes) {
 				if (visibleString.indexOf(context.usedPrefixes[prefix]) == 0) {
-					visibleString = prefix + href.substring(context.usedPrefixes[prefix].length);
+					visibleString = prefix + ':' + href.substring(context.usedPrefixes[prefix].length);
 					break;
 				}
 			}
