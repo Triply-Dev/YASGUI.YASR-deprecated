@@ -7,6 +7,7 @@
     <title>YASR</title>
   <link rel="icon"  type="image/png" href="doc/imgs/favicon.png">
   <link href="dist/yasr.css" rel="stylesheet" type="text/css" />
+  <link href='//cdn.jsdelivr.net/yasqe/2.2/yasqe.min.css' rel='stylesheet' type='text/css'/>
   <link href="doc/doc.min.css" rel="stylesheet" type="text/css" />
   </head>
   <body>
@@ -139,6 +140,7 @@
 
 
 <script src="dist/yasr.bundled.min.js"></script>
+<script src='//cdn.jsdelivr.net/yasqe/2.2/yasqe.bundled.min.js'></script>
 <script src="doc/doc.min.js"></script>
 <script type="text/javascript">
 	var yasr, yasqe = {};
@@ -168,6 +170,16 @@
 		yasr.setResponse({exception: exceptionMsg});
 	}
 	if(!yasr.somethingDrawn()) yasqe.query();
+	
+	/**
+	* A function to do some quick testing
+	*/
+	function testFile(testFile) {
+		$.get("test/" + testFile, function(data) {
+			yasr.setResponse(data);
+		});
+	}
+	
 </script>
   </body>
 </html>

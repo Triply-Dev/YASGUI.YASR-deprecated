@@ -19,7 +19,7 @@ gulp.task('makeMainPageJs', function() {
 			});
 });
 gulp.task('makeMainPageCss', function() {
-	return gulp.src(['node_modules/twitter-bootstrap-3.0.0/dist/css/bootstrap.css', './doc/main.css', './node_modules/yasgui-yasqe/dist/yasqe.min.css'])
+	return gulp.src(['node_modules/twitter-bootstrap-3.0.0/dist/css/bootstrap.css', './doc/main.css'])
   	.pipe(concat('doc.min.css'))
   	.pipe(minifyCSS())
     .pipe(gulp.dest("doc"))

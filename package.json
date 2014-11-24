@@ -37,7 +37,6 @@
     "exorcist": "^0.1.6",
     "vinyl-transform": "0.0.1",
     "gulp-sass": "^1.2.2",
-    "yasgui-yasqe": "^2.0.1",
     "twitter-bootstrap-3.0.0": "^3.0.0",
     "browserify-transform-tools": "^1.2.1"
   },
