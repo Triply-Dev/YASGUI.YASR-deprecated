@@ -1,0 +1,15 @@
+.yasr {
+	margin-top: 5px;
+	font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+	font-size: 14px;
+	line-height: 1.428571429;
+	color: #333333;
+	@import "../../lib/DataTables/media/css/jquery.dataTables.css";
+	@import "../../node_modules/codemirror/lib/codemirror.css"; 
+	@import "../../node_modules/codemirror/addon/fold/foldgutter.css"; 
+	@import "../main.scss";
+	@import "../boolean.scss";
+	@import "../error.scss";
+	@import "../rawResponse.scss";
+	@import "../table.scss";
+}
