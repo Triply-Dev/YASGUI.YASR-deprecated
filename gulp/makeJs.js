@@ -20,7 +20,7 @@ gulp.task('browserify', function() {
 		.exclude('jquery')
 		.exclude('codemirror')
 		.exclude('../lib/DataTables/media/js/jquery.dataTables.js')
-		.exclude('jquery.dataTables')
+		.exclude('datatables')
 		.bundle()
 		.pipe(exorcist(paths.bundleDir + '/' + paths.bundleName + '.js.map'))
 		.pipe(source(paths.bundleName + '.js'))

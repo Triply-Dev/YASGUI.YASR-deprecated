@@ -79,7 +79,7 @@
       "global": "CodeMirror"
     },
     "../lib/DataTables/media/js/jquery.dataTables.js": {
-      "require": "jquery.dataTables",
+      "require": "datatables",
       "global": "jQuery"
     }
   }
