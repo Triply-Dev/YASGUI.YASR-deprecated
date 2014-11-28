@@ -35703,17 +35703,21 @@ return jQuery;
 		storage
 
 	store.disabled = false
+	store.version = '1.3.17'
 	store.set = function(key, value) {}
-	store.get = function(key) {}
+	store.get = function(key, defaultVal) {}
+	store.has = function(key) { return store.get(key) !== undefined }
 	store.remove = function(key) {}
 	store.clear = function() {}
 	store.transact = function(key, defaultVal, transactionFn) {
-		var val = store.get(key)
 		if (transactionFn == null) {
 			transactionFn = defaultVal
 			defaultVal = null
 		}
-		if (typeof val == 'undefined') { val = defaultVal || {} }
+		if (defaultVal == null) {
+			defaultVal = {}
+		}
+		var val = store.get(key, defaultVal)
 		transactionFn(val)
 		store.set(key, val)
 	}
@@ -35744,7 +35748,10 @@ return jQuery;
 			storage.setItem(key, store.serialize(val))
 			return val
 		}
-		store.get = function(key) { return store.deserialize(storage.getItem(key)) }
+		store.get = function(key, defaultVal) {
+			var val = store.deserialize(storage.getItem(key))
+			return (val === undefined ? defaultVal : val)
+		}
 		store.remove = function(key) { storage.removeItem(key) }
 		store.clear = function() { storage.clear() }
 		store.getAll = function() {
@@ -35786,7 +35793,7 @@ return jQuery;
 			storage = doc.createElement('div')
 			storageOwner = doc.body
 		}
-		function withIEStorage(storeFunction) {
+		var withIEStorage = function(storeFunction) {
 			return function() {
 				var args = Array.prototype.slice.call(arguments, 0)
 				args.unshift(storage)
@@ -35815,9 +35822,10 @@ return jQuery;
 			storage.save(localStorageName)
 			return val
 		})
-		store.get = withIEStorage(function(storage, key) {
+		store.get = withIEStorage(function(storage, key, defaultVal) {
 			key = ieKeyFix(key)
-			return store.deserialize(storage.getAttribute(key))
+			var val = store.deserialize(storage.getAttribute(key))
+			return (val === undefined ? defaultVal : val)
 		})
 		store.remove = withIEStorage(function(storage, key) {
 			key = ieKeyFix(key)
@@ -35989,7 +35997,7 @@ module.exports = {
 module.exports={
   "name": "yasgui-yasr",
   "description": "Yet Another SPARQL Resultset GUI",
-  "version": "2.2.2",
+  "version": "2.2.3",
   "main": "src/main.js",
   "licenses": [
     {
@@ -36010,7 +36018,7 @@ module.exports={
     "gulp-git": "^0.5.2",
     "gulp-jsvalidate": "^0.2.0",
     "gulp-livereload": "^1.3.1",
-    "gulp-minify-css": "^0.3.0",
+    "gulp-minify-css": "^0.3.11",
     "gulp-notify": "^1.2.5",
     "gulp-rename": "^1.2.0",
     "gulp-streamify": "0.0.5",
@@ -36026,7 +36034,8 @@ module.exports={
     "vinyl-transform": "0.0.1",
     "gulp-sass": "^1.2.2",
     "twitter-bootstrap-3.0.0": "^3.0.0",
-    "browserify-transform-tools": "^1.2.1"
+    "browserify-transform-tools": "^1.2.1",
+    "gulp-cssimport": "^1.3.1"
   },
   "bugs": "https://github.com/YASGUI/YASR/issues/",
   "keywords": [
@@ -36049,9 +36058,8 @@ module.exports={
   },
   "dependencies": {
     "jquery": "~ 1.11.0",
-    "codemirror": "^4.2.0",
-    "yasgui-utils": "^1.4.1",
-    "n3": "^0.3.4"
+    "codemirror": "^4.7.0",
+    "yasgui-utils": "^1.4.1"
   },
   "optionalShim": {
     "codemirror": {
@@ -36067,7 +36075,7 @@ module.exports={
       "global": "CodeMirror"
     },
     "../lib/DataTables/media/js/jquery.dataTables.js": {
-      "require": "jquery.dataTables",
+      "require": "datatables",
       "global": "jQuery"
     }
   }
@@ -36951,7 +36959,7 @@ var getCellContent = function(yasr, plugin, bindings, sparqlVar, context) {
 		if (context.usedPrefixes) {
 			for (var prefix in context.usedPrefixes) {
 				if (visibleString.indexOf(context.usedPrefixes[prefix]) == 0) {
-					visibleString = prefix + href.substring(context.usedPrefixes[prefix].length);
+					visibleString = prefix + ':' + href.substring(context.usedPrefixes[prefix].length);
 					break;
 				}
 			}
