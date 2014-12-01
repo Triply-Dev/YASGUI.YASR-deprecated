@@ -3139,7 +3139,7 @@ module.exports = {
 module.exports={
   "name": "yasgui-yasr",
   "description": "Yet Another SPARQL Resultset GUI",
-  "version": "2.2.3",
+  "version": "2.2.4",
   "main": "src/main.js",
   "licenses": [
     {
@@ -4009,7 +4009,8 @@ var root = module.exports = function(yasr) {
 		//fetch stored datatables length value
 		if (options.persistency && options.persistency.tableLength) {
 			var persistencyId = (typeof options.persistency.tableLength == "string" ? options.persistency.tableLength: options.persistency.tableLength(yasr));
-			dataTableConfig.pageLength = yutils.storage.get(persistencyId);
+			var pLength = yutils.storage.get(persistencyId);
+			if (pLength) dataTableConfig.pageLength = pLength;
 		}
 		
 		
