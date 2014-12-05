@@ -1,7 +1,12 @@
+@import '../node_modules/bootstrap-sass/assets/stylesheets/_bootstrap';
+.affix {
+	margin-top: -60px;
+}
 .doc {
 	margin: 10px;
 }
 
+/* Sidebar stuff*/
 .bs-docs-sidebar .nav>li>a {
 	color: #999;
 	padding-top: 4px;
@@ -25,9 +30,6 @@
 }
 .bs-docs-sidebar .nav .active .nav {
 	display: block;
-}
-.affix {
-	margin-top: -60px;
 }
 
 .gistIcon {
