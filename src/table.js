@@ -149,7 +149,7 @@ var root = module.exports = function(yasr) {
 	 * @default If resultset contains variables in the resultset, return true
 	 */
 	plugin.canHandleResults = function(){
-		return yasr.results && yasr.results.getVariables() && yasr.results.getVariables().length > 0;
+		return yasr.results && yasr.results.getVariables && yasr.results.getVariables() && yasr.results.getVariables().length > 0;
 	};
 
 	

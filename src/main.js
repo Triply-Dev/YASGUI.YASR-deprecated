@@ -66,11 +66,12 @@ var root = module.exports = function(parent, options, queryResults) {
 	yasr.somethingDrawn = function() {
 		return !yasr.resultsContainer.is(":empty");
 	};
-	yasr.setResponse = function(queryResults) {
+
+	yasr.setResponse = function(dataOrJqXhr, textStatus, jqXhrOrErrorString) {
 		try {
-			yasr.results = require("./parsers/wrapper.js")(queryResults);
+			yasr.results = require("./parsers/wrapper.js")(dataOrJqXhr, textStatus, jqXhrOrErrorString);
 		} catch(exception) {
-			yasr.results = exception;
+			yasr.results = {getException: function(){return exception}};
 		}
 		yasr.draw();
 		
@@ -78,15 +79,12 @@ var root = module.exports = function(parent, options, queryResults) {
 		if (yasr.options.persistency && yasr.options.persistency.results) {
 			if (yasr.results.getOriginalResponseAsString && yasr.results.getOriginalResponseAsString().length < yasr.options.persistency.results.maxSize) {
 				var id = (typeof yasr.options.persistency.results.id == "string" ? yasr.options.persistency.results.id: yasr.options.persistency.results.id(yasr));
-				utils.storage.set(id, yasr.results.getOriginalResponse(), "month");
+				utils.storage.set(id, yasr.results.getAsStoreObject(), "month");
 			}
 		}
 	};
 	
-//	yasr.plugins = {};
-//	for (var plugin in root.plugins) {
-//		yasr.plugins[plugin] = root.plugins[plugin](yasr, yasr.resultsContainer);
-//	}
+
 	/**
 	 * postprocess
 	 */
@@ -97,12 +95,18 @@ var root = module.exports = function(parent, options, queryResults) {
 			if (selection) yasr.options.output = selection;
 		}
 	}
+	drawHeader(yasr);
 	if (!queryResults && yasr.options.persistency && yasr.options.persistency.results) {
 		var id = (typeof yasr.options.persistency.results.id == "string" ? yasr.options.persistency.results.id: yasr.options.persistency.results.id(yasr));
-		queryResults = utils.storage.get(id);
+		var fromStorage = utils.storage.get(id);
+		if (fromStorage) {
+			if ($.isArray(fromStorage)) {
+				yasr.setResponse.apply(this, fromStorage);
+			} else {
+				yasr.setResponse(fromStorage);
+			}
+		}
 	}
-	
-	drawHeader(yasr);
 	
 	if (queryResults) {
 		yasr.setResponse(queryResults);

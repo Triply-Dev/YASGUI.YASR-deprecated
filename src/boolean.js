@@ -40,7 +40,7 @@ var root = module.exports = function(yasr) {
 	};
 	
 
-	var canHandleResults = function(){return yasr.results.getBoolean() === true || yasr.results.getBoolean() == false;};
+	var canHandleResults = function(){return yasr.results.getBoolean && (yasr.results.getBoolean() === true || yasr.results.getBoolean() == false);};
 
 	
 	

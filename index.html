@@ -165,14 +165,7 @@
     * Set some of the hooks to link YASR and YASQE
     */
     yasr.options.getUsedPrefixes = yasqe.getPrefixesFromQuery;
-    yasqe.options.sparql.handlers.success =  function(data, status, response) {
-		yasr.setResponse({response: data, contentType: response.getResponseHeader("Content-Type")});
-	};
-	yasqe.options.sparql.handlers.error = function(xhr, textStatus, errorThrown) {
-		var exceptionMsg = textStatus + " (response status code " + xhr.status + ")";
-		if (errorThrown && errorThrown.length) exceptionMsg += ": " + errorThrown;
-		yasr.setResponse({exception: exceptionMsg});
-	}
+	yasqe.options.sparql.callbacks.complete = yasr.setResponse;
 	if(!yasr.somethingDrawn()) yasqe.query();
 	
 	/**

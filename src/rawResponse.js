@@ -41,6 +41,7 @@ var root = module.exports = function(yasr) {
 	};
 	var canHandleResults = function(){
 		if (!yasr.results) return false;
+		if (!yasr.results.getOriginalResponseAsString) return false;
 		var response = yasr.results.getOriginalResponseAsString();
 		if ((!response || response.length == 0) && yasr.results.getException()) return false;//in this case, show exception instead, as we have nothing to show anyway
 		return true;
