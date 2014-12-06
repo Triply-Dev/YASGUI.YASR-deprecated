@@ -5,7 +5,7 @@ var gulp = require('gulp'),
 gulp.task('modifyYasqeIncludeDev', function() {
   gulp.src('index.html')
     .pipe(htmlreplace({
-        'css': '//localhost/yasgui/yasqe/dist/yasqe.css',
+        'css': '//localhost/yasgui/yasqe/dist/yasqe.min.css',
         'js': '//localhost/yasgui/yasqe/dist/yasqe.bundled.js'
     },
     {keepBlockTags: true}))
