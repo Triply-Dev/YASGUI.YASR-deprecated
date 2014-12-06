@@ -207,6 +207,7 @@ root.registerOutput('boolean', require("./boolean.js"));
 root.registerOutput('table', require("./table.js"));
 root.registerOutput('rawResponse', require("./rawResponse.js"));
 root.registerOutput('error', require("./error.js"));
+root.registerOutput('pivot', require("./pivot.js"));
 
 /**
  * The default options of YASR. Either change the default options by setting YASR.defaults, or by
@@ -220,3 +221,5 @@ root.version = {
 	"jquery": $.fn.jquery,
 	"yasgui-utils": require("yasgui-utils").version
 };
+root.$ = $;
+

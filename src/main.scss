@@ -45,12 +45,23 @@ th {
 		filter: alpha(opacity=50);
 		-webkit-box-shadow: none;
 		box-shadow: none;
+		&:hover, &:focus, &.selected {
+			/**keep regular colors, not the blue one*/
+			color: #333;
+			background-color: #fff;
+			border-color: 1px solid transparent;
+		}
 	}
-	&:hover, &:focus, &.selected {
-		color: #333;
+	&:hover {
 		outline:0;
 		background-color: #ebebeb;
 		border-color: #adadad;
+	}
+	&:focus, &.selected {
+		color: #fff;
+		outline:0;
+		background-color: #337ab7;
+		border-color: #337ab7;
 	}
 }
 .yasr_btnGroup {

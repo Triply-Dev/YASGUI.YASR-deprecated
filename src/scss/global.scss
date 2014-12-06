@@ -1,1 +1,8 @@
 //some content
+
+/**need to reset this: the modal-dialog class conflicts with bootstrap**/
+.modal-dialog.google-visualization-charteditor-dialog {
+	width: auto;
+	margin: inherit;
+	z-index: 40;/**otherwise might have conflicts with codemirror, or yasr buttons**/
+}
