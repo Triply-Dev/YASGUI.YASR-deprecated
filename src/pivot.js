@@ -21,7 +21,7 @@ var root = module.exports = function(yasr) {
 		} catch (e) {
 			//do nothing. just make sure we don't use this renderer
 		}
-		if (!$.pivotUtilities.d3_renderers) $.extend(true, renderers, $.pivotUtilities.d3_renderers);
+		if ($.pivotUtilities.d3_renderers) $.extend(true, renderers, $.pivotUtilities.d3_renderers);
 	}
 	
 	var loadGoogleApi = function() {
