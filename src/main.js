@@ -197,7 +197,7 @@ var drawHeader = function(yasr) {
 			}
 			return url;
 		};
-		var button = $("<button class='yasr_btn yasr_downloadIcon'></button>")
+		var button = $("<button class='yasr_btn yasr_downloadIcon btn_icon'></button>")
 			.append(require("yasgui-utils").svg.getElement(require('./imgs.js').download, {width: "15px", height: "15px"}))
 			.click(function() {
 				var currentPlugin = yasr.plugins[yasr.options.output];
@@ -212,6 +212,23 @@ var drawHeader = function(yasr) {
 			});
 		yasr.header.append(button);
 	};
+	var drawFullscreenButton = function() {
+		var button = $("<button class='yasr_btn btn_fullscreen btn_icon'></button>")
+			.append(require("yasgui-utils").svg.getElement(require('./imgs.js').fullscreen, {width: "15px", height: "15px"}))
+			.click(function() {
+				yasr.container.addClass('yasr_fullscreen');
+			});
+		yasr.header.append(button);
+	};
+	var drawSmallscreenButton = function() {
+		var button = $("<button class='yasr_btn btn_smallscreen btn_icon'></button>")
+			.append(require("yasgui-utils").svg.getElement(require('./imgs.js').smallscreen, {width: "15px", height: "15px"}))
+			.click(function() {
+				yasr.container.removeClass('yasr_fullscreen');
+			});
+		yasr.header.append(button);
+	};
+	drawFullscreenButton();drawSmallscreenButton();
 	if (yasr.options.drawOutputSelector) drawOutputSelector();
 	if (yasr.options.drawDownloadIcon) drawDownloadIcon();
 };

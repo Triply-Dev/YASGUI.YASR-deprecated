@@ -11,10 +11,15 @@ a {
 th {
 	text-align: left;
 }
-.yasr_header * {
-	/* use position relative and z-index, as this fixes issue where results div overflows the button (do this to align controls), and divs are not clickable anymore*/
-	z-index: 8;
-	position: relative;
+
+.yasr_header {
+	* {
+		/* use position relative and z-index, as this fixes issue where results div overflows the button (do this to align controls), and divs are not clickable anymore*/
+		position: relative;
+	}
+	& > * {
+		margin-left: 6px;
+	}
 }
 .yasr_btn {
 	color: #333;
@@ -38,7 +43,9 @@ th {
 	/* margin: 0; */
 	overflow: visible;
 	box-sizing: border-box;	
-	
+	&.btn_icon {
+		padding: 4px 8px;
+	}
 	&[disabled], &.disabled {
 		cursor: default;
 		opacity: .50;
@@ -57,7 +64,7 @@ th {
 		background-color: #337ab7;
 		border-color: #337ab7;
 	}
-	&.yasr_downloadIcon:focus {
+	&.btn_icon:focus {
 		color: #333;
 		border: 1px solid transparent;
 		background-color: #fff;
@@ -81,7 +88,4 @@ th {
 	button+button {
 		margin-left: -1px;
 	}
-}
-.yasr_downloadIcon {
-	margin-left: 5px;
 }

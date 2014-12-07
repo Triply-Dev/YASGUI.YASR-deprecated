@@ -1,5 +1,26 @@
+@import "./variables.scss";
 .yasr {
+	z-index: $zIndex-main;
+	button.btn_smallscreen {
+		display: none;
+	}
+	&.yasr_fullscreen {
+		z-index: $zIndex-fullscreen;
+		
+		
+		.btn_smallscreen {
+			display: inline-block;
+		}
+		.btn_fullscreen {
+			display: none;
+		}
+		position: fixed;
+		top: 0;
+		bottom:0;
+		left:0;
+		right:0;
 	
+	}
 	margin-top: 5px;
 	font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
 	font-size: 14px;
