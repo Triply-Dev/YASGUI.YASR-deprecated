@@ -39,18 +39,12 @@ th {
 	overflow: visible;
 	box-sizing: border-box;	
 	
-	&[disabled] {
+	&[disabled], &.disabled {
 		cursor: default;
 		opacity: .50;
 		filter: alpha(opacity=50);
 		-webkit-box-shadow: none;
 		box-shadow: none;
-		&:hover, &:focus, &.selected {
-			/**keep regular colors, not the blue one*/
-			color: #333;
-			background-color: #fff;
-			border-color: 1px solid transparent;
-		}
 	}
 	&:hover {
 		outline:0;

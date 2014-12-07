@@ -69,8 +69,8 @@
 			Output visualizations are <a href="#outputPlugins">defined separately</a>.			
 			</p>
 			<div class="doc" >
-				<code>outputPlugins: array (default: ["table", "error", "boolean", "rawResponse"])</code>
-				<p>List of enabled output plugins</p>
+				<code>outputPlugins: array (default: ["error", "boolean", "rawResponse", "table", "pivot"])</code>
+				<p>List of enabled output plugins. The order of these plugins specifies the order of the output buttons as well</p>
 			</div>
 			<div class="doc" >
 				<code>output: string (default: "table")</code>
@@ -191,6 +191,8 @@
 				<code>datatable: object</code>
 				<p>Any additional DataTables-related settings. See the <a href="http://datatables.net/reference/option/">DataTables manual</a> for more information</p>
 			</div>
+			
+			
 			<h3 id="outputRawResponse">Raw Response</h3>
 			A plugin which uses <a href="http://codemirror.net/" target="_blank">CodeMirror</a> to present the SPARQL results as-is.
 			<div class="doc">
@@ -205,6 +207,40 @@
 			<code>YASR.plugins.rawResponse.CodeMirror</code>
 			<p>Any additional CodeMirror related settings. See the <a href="http://codemirror.net/doc/manual.html" target="_blank">CodeMirror manual</a> for more information.</p>
 			</div>
+			
+			<h3 id="outputRawResponse">Pivot Table</h3>
+			A plugin which uses the <a href="https://github.com/nicolaskruchten/pivottable" target="_blank">Pivot Table plugin</a>.
+			<div class="doc">
+				<code>YASR.plugins.pivot(yasr: Object, parent: DOM element) → yasr-rawResponse (doc): </code>
+				<p>Constructor of plugin</p>
+			</div>
+			<div class="doc">
+			<code>YASR.plugins.pivot.defaults</code>
+			<p>Settings object</p>
+			</div>
+			<div class="doc">
+			<code>YASR.plugins.pivot.pivottable</code>
+			<p>Any additional PivotTable related settings. See the <a href="https://github.com/nicolaskruchten/pivottable/wiki/Parameters" target="_blank">PivotTable manual</a> for more information.</p>
+			</div>
+			<div class="doc">
+			<code>YASR.plugins.pivot.persistency: string|function(yasr:doc) → string</code>
+			<p>Make certain settings and values of the pivot table persistent. Setting
+					a key to null, will disable persistancy: nothing is stored between
+					browser sessions. Setting the values to a string (or a function
+					which returns a string), will store the values in localstorage using
+					the specified string. By default, the ID is dynamically generated
+					by finding the nearest DOM element with an "id" set, to avoid
+					collissions when using multiple YASR items on one page</p>
+			</div>
+			<div class="doc">
+			<code>YASR.plugins.pivot.useGChart: boolean (default: true)</code>
+			<p>Enable the use of <a href="https://developers.google.com/chart/" target="_blank">google charts</a> for visualizing the pivot data</p>
+			</div>
+			<div class="doc">
+			<code>YASR.plugins.pivot.useD3Chart: boolean (default: true)</code>
+			<p>Enable the use of <a href="http://d3js.org/" target="_blank">D3Js</a> for visualizing the pivot data. At this moment, the TreeMap is the only visualization for which the D3 library is used</p>
+			</div>
+			
 			<h3 id="outputBoolean">Boolean results</h3>
 			<div class="doc">
 				<code>YASR.plugins.boolean(yasr: Object, parent: DOM element) → yasr-boolean (doc): </code>

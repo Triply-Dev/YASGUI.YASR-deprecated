@@ -38,14 +38,11 @@ var root = module.exports = function(parent, options, queryResults) {
 		if (!yasr.results) return false;
 		if (!output) output = yasr.options.output;
 		
-		if (output in yasr.plugins && yasr.plugins[output].canHandleResults(yasr)) {
-			$(yasr.resultsContainer).empty();
-			yasr.plugins[output].draw();
-			return true;
-		}
+		
 		//ah, our default output does not take our current results. Try to autodetect
 		var selectedOutput = null;
 		var selectedOutputPriority = -1;
+		var unsupportedOutputs = [];
 		for (var tryOutput in yasr.plugins) {
 			if (yasr.plugins[tryOutput].canHandleResults(yasr)) {
 				var priority = yasr.plugins[tryOutput].getPriority;
@@ -54,14 +51,33 @@ var root = module.exports = function(parent, options, queryResults) {
 					selectedOutputPriority = priority;
 					selectedOutput = tryOutput;
 				}
+			} else {
+				unsupportedOutputs.push(tryOutput);
 			}
 		}
-		if (selectedOutput) {
+		disableOutputs(unsupportedOutputs);
+		if (output in yasr.plugins && yasr.plugins[output].canHandleResults(yasr)) {
+			$(yasr.resultsContainer).empty();
+			yasr.plugins[output].draw();
+			return true;
+		} else if (selectedOutput) {
 			$(yasr.resultsContainer).empty();
 			yasr.plugins[selectedOutput].draw();
 			return true;
 		}
 		return false;
+	};
+	
+	var disableOutputs = function(outputs) {
+		//first enable everything.
+		yasr.header.find('.yasr_btnGroup .yasr_btn').removeClass('disabled');
+		
+		
+		//now disable the outputs passed as param
+		outputs.forEach(function(outputName) {
+			yasr.header.find('.yasr_btnGroup .select_' + outputName).addClass('disabled');
+		});
+		
 	};
 	yasr.somethingDrawn = function() {
 		return !yasr.resultsContainer.is(":empty");
@@ -77,9 +93,11 @@ var root = module.exports = function(parent, options, queryResults) {
 		
 		//store if needed
 		if (yasr.options.persistency && yasr.options.persistency.results) {
+			var id = (typeof yasr.options.persistency.results.id == "string" ? yasr.options.persistency.results.id: yasr.options.persistency.results.id(yasr));
 			if (yasr.results.getOriginalResponseAsString && yasr.results.getOriginalResponseAsString().length < yasr.options.persistency.results.maxSize) {
-				var id = (typeof yasr.options.persistency.results.id == "string" ? yasr.options.persistency.results.id: yasr.options.persistency.results.id(yasr));
 				utils.storage.set(id, yasr.results.getAsStoreObject(), "month");
+			} else {
+				utils.storage.remove(id);
 			}
 		}
 	};
@@ -204,8 +222,8 @@ root.registerOutput = function(name, constructor) {
 };
 //initialize the outputs we provide as default
 root.registerOutput('boolean', require("./boolean.js"));
-root.registerOutput('table', require("./table.js"));
 root.registerOutput('rawResponse', require("./rawResponse.js"));
+root.registerOutput('table', require("./table.js"));
 root.registerOutput('error', require("./error.js"));
 root.registerOutput('pivot', require("./pivot.js"));
 

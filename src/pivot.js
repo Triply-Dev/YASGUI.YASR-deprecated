@@ -6,18 +6,24 @@ var $ = require("jquery"),
 require('jquery-ui/sortable');
 require('pivottable');
 
-try {
-	var d3 = require('d3');
-	require('../node_modules/pivottable/dist/d3_renderers.js');
-} catch (e) {
-	//do nothing. just make sure we don't use this renderer
-}
 
 var root = module.exports = function(yasr) {
 	var drawOnGChartCallback = false;
 	var loadingGChart = false;
 	var renderers = $.pivotUtilities.renderers;
-	if ($.pivotUtilities.d3_renderers) $.extend(true, renderers, $.pivotUtilities.d3_renderers);
+	var plugin = {};
+	var options = $.extend(true, {}, root.defaults);
+	
+	if (options.useD3Chart) {
+		try {
+			var d3 = require('d3');
+			require('../node_modules/pivottable/dist/d3_renderers.js');
+		} catch (e) {
+			//do nothing. just make sure we don't use this renderer
+		}
+		if (!$.pivotUtilities.d3_renderers) $.extend(true, renderers, $.pivotUtilities.d3_renderers);
+	}
+	
 	var loadGoogleApi = function() {
 		var finishAjax = function() {
 			try {
@@ -48,8 +54,7 @@ var root = module.exports = function(yasr) {
 			.fail(finishAjax);
 	};
 	
-	var plugin = {};
-	var options = $.extend(true, {}, root.defaults);
+	
 	
 	//only load this script 
 	if (options.useGChart && !$.pivotUtilities.gchart_renderers) {
@@ -81,7 +86,6 @@ var root = module.exports = function(yasr) {
 			});
 			callback(rowObj);
 		});
-		
 	} 
 	var settingsPersistencyId = null
 	var getPersistencyId = function() {
@@ -141,8 +145,16 @@ var root = module.exports = function(yasr) {
 		$pivotWrapper = $('<div>', {class: 'pivotTable'}).appendTo($(yasr.resultsContainer));
 		
 		var renderers = $.pivotUtilities.renderers;
-		var settings = getStoredSettings();
-		settings.onRefresh = onRefresh;
+		var settings = $.extend(true, {}, getStoredSettings(), root.defaults.pivotTable);
+		
+		settings.onRefresh = (function() {
+		    var originalRefresh = settings.onRefresh;
+		    return function(pivotObj) {
+		    	onRefresh(pivotObj);
+		    	if (originalRefresh) originalRefresh(pivotObj);
+		    };
+		})();
+		
 		window.pivot = $pivotWrapper.pivotUI(formatForPivot, settings);
 
 		/**
@@ -177,7 +189,9 @@ var root = module.exports = function(yasr) {
 
 root.defaults = {
 	useGChart: true,
-	persistency: function(yasr) {return "yasr_pivot_" + $(yasr.container).closest('[id]').attr('id')}
+	useD3Chart: true,
+	persistency: function(yasr) {return "yasr_pivot_" + $(yasr.container).closest('[id]').attr('id')},
+	pivotTable: {}
 };
 
 root.version = {
