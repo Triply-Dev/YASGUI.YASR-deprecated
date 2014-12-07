@@ -1,3 +1,2 @@
-$zIndex-main: 10;
-$zIndex-fullscreen: $zIndex-main + 5;
-$zIndex-offset-modal: $zIndex-main + 7;
+$zIndex-fullscreen: 10;
+$zIndex-global: $zIndex-fullscreen +1;
