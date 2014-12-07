@@ -1,5 +1,5 @@
 .yasr {
-  margin-top: 5px;
+  background-color: white;
   font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
   font-size: 14px;
   line-height: 1.42857;
@@ -58,6 +58,19 @@
   /* Used to force a border model for a node */
   /* See issue #2901 */
   /* Help users use markselection to safely style text background */ }
+  .yasr button.btn_smallscreen {
+    display: none; }
+  .yasr.yasr_fullscreen {
+    z-index: 10;
+    position: fixed;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    right: 0; }
+    .yasr.yasr_fullscreen .btn_smallscreen {
+      display: inline-block; }
+    .yasr.yasr_fullscreen .btn_fullscreen {
+      display: none; }
   .yasr table.dataTable {
     width: 100%;
     margin: 0 auto;
@@ -350,6 +363,83 @@
     .yasr .dataTables_wrapper .dataTables_filter {
       margin-top: 0.5em; }
  }
+  .yasr table.pvtTable {
+    font-family: arial;
+    font-size: 8pt;
+    text-align: left;
+    border-collapse: collapse; }
+  .yasr table.pvtTable tr th, .yasr table.pvtTable tr th {
+    background-color: #e6EEEE;
+    border: 1px solid #CDCDCD;
+    font-size: 8pt;
+    padding: 5px; }
+  .yasr table.pvtTable .pvtColLabel {
+    text-align: center; }
+  .yasr table.pvtTable .pvtTotalLabel {
+    text-align: right; }
+  .yasr table.pvtTable tr td {
+    color: #3D3D3D;
+    padding: 5px;
+    background-color: #FFF;
+    border: 1px solid #CDCDCD;
+    vertical-align: top;
+    text-align: right; }
+  .yasr .pvtTotal, .yasr .pvtGrandTotal {
+    font-weight: bold; }
+  .yasr .pvtVals {
+    text-align: center; }
+  .yasr .pvtAggregator {
+    margin-bottom: 5px; }
+  .yasr .pvtAxisContainer, .yasr .pvtVals {
+    border: 1px solid gray;
+    background: #EEE;
+    padding: 5px;
+    min-width: 20px;
+    min-height: 20px; }
+  .yasr .pvtAxisContainer li {
+    padding: 8px 6px;
+    list-style-type: none;
+    cursor: move; }
+  .yasr .pvtAxisContainer li.pvtPlaceholder {
+    -webkit-border-radius: 5px;
+    padding: 3px 15px;
+    -moz-border-radius: 5px;
+    border-radius: 5px;
+    border: 1px dashed #aaa; }
+  .yasr .pvtAxisContainer li span.pvtAttr {
+    background: #F3F3F3;
+    border: 1px solid #DEDEDE;
+    padding: 2px 5px;
+    white-space: nowrap;
+    -webkit-border-radius: 5px;
+    -moz-border-radius: 5px;
+    border-radius: 5px; }
+  .yasr .pvtTriangle {
+    cursor: pointer;
+    color: grey; }
+  .yasr .pvtHorizList li {
+    display: inline; }
+  .yasr .pvtVertList {
+    vertical-align: top; }
+  .yasr .pvtFilteredAttribute {
+    font-style: italic; }
+  .yasr .pvtFilterBox {
+    z-index: 100;
+    width: 280px;
+    border: 1px solid gray;
+    background-color: #fff;
+    position: absolute;
+    padding: 20px;
+    text-align: center; }
+  .yasr .pvtFilterBox h4 {
+    margin: 0; }
+  .yasr .pvtCheckContainer {
+    text-align: left;
+    overflow: scroll;
+    width: 100%;
+    max-height: 200px; }
+  .yasr .pvtCheckContainer p {
+    margin: 5px; }
   .yasr .CodeMirror {
     /* Set height, width, borders, and global font properties here */
     font-family: monospace;
@@ -636,8 +726,10 @@
     text-align: left; }
   .yasr .yasr_header * {
     /* use position relative and z-index, as this fixes issue where results div overflows the button (do this to align controls), and divs are not clickable anymore*/
-    z-index: 8;
+    z-index: 5;
     position: relative; }
+  .yasr .yasr_header > * {
+    margin-left: 6px; }
   .yasr .yasr_btn {
     color: #333;
     border: 1px solid transparent;
@@ -659,17 +751,28 @@
     /* margin: 0; */
     overflow: visible;
     box-sizing: border-box; }
-    .yasr .yasr_btn[disabled] {
+    .yasr .yasr_btn.btn_icon {
+      padding: 4px 8px; }
+    .yasr .yasr_btn[disabled], .yasr .yasr_btn.disabled {
       cursor: default;
       opacity: 0.5;
       filter: alpha(opacity=50);
       -webkit-box-shadow: none;
       box-shadow: none; }
-    .yasr .yasr_btn:hover, .yasr .yasr_btn:focus, .yasr .yasr_btn.selected {
-      color: #333;
+    .yasr .yasr_btn:hover {
       outline: 0;
       background-color: #ebebeb;
       border-color: #adadad; }
+    .yasr .yasr_btn:focus, .yasr .yasr_btn.selected {
+      color: #fff;
+      outline: 0;
+      background-color: #337ab7;
+      border-color: #337ab7; }
+    .yasr .yasr_btn.btn_icon:focus {
+      color: #333;
+      border: 1px solid transparent;
+      background-color: #fff;
+      border-color: #ccc; }
   .yasr .yasr_btnGroup {
     display: inline-block;
     vertical-align: middle; }
@@ -683,8 +786,6 @@
       border-radius: 0; }
     .yasr .yasr_btnGroup button + button {
       margin-left: -1px; }
-  .yasr .yasr_downloadIcon {
-    margin-left: 5px; }
   .yasr .booleanResult {
     width: 70px;
     margin: 0 auto;
@@ -706,6 +807,18 @@
       vertical-align: baseline;
       border-radius: 0.25em;
       background-color: #d9534f; }
+    .yasr .errorResult pre {
+      display: block;
+      padding: 10px;
+      margin: 10px 0 10px;
+      font-size: 13px;
+      line-height: 1.42857;
+      word-break: break-all;
+      word-wrap: break-word;
+      color: #333;
+      background-color: #f5f5f5;
+      border: 1px solid #ccc;
+      border-radius: 4px; }
   .yasr .yasr_results .CodeMirror {
     border: 1px solid #d1d1d1;
     margin-top: 5px;
@@ -717,4 +830,45 @@
       vertical-align: middle; }
   .yasr table.dataTable thead th {
     background: none !important; }
+  .yasr .pivotTable {
+    margin-top: 5px; }
+    .yasr .pivotTable td.pvtAxisContainer, .yasr .pivotTable td.pvtVals {
+      /**where vars are dragged to/from**/
+      border: 1px solid #ddd;
+      background-color: transparent; }
+    .yasr .pivotTable li span.pvtAttr {
+      background-color: #337ab7;
+      color: #fff;
+      padding: 4px 7px; }
+      .yasr .pivotTable li span.pvtAttr svg {
+        fill: #fff; }
+      .yasr .pivotTable li span.pvtAttr div {
+        /**svg container**/
+        margin-left: 6px; }
+    .yasr .pivotTable .pvtCols {
+      vertical-align: top; }
+    .yasr .pivotTable table.pvtTable tr th {
+      background-color: #f2f2f2; }
+      .yasr .pivotTable table.pvtTable tr th.pvtAxisLabel {
+        background-color: #337ab7;
+        color: #fff; }
+    .yasr .pivotTable .containerHeader {
+      margin-left: 8px;
+      margin-bottom: 8px;
+      font-style: italic;
+      font-size: 110%;
+      color: #999;
+      text-align: left; }
+    .yasr .pivotTable .node {
+      border: solid 1px white;
+      font: 10px sans-serif;
+      line-height: 12px;
+      overflow: hidden;
+      position: absolute;
+      text-indent: 2px; }
 
+/**need to reset this: the modal-dialog class conflicts with bootstrap**/
+.modal-dialog.google-visualization-charteditor-dialog {
+  z-index: 11;
+  width: auto;
+  margin: inherit; }
