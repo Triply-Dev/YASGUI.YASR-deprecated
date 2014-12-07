@@ -57,6 +57,12 @@ th {
 		background-color: #337ab7;
 		border-color: #337ab7;
 	}
+	&.yasr_downloadIcon:focus {
+		color: #333;
+		border: 1px solid transparent;
+		background-color: #fff;
+		border-color: #ccc;
+	}
 }
 .yasr_btnGroup {
 	display: inline-block;
