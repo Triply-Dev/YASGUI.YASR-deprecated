@@ -15907,7 +15907,7 @@ $.each( { show: "fadeIn", hide: "fadeOut" }, function( method, defaultEffect ) {
 },{}],19:[function(require,module,exports){
 module.exports={
   "name": "yasgui-utils",
-  "version": "1.4.1",
+  "version": "1.4.2",
   "description": "Utils for YASGUI libs",
   "main": "src/main.js",
   "repository": {
@@ -16030,7 +16030,7 @@ module.exports = {
 module.exports={
   "name": "yasgui-yasr",
   "description": "Yet Another SPARQL Resultset GUI",
-  "version": "2.3.0",
+  "version": "2.3.1",
   "main": "src/main.js",
   "licenses": [
     {
