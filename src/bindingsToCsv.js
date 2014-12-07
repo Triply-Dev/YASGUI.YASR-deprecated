@@ -52,7 +52,7 @@ module.exports = function(result) {
 		return needQuoting;
 	};
 	
-	csvString = "";
+	var csvString = "";
 	createHeader();
 	createBody();
 	return csvString;
