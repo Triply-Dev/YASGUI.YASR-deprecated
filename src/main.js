@@ -198,7 +198,7 @@ var drawHeader = function(yasr) {
 			return url;
 		};
 		var button = $("<button class='yasr_btn yasr_downloadIcon btn_icon'></button>")
-			.append(require("yasgui-utils").svg.getElement(require('./imgs.js').download, {width: "15px", height: "15px"}))
+			.append(require("yasgui-utils").svg.getElement(require('./imgs.js').download))
 			.click(function() {
 				var currentPlugin = yasr.plugins[yasr.options.output];
 				if (currentPlugin && currentPlugin.getDownloadInfo) {
@@ -214,7 +214,7 @@ var drawHeader = function(yasr) {
 	};
 	var drawFullscreenButton = function() {
 		var button = $("<button class='yasr_btn btn_fullscreen btn_icon'></button>")
-			.append(require("yasgui-utils").svg.getElement(require('./imgs.js').fullscreen, {width: "15px", height: "15px"}))
+			.append(require("yasgui-utils").svg.getElement(require('./imgs.js').fullscreen))
 			.click(function() {
 				yasr.container.addClass('yasr_fullscreen');
 			});
@@ -222,7 +222,7 @@ var drawHeader = function(yasr) {
 	};
 	var drawSmallscreenButton = function() {
 		var button = $("<button class='yasr_btn btn_smallscreen btn_icon'></button>")
-			.append(require("yasgui-utils").svg.getElement(require('./imgs.js').smallscreen, {width: "15px", height: "15px"}))
+			.append(require("yasgui-utils").svg.getElement(require('./imgs.js').smallscreen))
 			.click(function() {
 				yasr.container.removeClass('yasr_fullscreen');
 			});

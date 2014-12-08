@@ -1,8 +1,16 @@
 @import "./variables.scss";
 .yasr {
 	padding-top: 5px;
+	
+	.svgImg {
+		display:inline-block;
+	} 
 	button.btn_smallscreen {
 		display: none;
+	}
+	button.btn_smallscreen div, button.btn_fullscreen div {
+		width: 15px;
+		height: 15px;
 	}
 	&.yasr_fullscreen {
 		z-index: $zIndex-fullscreen;

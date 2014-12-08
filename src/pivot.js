@@ -161,7 +161,7 @@ var root = module.exports = function(yasr) {
 		 * post process
 		 */
 		//use 'move' handler for variables
-		var icon = $(yUtils.svg.getElement(imgs.move, {width: '14px', height: '14px'}));
+		var icon = $(yUtils.svg.getElement(imgs.move));
 		$pivotWrapper.find('.pvtTriangle').replaceWith(icon);
 		
 		//add headers to selector rows

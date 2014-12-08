@@ -31,10 +31,7 @@ var root = module.exports = function(yasr) {
 		}
 		
 		//add icon
-		if (imgId) require("yasgui-utils").svg.draw(container, require('./imgs.js')[imgId], {
-			width: 25,
-			height: 25,
-		});
+		if (imgId) require("yasgui-utils").svg.draw(container, require('./imgs.js')[imgId]);
 		
 		$("<span></span>").text(textVal).appendTo(container);
 	};

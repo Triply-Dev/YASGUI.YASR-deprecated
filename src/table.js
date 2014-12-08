@@ -137,7 +137,7 @@ var root = module.exports = function(yasr) {
 		var height = 13;
 		for (var sorting in sortings) {
 			var svgDiv = $("<div class='sortIcons'></div>").css("float", "right").css("margin-right", "-12px").width(width).height(height);
-			yutils.svg.draw(svgDiv, imgs[sortings[sorting]], {width: width+2, height: height+1});
+			yutils.svg.draw(svgDiv, imgs[sortings[sorting]]);
 			table.find("th." + sorting).append(svgDiv);
 		}
 	};
