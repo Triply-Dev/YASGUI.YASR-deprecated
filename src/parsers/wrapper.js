@@ -34,7 +34,7 @@ var root = module.exports = function(dataOrJqXhr, textStatus, jqXhrOrErrorString
 			if (dataOrJqXhr.exception) {
 				//this object just has this exception string, nothing more. (here for backwards compatability)
 				exception = dataOrJqXhr.exception;
-			} else if (dataOrJqXhr.status && dataOrJqXhr.status >= 300) {
+			} else if (dataOrJqXhr.status != undefined && (dataOrJqXhr.status >= 300 || dataOrJqXhr.status === 0)) {
 				//this is an exception, and jquery response
 				exception = {status: dataOrJqXhr.status};
 				if (typeof jqXhrOrErrorString == "string") exception.errorString = jqXhrOrErrorString;

@@ -24,7 +24,7 @@ var root = module.exports = function(yasr) {
 			//use a max: otherwise the alert span will look ugly
 			statusText = error.statusText;
 		}
-		if (error.status) {
+		if (error.status != undefined) {
 			statusText += ' (#' + error.status + ')';
 		}
 		$container
