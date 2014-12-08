@@ -240,7 +240,13 @@
 			<code>YASR.plugins.pivot.useD3Chart: boolean (default: true)</code>
 			<p>Enable the use of <a href="http://d3js.org/" target="_blank">D3Js</a> for visualizing the pivot data. At this moment, the TreeMap is the only visualization for which the D3 library is used</p>
 			</div>
-			
+			<div class="doc" style="margin-left: 30px;">
+				<code>mergeLabelsWithUris: boolean|string (default: false)</code>
+				<p>Merge bindings together, by using one value as the label, and the other as the hyperlink. When setting this to <code>true</code>, every projection variable ending with 'Label' will be used as text for the corresponding projection variable without that label. I.e., <code>?carLabel</code> is used as text for the <code>?car</code> projection variable (as long as <code>?car</code> is a URI).
+				If you'd like to specify your own postfix to trigger this behaviour, set your postfix as value, instead of true.
+				</p>.
+				
+			</div>
 			<h3 id="outputBoolean">Boolean results</h3>
 			<div class="doc">
 				<code>YASR.plugins.boolean(yasr: Object, parent: DOM element) → yasr-boolean (doc): </code>

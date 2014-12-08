@@ -65,10 +65,29 @@ var root = module.exports = function(yasr) {
 	
 	
 	var $pivotWrapper;
-	
+	var mergeLabelPostfix = null;
+	var getShownVariables = function() {
+		var variables = yasr.results.getVariables();
+		if (!options.mergeLabelsWithUris) return variables;
+		var shownVariables = [];
+		
+		mergeLabelPostfix = (typeof options.mergeLabelsWithUris == "string"? options.mergeLabelsWithUris: "Label");
+		variables.forEach(function(variable){
+			if (variable.indexOf(mergeLabelPostfix, variable.length - mergeLabelPostfix.length) !== -1) {
+				//this one ends with a postfix
+				if (variables.indexOf(variable.substring(0, variable.length - mergeLabelPostfix.length)) >= 0) {
+					//we have a shorter version of this variable. So, do not include the ..<postfix> variable in the table
+					return;
+				}
+			}
+			shownVariables.push(variable);
+		});
+		return shownVariables;
+	};
 	
 	var formatForPivot = function(callback) {
-		var vars = yasr.results.getVariables();
+		
+		var vars = getShownVariables();
 		var usedPrefixes = null;
 		if (yasr.options.getUsedPrefixes) {
 			usedPrefixes = (typeof yasr.options.getUsedPrefixes == "function"? yasr.options.getUsedPrefixes(yasr):  yasr.options.getUsedPrefixes);
@@ -78,7 +97,11 @@ var root = module.exports = function(yasr) {
 			vars.forEach(function(variable) {
 				if (variable in binding) {
 					var val = binding[variable].value;
-					if (binding.type == "uri") val = utils.uriToPrefixed(usedPrefixes, val);
+					if (mergeLabelPostfix && binding[variable + mergeLabelPostfix]) {
+						val = binding[variable + mergeLabelPostfix].value;
+					} else if (binding.type == "uri") {
+						val = utils.uriToPrefixed(usedPrefixes, val);
+					}
 					rowObj[variable] = val;
 				} else {
 					rowObj[variable] = null;
@@ -188,6 +211,7 @@ var root = module.exports = function(yasr) {
 
 
 root.defaults = {
+	mergeLabelsWithUris: false,
 	useGChart: true,
 	useD3Chart: true,
 	persistency: function(yasr) {return "yasr_pivot_" + $(yasr.container).closest('[id]').attr('id')},
