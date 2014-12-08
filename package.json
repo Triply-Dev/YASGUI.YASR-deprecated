@@ -1,7 +1,7 @@
 {
   "name": "yasgui-yasr",
   "description": "Yet Another SPARQL Resultset GUI",
-  "version": "2.3.1",
+  "version": "2.3.2",
   "main": "src/main.js",
   "licenses": [
     {
@@ -100,16 +100,16 @@
       "global": "jQuery"
     },
     "d3": {
-    	"require": "d3",
-    	"global": "d3"
+      "require": "d3",
+      "global": "d3"
     },
     "jquery-ui/sortable": {
-    	"require": "jquery-ui/sortable",
-    	"global": "jQuery"
+      "require": "jquery-ui/sortable",
+      "global": "jQuery"
     },
     "pivottable": {
-    	"require": "pivottable",
-    	"global": "jQuery"
+      "require": "pivottable",
+      "global": "jQuery"
     }
   }
 }
