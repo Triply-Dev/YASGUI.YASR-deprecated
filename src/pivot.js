@@ -6,7 +6,7 @@ var $ = require("jquery"),
 require('jquery-ui/sortable');
 require('pivottable');
 
-
+if (!$.fn.pivotUI) throw new Error("Pivot lib not loaded");
 var root = module.exports = function(yasr) {
 	var drawOnGChartCallback = false;
 	var loadingGChart = false;
@@ -17,7 +17,7 @@ var root = module.exports = function(yasr) {
 	if (options.useD3Chart) {
 		try {
 			var d3 = require('d3');
-			require('../node_modules/pivottable/dist/d3_renderers.js');
+			if (d3) require('../node_modules/pivottable/dist/d3_renderers.js');
 		} catch (e) {
 			//do nothing. just make sure we don't use this renderer
 		}
