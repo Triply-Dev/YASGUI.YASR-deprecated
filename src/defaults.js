@@ -8,7 +8,7 @@ module.exports = {
 	 * @default "table"
 	 */
 	output: "table",
-	
+	useGoogleCharts: true, 
 	outputPlugins: ["table", "error", "boolean", "rawResponse"],
 	
 	/**

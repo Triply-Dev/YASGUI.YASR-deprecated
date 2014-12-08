@@ -16,12 +16,21 @@ console = console || {"log":function(){}};//make sure any console statements don
  * @return {doc} YASR document
  */
 var root = module.exports = function(parent, options, queryResults) {
+
+	
 	var yasr = {};
 	yasr.options = $.extend(true, {}, root.defaults, options);
 	yasr.container = $("<div class='yasr'></div>").appendTo(parent);
 	yasr.header = $("<div class='yasr_header'></div>").appendTo(yasr.container);
 	yasr.resultsContainer = $("<div class='yasr_results'></div>").appendTo(yasr.container);
+	yasr.storage = utils.storage;
 	
+	if (yasr.options.useGoogleCharts) {
+		//pre-load google-loader
+		require('./gChartLoader.js')
+			.once('initError', function(){yasr.options.useGoogleCharts = false})
+			.init();
+	}
 	
 	//first initialize plugins
 	yasr.plugins = {};
@@ -239,12 +248,7 @@ root.registerOutput = function(name, constructor) {
 };
 
 
-//put these in a try-catch. When using the unbundled version, and when some dependencies are missing, then YASR as a whole will still function
-try {root.registerOutput('boolean', require("./boolean.js"))} catch(e){};
-try {root.registerOutput('rawResponse', require("./rawResponse.js"))} catch(e){};
-try {root.registerOutput('table', require("./table.js"))} catch(e){};
-try {root.registerOutput('error', require("./error.js"))} catch(e){};
-try {root.registerOutput('pivot', require("./pivot.js"))} catch(e){};
+
 
 /**
  * The default options of YASR. Either change the default options by setting YASR.defaults, or by
@@ -260,3 +264,12 @@ root.version = {
 };
 root.$ = $;
 
+
+
+//put these in a try-catch. When using the unbundled version, and when some dependencies are missing, then YASR as a whole will still function
+try {root.registerOutput('boolean', require("./boolean.js"))} catch(e){};
+try {root.registerOutput('rawResponse', require("./rawResponse.js"))} catch(e){};
+try {root.registerOutput('table', require("./table.js"))} catch(e){};
+try {root.registerOutput('error', require("./error.js"))} catch(e){};
+try {root.registerOutput('pivot', require("./pivot.js"))} catch(e){};
+if (root.defaults.useGoogleCharts) try {root.registerOutput('gchart', require("./gchart.js"))} catch(e){};

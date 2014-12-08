@@ -8,9 +8,6 @@ require('pivottable');
 
 if (!$.fn.pivotUI) throw new Error("Pivot lib not loaded");
 var root = module.exports = function(yasr) {
-	var drawOnGChartCallback = false;
-	var loadingGChart = false;
-	var renderers = $.pivotUtilities.renderers;
 	var plugin = {};
 	var options = $.extend(true, {}, root.defaults);
 	
@@ -21,47 +18,9 @@ var root = module.exports = function(yasr) {
 		} catch (e) {
 			//do nothing. just make sure we don't use this renderer
 		}
-		if ($.pivotUtilities.d3_renderers) $.extend(true, renderers, $.pivotUtilities.d3_renderers);
+		if ($.pivotUtilities.d3_renderers) $.extend(true,  $.pivotUtilities.renderers, $.pivotUtilities.d3_renderers);
 	}
 	
-	var loadGoogleApi = function() {
-		var finishAjax = function() {
-			try {
-				require('../node_modules/pivottable/dist/gchart_renderers.js');
-				$.extend(true, renderers, $.pivotUtilities.gchart_renderers);
-			} catch (e) {
-				//hmm, something went wrong. forget about it;
-			}
-			loadingGChart = false;
-			if (drawOnGChartCallback) draw();
-			drawOnGChartCallback = false;
-		};
-		
-		
-		//cannot package google loader via browserify...
-		$.ajax({
-			  cache: true,
-			  dataType: "script",//this tag messes things up: I cannot catch exceptions when this request fails.... (e.g., with some privacy addons)
-			  url: "//google.com/jsapi",
-			})
-			.done(function(data, textStatus, jqxhr) {
-				var googleLoader = require('google');// shimmed to global google variable
-				googleLoader.load("visualization", "1", {
-					packages : [ "corechart", "charteditor" ],
-					callback : finishAjax
-				})
-			})
-			.fail(finishAjax);
-	};
-	
-	
-	
-	//only load this script 
-	if (options.useGChart && !$.pivotUtilities.gchart_renderers) {
-		loadingGChart = true;
-		//gchart not loaded yet. load them!
-		loadGoogleApi();
-	}
 	
 	
 	var $pivotWrapper;
@@ -151,48 +110,65 @@ var root = module.exports = function(yasr) {
 				settings.cols = [];
 				settings.rows = [];
 			}
-			if (!renderers[settings.rendererName]) delete settings.rendererName;
+			if (! $.pivotUtilities.renderers[settings.rendererName]) delete settings.rendererName;
 		} else {
 			settings = {};
 		}
 		return settings;
 	};
 	var draw = function() {
-		if (loadingGChart) {
-			//postpone drawing until we've loaded everything
-			drawOnGChartCallback = true;
-			return;
+		var doDraw = function() {
+		
+			$pivotWrapper = $('<div>', {class: 'pivotTable'}).appendTo($(yasr.resultsContainer));
+			
+			var settings = $.extend(true, {}, getStoredSettings(), root.defaults.pivotTable);
+			
+			settings.onRefresh = (function() {
+			    var originalRefresh = settings.onRefresh;
+			    return function(pivotObj) {
+			    	onRefresh(pivotObj);
+			    	if (originalRefresh) originalRefresh(pivotObj);
+			    };
+			})();
+			
+			window.pivot = $pivotWrapper.pivotUI(formatForPivot, settings);
+	
+			/**
+			 * post process
+			 */
+			//use 'move' handler for variables
+			var icon = $(yUtils.svg.getElement(imgs.move));
+			$pivotWrapper.find('.pvtTriangle').replaceWith(icon);
+			
+			//add headers to selector rows
+			$('.pvtCols').prepend($('<div>', {class: 'containerHeader'}).text("Columns"));
+			$('.pvtRows').prepend($('<div>', {class: 'containerHeader'}).text("Rows"));
+			$('.pvtUnused').prepend($('<div>', {class: 'containerHeader'}).text("Available Variables"));
+			$('.pvtVals').prepend($('<div>', {class: 'containerHeader'}).text("Cells"));
 		}
 		
-		
-		$pivotWrapper = $('<div>', {class: 'pivotTable'}).appendTo($(yasr.resultsContainer));
-		
-		var renderers = $.pivotUtilities.renderers;
-		var settings = $.extend(true, {}, getStoredSettings(), root.defaults.pivotTable);
-		
-		settings.onRefresh = (function() {
-		    var originalRefresh = settings.onRefresh;
-		    return function(pivotObj) {
-		    	onRefresh(pivotObj);
-		    	if (originalRefresh) originalRefresh(pivotObj);
-		    };
-		})();
-		
-		window.pivot = $pivotWrapper.pivotUI(formatForPivot, settings);
-
-		/**
-		 * post process
-		 */
-		//use 'move' handler for variables
-		var icon = $(yUtils.svg.getElement(imgs.move));
-		$pivotWrapper.find('.pvtTriangle').replaceWith(icon);
-		
-		//add headers to selector rows
-		$('.pvtCols').prepend($('<div>', {class: 'containerHeader'}).text("Columns"));
-		$('.pvtRows').prepend($('<div>', {class: 'containerHeader'}).text("Rows"));
-		$('.pvtUnused').prepend($('<div>', {class: 'containerHeader'}).text("Available Variables"));
-		$('.pvtVals').prepend($('<div>', {class: 'containerHeader'}).text("Cells"));
-		
+		if (yasr.options.useGoogleCharts && options.useGoogleCharts && !$.pivotUtilities.gchart_renderers) {
+			require('./gChartLoader.js')
+				.on('done', function() {
+					try {
+						require('../node_modules/pivottable/dist/gchart_renderers.js');
+						$.extend(true,  $.pivotUtilities.renderers, $.pivotUtilities.gchart_renderers);
+					} catch (e) {
+						//hmm, still something went wrong. forget about it;
+						options.useGoogleCharts = false;
+					}
+					doDraw();
+				})
+				.on('error', function() {
+					console.log('could not load gchart');
+					options.useGoogleCharts = false;
+					doDraw();
+				})
+				.googleLoad();
+		} else {
+			//everything is already loaded. just draw
+			doDraw();
+		}
 	};
 	var canHandleResults = function(){
 		return yasr.results && yasr.results.getVariables && yasr.results.getVariables() && yasr.results.getVariables().length > 0;
@@ -201,6 +177,7 @@ var root = module.exports = function(yasr) {
 	
 	
 	return {
+		options: options,
 		draw: draw,
 		name: "Pivot Table",
 		canHandleResults: canHandleResults,
@@ -212,7 +189,7 @@ var root = module.exports = function(yasr) {
 
 root.defaults = {
 	mergeLabelsWithUris: false,
-	useGChart: true,
+	useGoogleCharts: true,
 	useD3Chart: true,
 	persistency: function(yasr) {return "yasr_pivot_" + $(yasr.container).closest('[id]').attr('id')},
 	pivotTable: {}

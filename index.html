@@ -166,8 +166,8 @@
     */
     yasr.options.getUsedPrefixes = yasqe.getPrefixesFromQuery;
 	yasqe.options.sparql.callbacks.complete = yasr.setResponse;
-	if(!yasr.somethingDrawn()) yasqe.query();
 	
+	if (!yasr.storage.get(YASR.defaults.persistency.results.id(yasr)))  yasqe.query();
 	/**
 	* A function to do some quick testing
 	*/
