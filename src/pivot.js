@@ -41,7 +41,7 @@ var root = module.exports = function(yasr) {
 		//cannot package google loader via browserify...
 		$.ajax({
 			  cache: true,
-			  dataType: "script",
+			  dataType: "script",//this tag messes things up: I cannot catch exceptions when this request fails.... (e.g., with some privacy addons)
 			  url: "//google.com/jsapi",
 			})
 			.done(function(data, textStatus, jqxhr) {
