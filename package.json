@@ -94,6 +94,22 @@
     "../lib/DataTables/media/js/jquery.dataTables.js": {
       "require": "datatables",
       "global": "jQuery"
+    },
+    "datatables": {
+      "require": "datatables",
+      "global": "jQuery"
+    },
+    "d3": {
+    	"require": "d3",
+    	"global": "d3"
+    },
+    "jquery-ui/sortable": {
+    	"require": "jquery-ui/sortable",
+    	"global": "jQuery"
+    },
+    "pivottable": {
+    	"require": "pivottable",
+    	"global": "jQuery"
     }
   }
 }

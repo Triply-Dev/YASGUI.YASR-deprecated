@@ -15,14 +15,20 @@ var gulp = require('gulp'),
 	notify = require('gulp-notify'),
 	sourcemaps = require('gulp-sourcemaps');
 
+
+var getExcludes = function() {
+	var excludes = [];
+	
+	return excludes;
+}
 gulp.task('browserify', function() {
-	browserify({entries: ["./src/entry.js"],standalone: "YASR", debug: true})
-		.transform({global:true}, optionalShim)
-		.exclude('jquery')
-		.exclude('codemirror')
-		.exclude('../lib/DataTables/media/js/jquery.dataTables.js')
-		.exclude('datatables')
-		.bundle()
+	
+	var bundler = browserify({entries: ["./src/entry.js"],standalone: "YASR", debug: true})
+		.transform({global:true}, optionalShim);
+	for (var modName in require('../package.json').optionalShim) {
+		bundler.exclude(modName);
+	}
+	bundler.bundle()
 		.pipe(exorcist(paths.bundleDir + '/' + paths.bundleName + '.js.map'))
 		.pipe(source(paths.bundleName + '.js'))
 		.pipe(gulp.dest(paths.bundleDir))
