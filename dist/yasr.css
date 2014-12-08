@@ -59,8 +59,13 @@
   /* Used to force a border model for a node */
   /* See issue #2901 */
   /* Help users use markselection to safely style text background */ }
+  .yasr .svgImg {
+    display: inline-block; }
   .yasr button.btn_smallscreen {
     display: none; }
+  .yasr button.btn_smallscreen div, .yasr button.btn_fullscreen div {
+    width: 15px;
+    height: 15px; }
   .yasr.yasr_fullscreen {
     z-index: 10;
     position: fixed;
@@ -774,6 +779,9 @@
       border: 1px solid transparent;
       background-color: #fff;
       border-color: #ccc; }
+  .yasr .yasr_downloadIcon div {
+    height: 15px;
+    width: 15px; }
   .yasr .yasr_btnGroup {
     display: inline-block;
     vertical-align: middle; }
@@ -860,6 +868,9 @@
       font-size: 110%;
       color: #999;
       text-align: left; }
+    .yasr .pivotTable .pvtAttr .svgImg {
+      width: 14px;
+      height: 14px; }
     .yasr .pivotTable .node {
       border: solid 1px white;
       font: 10px sans-serif;

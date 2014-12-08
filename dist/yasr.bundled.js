@@ -48765,7 +48765,7 @@ return jQuery;
 },{}],22:[function(require,module,exports){
 module.exports={
   "name": "yasgui-utils",
-  "version": "1.4.2",
+  "version": "1.5.0",
   "description": "Utils for YASGUI libs",
   "main": "src/main.js",
   "repository": {
@@ -48852,9 +48852,9 @@ var root = module.exports = {
 
 },{"store":21}],25:[function(require,module,exports){
 module.exports = {
-	draw: function(parent, svgString, config) {
+	draw: function(parent, svgString) {
 		if (!parent) return;
-		var el = module.exports.getElement(svgString, config);
+		var el = module.exports.getElement(svgString);
 		if (el) {
 			if (parent.append) {
 				parent.append(el);
@@ -48864,20 +48864,15 @@ module.exports = {
 			}
 		}
 	},
-	getElement: function(svgString, config) {
-		if (!config) config = {};
+	getElement: function(svgString) {
 		if (svgString && svgString.indexOf("<svg") == 0) {
-			if (!config.width) config.width = "100%";
-			if (!config.height) config.height = "100%";
-			
+			//no style passed via config. guess own styles
 			var parser = new DOMParser();
 			var dom = parser.parseFromString(svgString, "text/xml");
 			var svg = dom.documentElement;
 			
 			var svgContainer = document.createElement("div");
-			svgContainer.style.display = "inline-block";
-			svgContainer.style.width = config.width;
-			svgContainer.style.height = config.height;
+			svgContainer.className = 'svgImg';
 			svgContainer.appendChild(svg);
 			return svgContainer;
 		}
@@ -48888,7 +48883,7 @@ module.exports = {
 module.exports={
   "name": "yasgui-yasr",
   "description": "Yet Another SPARQL Resultset GUI",
-  "version": "2.3.1",
+  "version": "2.3.2",
   "main": "src/main.js",
   "licenses": [
     {
@@ -48980,6 +48975,22 @@ module.exports={
     },
     "../lib/DataTables/media/js/jquery.dataTables.js": {
       "require": "datatables",
+      "global": "jQuery"
+    },
+    "datatables": {
+      "require": "datatables",
+      "global": "jQuery"
+    },
+    "d3": {
+      "require": "d3",
+      "global": "d3"
+    },
+    "jquery-ui/sortable": {
+      "require": "jquery-ui/sortable",
+      "global": "jQuery"
+    },
+    "pivottable": {
+      "require": "pivottable",
       "global": "jQuery"
     }
   }
@@ -49079,10 +49090,7 @@ var root = module.exports = function(yasr) {
 		}
 		
 		//add icon
-		if (imgId) require("yasgui-utils").svg.draw(container, require('./imgs.js')[imgId], {
-			width: 25,
-			height: 25,
-		});
+		if (imgId) require("yasgui-utils").svg.draw(container, require('./imgs.js')[imgId]);
 		
 		$("<span></span>").text(textVal).appendTo(container);
 	};
@@ -49226,7 +49234,7 @@ var root = module.exports = function(yasr) {
 			//use a max: otherwise the alert span will look ugly
 			statusText = error.statusText;
 		}
-		if (error.status) {
+		if (error.status != undefined) {
 			statusText += ' (#' + error.status + ')';
 		}
 		$container
@@ -49479,7 +49487,7 @@ var drawHeader = function(yasr) {
 			return url;
 		};
 		var button = $("<button class='yasr_btn yasr_downloadIcon btn_icon'></button>")
-			.append(require("yasgui-utils").svg.getElement(require('./imgs.js').download, {width: "15px", height: "15px"}))
+			.append(require("yasgui-utils").svg.getElement(require('./imgs.js').download))
 			.click(function() {
 				var currentPlugin = yasr.plugins[yasr.options.output];
 				if (currentPlugin && currentPlugin.getDownloadInfo) {
@@ -49495,7 +49503,7 @@ var drawHeader = function(yasr) {
 	};
 	var drawFullscreenButton = function() {
 		var button = $("<button class='yasr_btn btn_fullscreen btn_icon'></button>")
-			.append(require("yasgui-utils").svg.getElement(require('./imgs.js').fullscreen, {width: "15px", height: "15px"}))
+			.append(require("yasgui-utils").svg.getElement(require('./imgs.js').fullscreen))
 			.click(function() {
 				yasr.container.addClass('yasr_fullscreen');
 			});
@@ -49503,7 +49511,7 @@ var drawHeader = function(yasr) {
 	};
 	var drawSmallscreenButton = function() {
 		var button = $("<button class='yasr_btn btn_smallscreen btn_icon'></button>")
-			.append(require("yasgui-utils").svg.getElement(require('./imgs.js').smallscreen, {width: "15px", height: "15px"}))
+			.append(require("yasgui-utils").svg.getElement(require('./imgs.js').smallscreen))
 			.click(function() {
 				yasr.container.removeClass('yasr_fullscreen');
 			});
@@ -49518,12 +49526,14 @@ root.plugins = {};
 root.registerOutput = function(name, constructor) {
 	root.plugins[name] = constructor;
 };
-//initialize the outputs we provide as default
-root.registerOutput('boolean', require("./boolean.js"));
-root.registerOutput('rawResponse', require("./rawResponse.js"));
-root.registerOutput('table', require("./table.js"));
-root.registerOutput('error', require("./error.js"));
-root.registerOutput('pivot', require("./pivot.js"));
+
+
+//put these in a try-catch. When using the unbundled version, and when some dependencies are missing, then YASR as a whole will still function
+try {root.registerOutput('boolean', require("./boolean.js"))} catch(e){};
+try {root.registerOutput('rawResponse', require("./rawResponse.js"))} catch(e){};
+try {root.registerOutput('table', require("./table.js"))} catch(e){};
+try {root.registerOutput('error', require("./error.js"))} catch(e){};
+try {root.registerOutput('pivot', require("./pivot.js"))} catch(e){};
 
 /**
  * The default options of YASR. Either change the default options by setting YASR.defaults, or by
@@ -49669,7 +49679,7 @@ var root = module.exports = function(dataOrJqXhr, textStatus, jqXhrOrErrorString
 			if (dataOrJqXhr.exception) {
 				//this object just has this exception string, nothing more. (here for backwards compatability)
 				exception = dataOrJqXhr.exception;
-			} else if (dataOrJqXhr.status && dataOrJqXhr.status >= 300) {
+			} else if (dataOrJqXhr.status != undefined && (dataOrJqXhr.status >= 300 || dataOrJqXhr.status === 0)) {
 				//this is an exception, and jquery response
 				exception = {status: dataOrJqXhr.status};
 				if (typeof jqXhrOrErrorString == "string") exception.errorString = jqXhrOrErrorString;
@@ -49962,7 +49972,7 @@ var $ = require("jquery"),
 require('jquery-ui/sortable');
 require('pivottable');
 
-
+if (!$.fn.pivotUI) throw new Error("Pivot lib not loaded");
 var root = module.exports = function(yasr) {
 	var drawOnGChartCallback = false;
 	var loadingGChart = false;
@@ -49973,7 +49983,7 @@ var root = module.exports = function(yasr) {
 	if (options.useD3Chart) {
 		try {
 			var d3 = require('d3');
-			require('../node_modules/pivottable/dist/d3_renderers.js');
+			if (d3) require('../node_modules/pivottable/dist/d3_renderers.js');
 		} catch (e) {
 			//do nothing. just make sure we don't use this renderer
 		}
@@ -50021,10 +50031,29 @@ var root = module.exports = function(yasr) {
 	
 	
 	var $pivotWrapper;
-	
+	var mergeLabelPostfix = null;
+	var getShownVariables = function() {
+		var variables = yasr.results.getVariables();
+		if (!options.mergeLabelsWithUris) return variables;
+		var shownVariables = [];
+		
+		mergeLabelPostfix = (typeof options.mergeLabelsWithUris == "string"? options.mergeLabelsWithUris: "Label");
+		variables.forEach(function(variable){
+			if (variable.indexOf(mergeLabelPostfix, variable.length - mergeLabelPostfix.length) !== -1) {
+				//this one ends with a postfix
+				if (variables.indexOf(variable.substring(0, variable.length - mergeLabelPostfix.length)) >= 0) {
+					//we have a shorter version of this variable. So, do not include the ..<postfix> variable in the table
+					return;
+				}
+			}
+			shownVariables.push(variable);
+		});
+		return shownVariables;
+	};
 	
 	var formatForPivot = function(callback) {
-		var vars = yasr.results.getVariables();
+		
+		var vars = getShownVariables();
 		var usedPrefixes = null;
 		if (yasr.options.getUsedPrefixes) {
 			usedPrefixes = (typeof yasr.options.getUsedPrefixes == "function"? yasr.options.getUsedPrefixes(yasr):  yasr.options.getUsedPrefixes);
@@ -50034,7 +50063,11 @@ var root = module.exports = function(yasr) {
 			vars.forEach(function(variable) {
 				if (variable in binding) {
 					var val = binding[variable].value;
-					if (binding.type == "uri") val = utils.uriToPrefixed(usedPrefixes, val);
+					if (mergeLabelPostfix && binding[variable + mergeLabelPostfix]) {
+						val = binding[variable + mergeLabelPostfix].value;
+					} else if (binding.type == "uri") {
+						val = utils.uriToPrefixed(usedPrefixes, val);
+					}
 					rowObj[variable] = val;
 				} else {
 					rowObj[variable] = null;
@@ -50117,7 +50150,7 @@ var root = module.exports = function(yasr) {
 		 * post process
 		 */
 		//use 'move' handler for variables
-		var icon = $(yUtils.svg.getElement(imgs.move, {width: '14px', height: '14px'}));
+		var icon = $(yUtils.svg.getElement(imgs.move));
 		$pivotWrapper.find('.pvtTriangle').replaceWith(icon);
 		
 		//add headers to selector rows
@@ -50144,6 +50177,7 @@ var root = module.exports = function(yasr) {
 
 
 root.defaults = {
+	mergeLabelsWithUris: false,
 	useGChart: true,
 	useD3Chart: true,
 	persistency: function(yasr) {return "yasr_pivot_" + $(yasr.container).closest('[id]').attr('id')},
@@ -50384,7 +50418,7 @@ var root = module.exports = function(yasr) {
 		var height = 13;
 		for (var sorting in sortings) {
 			var svgDiv = $("<div class='sortIcons'></div>").css("float", "right").css("margin-right", "-12px").width(width).height(height);
-			yutils.svg.draw(svgDiv, imgs[sortings[sorting]], {width: width+2, height: height+1});
+			yutils.svg.draw(svgDiv, imgs[sortings[sorting]]);
 			table.find("th." + sorting).append(svgDiv);
 		}
 	};
