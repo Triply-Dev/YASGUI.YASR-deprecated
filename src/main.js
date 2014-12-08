@@ -237,12 +237,14 @@ root.plugins = {};
 root.registerOutput = function(name, constructor) {
 	root.plugins[name] = constructor;
 };
-//initialize the outputs we provide as default
-root.registerOutput('boolean', require("./boolean.js"));
-root.registerOutput('rawResponse', require("./rawResponse.js"));
-root.registerOutput('table', require("./table.js"));
-root.registerOutput('error', require("./error.js"));
-root.registerOutput('pivot', require("./pivot.js"));
+
+
+//put these in a try-catch. When using the unbundled version, and when some dependencies are missing, then YASR as a whole will still function
+try {root.registerOutput('boolean', require("./boolean.js"))} catch(e){};
+try {root.registerOutput('rawResponse', require("./rawResponse.js"))} catch(e){};
+try {root.registerOutput('table', require("./table.js"))} catch(e){};
+try {root.registerOutput('error', require("./error.js"))} catch(e){};
+try {root.registerOutput('pivot', require("./pivot.js"))} catch(e){};
 
 /**
  * The default options of YASR. Either change the default options by setting YASR.defaults, or by
