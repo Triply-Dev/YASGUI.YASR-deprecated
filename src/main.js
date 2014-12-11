@@ -25,6 +25,23 @@ var root = module.exports = function(parent, options, queryResults) {
 	yasr.resultsContainer = $("<div class='yasr_results'></div>").appendTo(yasr.container);
 	yasr.storage = utils.storage;
 	
+	var prefix = null;
+	yasr.getPersistencyId = function(postfix) {
+		if (prefix === null) {
+			//instantiate prefix
+			if (yasr.options.persistency && yasr.options.persistency.prefix) {
+				prefix = (typeof yasr.options.persistency.prefix == 'string'? yasr.options.persistency.prefix : yasr.options.persistency.prefix(yasr));
+			} else {
+				prefix = false;
+			}
+		}
+		if (prefix && postfix) {
+			return prefix + (typeof postfix == 'string'? postfix : postfix(yasr));
+		} else {
+			return null;
+		}
+	};
+	
 	if (yasr.options.useGoogleCharts) {
 		//pre-load google-loader
 		require('./gChartLoader.js')
@@ -37,9 +54,6 @@ var root = module.exports = function(parent, options, queryResults) {
 	for (var pluginName in root.plugins) {
 		yasr.plugins[pluginName] = new root.plugins[pluginName](yasr);
 	}
-	
-	
-	
 	
 	
 	
@@ -101,31 +115,46 @@ var root = module.exports = function(parent, options, queryResults) {
 		yasr.draw();
 		
 		//store if needed
-		if (yasr.options.persistency && yasr.options.persistency.results) {
-			var id = (typeof yasr.options.persistency.results.id == "string" ? yasr.options.persistency.results.id: yasr.options.persistency.results.id(yasr));
+		var resultsId = yasr.getPersistencyId(yasr.options.persistency.results.key);
+		if (resultsId) {
 			if (yasr.results.getOriginalResponseAsString && yasr.results.getOriginalResponseAsString().length < yasr.options.persistency.results.maxSize) {
-				utils.storage.set(id, yasr.results.getAsStoreObject(), "month");
+				utils.storage.set(resultsId, yasr.results.getAsStoreObject(), "month");
 			} else {
-				utils.storage.remove(id);
+				//remove old string
+				utils.storage.remove(resultsId);
 			}
 		}
 	};
+	
 	
 
 	/**
 	 * postprocess
 	 */
-	if (yasr.options.persistency && yasr.options.persistency.outputSelector) {
-		var id = (typeof yasr.options.persistency.outputSelector == "string"? yasr.options.persistency.outputSelector: yasr.options.persistency.outputSelector(yasr));
-		if (id) {
-			var selection = utils.storage.get(id);
-			if (selection) yasr.options.output = selection;
-		}
+	var selectorId = yasr.getPersistencyId(yasr.options.persistency.outputSelector)
+	if (selectorId) {
+		var selection = utils.storage.get(selectorId);
+		if (selection) yasr.options.output = selection;
 	}
 	drawHeader(yasr);
 	if (!queryResults && yasr.options.persistency && yasr.options.persistency.results) {
-		var id = (typeof yasr.options.persistency.results.id == "string" ? yasr.options.persistency.results.id: yasr.options.persistency.results.id(yasr));
-		var fromStorage = utils.storage.get(id);
+		var resultsId = yasr.getPersistencyId(yasr.options.persistency.results.key)
+		var fromStorage;
+		if (resultsId) {
+			fromStorage = utils.storage.get(resultsId);
+		}
+		
+		
+		if (!fromStorage && yasr.options.persistency.results.id) {
+			//deprecated! But keep for backwards compatability
+			//if results are stored under old ID. Fetch the results, and delete that key (results can be large, and clutter space)
+			//setting the results, will automatically store it under the new key, so we don't have to worry about that here
+			var deprId = (typeof yasr.options.persistency.results.id == "string" ? yasr.options.persistency.results.id: yasr.options.persistency.results.id(yasr));
+			if (deprId) {
+				fromStorage = utils.storage.get(deprId);
+				if (fromStorage) utils.storage.remove(deprId);
+			}
+		}
 		if (fromStorage) {
 			if ($.isArray(fromStorage)) {
 				yasr.setResponse.apply(this, fromStorage);
@@ -181,9 +210,9 @@ var drawHeader = function(yasr) {
 				yasr.options.output = pluginName;
 				
 				//store if needed
-				if (yasr.options.persistency && yasr.options.persistency.outputSelector) {
-					var id = (typeof yasr.options.persistency.outputSelector == "string"? yasr.options.persistency.outputSelector: yasr.options.persistency.outputSelector(yasr));
-					utils.storage.set(id, yasr.options.output, "month");
+				var selectorId = yasr.getPersistencyId(yasr.options.persistency.outputSelector);
+				if (selectorId) {
+					utils.storage.set(selectorId, yasr.options.output, "month");
 				}
 				
 				

@@ -100,18 +100,19 @@
 				Get the used prefixes. Plugins may use this to create more human-readable URIs. Return object should be in the form <code>{"rdf" : "http://www.w3.org/1999/02/22-rdf-syntax-ns#"}</code>
 				</p>
 			</div>
+			
 			<div class="doc" >
-				<code>persistencyPrefix: string | function() → string</code>
+				<code>persistency: object</code>
+<!-- 				<p></p> -->
+			</div>
+			<div class="doc" style="margin-left: 30px">
+				<code>prefix</code>
 				<p>
 					YASR is able to store settings between browser sessions, using LocalStorage (or, if this is not available, regular cookies or session storage).
 					The persistent settings of YASR are prefixed, to avoid collisions with other applications or instances of YASR (running on the same domain).
 					By default, key of the persistent settings are prefixed using the ID of the nearest parent (containing an ID, that is).
 					To disable persistency alltogether, set this value to false.
 				</p>
-			</div>
-			<div class="doc" >
-				<code>persistency: object</code>
-<!-- 				<p></p> -->
 			</div>
 			<div class="doc" style="margin-left: 30px;">
 				<code>outputSelector: string|function (default: 'output')</code>
@@ -122,7 +123,11 @@
 <!-- 				<p>Persistency setting for query results.</p> -->
 			</div>
 			<div class="doc" style="margin-left: 60px;">
-				<code>id: string|function (default: 'results')</code>
+				<code style="text-decoration:line-through">id: string|function (default: function)</code><small>deprecated</small>
+				<p>Make the query results persistent (set to null or false to disable)</p>
+			</div>
+			<div class="doc" style="margin-left: 60px;">
+				<code>key: string|function (default: 'results')</code>
 				<p>Make the query results persistent (set to null or false to disable)</p>
 			</div>
 			<div class="doc" style="margin-left: 60px;">
@@ -218,14 +223,12 @@
 			<p>Any additional PivotTable related settings. See the <a href="https://github.com/nicolaskruchten/pivottable/wiki/Parameters" target="_blank">PivotTable manual</a> for more information.</p>
 			</div>
 			<div class="doc" style="margin-left: 30px">
-			<code>YASR.plugins.pivot.persistency: string|function(yasr:doc) → string</code>
+			<code>YASR.plugins.pivot.persistency: string|function(yasr:doc) → string (default: 'pivot')</code>
 			<p>Make certain settings and values of the pivot table persistent. Setting
 					a key to null, will disable persistancy: nothing is stored between
 					browser sessions. Setting the values to a string (or a function
 					which returns a string), will store the values in localstorage using
-					the specified string. By default, the ID is dynamically generated
-					by finding the nearest DOM element with an "id" set, to avoid
-					collissions when using multiple YASR items on one page</p>
+					the specified string. </p>
 			</div>
 			<div class="doc" style="margin-left: 30px">
 			<code>useGoogleCharts: boolean (default: true)</code>

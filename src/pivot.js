@@ -69,31 +69,20 @@ var root = module.exports = function(yasr) {
 			callback(rowObj);
 		});
 	} 
-	var settingsPersistencyId = null
-	var getPersistencyId = function() {
-		if (settingsPersistencyId === null) {
-			if (typeof options.persistency == "string") {
-				settingsPersistencyId = options.persistency;
-			} else if (typeof options.persistency == "function") {
-				settingsPersistencyId = options.persistency(yasr);
-			} else {
-				settingsPersistencyId = false;
-			}
-		}
-		return settingsPersistencyId;
-	};
+	
+	var persistencyId = yasr.getPersistencyId(options.persistencyId);
 	var onRefresh = function(pivotObj) {
-		if (getPersistencyId()) {
+		if (persistencyId) {
 			var storeSettings = {
 				cols: pivotObj.cols,
 				rows: pivotObj.rows,
 				rendererName: pivotObj.rendererName,
 			}
-			yUtils.storage.set(getPersistencyId(), storeSettings, "month");
+			yUtils.storage.set(persistencyId, storeSettings, "month");
 		}
 	};
 	var getStoredSettings = function() {
-		var settings = yUtils.storage.get(getPersistencyId());
+		var settings = yUtils.storage.get(persistencyId);
 		//validate settings. we may have different variables, or renderers might be gone
 		if (settings) {
 			var vars = yasr.results.getVariables();
@@ -191,7 +180,7 @@ root.defaults = {
 	mergeLabelsWithUris: false,
 	useGoogleCharts: true,
 	useD3Chart: true,
-	persistency: function(yasr) {return "yasr_pivot_" + $(yasr.container).closest('[id]').attr('id')},
+	persistency: 'pivot',
 	pivotTable: {}
 };
 

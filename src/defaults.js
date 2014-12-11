@@ -11,6 +11,7 @@ module.exports = {
 	useGoogleCharts: true, 
 	outputPlugins: ["table", "error", "boolean", "rawResponse"],
 	
+	
 	/**
 	 * Draw the output selector widget
 	 * 
@@ -44,6 +45,9 @@ module.exports = {
 	 * @type object
 	 */
 	persistency: {
+		prefix: function(yasr) {
+			return "yasr_" + $(yasr.container).closest('[id]').attr('id') + "_";
+		},
 		/**
 		 * Persistency setting for the selected output
 		 * 
@@ -52,7 +56,7 @@ module.exports = {
 		 * @default function (determine unique id)
 		 */
 		outputSelector: function(yasr) {
-			return "selector_" + $(yasr.container).closest('[id]').attr('id');
+			return "selector";
 		},
 		/**
 		 * Persistency setting for query results.
@@ -71,6 +75,7 @@ module.exports = {
 			id: function(yasr){
 				return "results_" +  $(yasr.container).closest('[id]').attr('id');
 			},
+			key: 'results',
 			/**
 			 * The result set might too large to fit in local storage. 
 			 * It is impossible to detect how large the local storage is.

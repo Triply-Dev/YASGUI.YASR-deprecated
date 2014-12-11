@@ -23,7 +23,7 @@ var root = module.exports = function(yasr) {
 		getPriority: 10,
 	};
 	var options = plugin.options = $.extend(true, {}, root.defaults);
-	
+	var tableLengthPersistencyId = (options.persistency? yasr.getPersistencyId(options.persistency.tableLength): null);
 
 	var getRows = function() {
 		var rows = [];
@@ -59,10 +59,9 @@ var root = module.exports = function(yasr) {
 		table.on( 'order.dt', function () {
 		    drawSvgIcons();
 		});
-		if (options.persistency && options.persistency.tableLength) {
+		if (tableLengthPersistencyId) {
 			table.on('length.dt', function(e, settings, len) {
-				var persistencyId = (typeof options.persistency.tableLength == "string" ? options.persistency.tableLength: options.persistency.tableLength(yasr));
-				yutils.storage.set(persistencyId, len, "month");
+				yutils.storage.set(tableLengthPersistencyId, len, "month");
 			});
 		}
 		$.extend(true, options.callbacks, options.handlers);
@@ -99,11 +98,8 @@ var root = module.exports = function(yasr) {
 		dataTableConfig.columns = options.getColumns(yasr, plugin);
 		
 		//fetch stored datatables length value
-		if (options.persistency && options.persistency.tableLength) {
-			var persistencyId = (typeof options.persistency.tableLength == "string" ? options.persistency.tableLength: options.persistency.tableLength(yasr));
-			var pLength = yutils.storage.get(persistencyId);
-			if (pLength) dataTableConfig.pageLength = pLength;
-		}
+		var pLength = yutils.storage.get(tableLengthPersistencyId);
+		if (pLength) dataTableConfig.pageLength = pLength;
 		
 		
 		
@@ -262,9 +258,7 @@ root.defaults = {
 	getCellContent: getCellContent,
 	
 	persistency: {
-		tableLength: function (yasr){
-			return "tableLength_" + $(yasr.container).closest('[id]').attr('id');
-		},
+		tableLength: "tableLength",
 	},
 	
 	getColumns: function(yasr, plugin) {
