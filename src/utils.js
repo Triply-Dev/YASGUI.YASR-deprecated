@@ -10,6 +10,7 @@ module.exports = {
 				}
 			}
 		}
+		return uri;
 	},
 	getGoogleType: function(binding) {
 		if (binding.type != null && (binding.type === 'typed-literal' || binding.type === 'literal')) {
@@ -38,7 +39,7 @@ module.exports = {
 			return "string";
 		}
 	},
-	castGoogleType: function(binding){
+	castGoogleType: function(binding, prefixes){
 		if (binding == null) {
 			return null;
 		}
@@ -63,7 +64,11 @@ module.exports = {
 				return binding.value;
 			}
 		} else {
-			return binding.value;
+			if (binding.type = 'uri') {
+				return module.exports.uriToPrefixed(prefixes, binding.value);
+			} else {
+				return binding.value;
+			}
 		}
 	},
 };

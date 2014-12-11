@@ -1,11 +1,11 @@
 'use strict';
-
 /**
  * todo: chart height as option
  * 
  */
 var $ = require('jquery'),
-	utils = require('./utils.js');
+	utils = require('./utils.js'),
+	yUtils = require('yasgui-utils');
 
 var root = module.exports = function(yasr){
 	var options = $.extend(true, {}, root.defaults);
@@ -13,11 +13,13 @@ var root = module.exports = function(yasr){
 	if (yasr.options.gchart == null) {
 		yasr.options.gchart = {};
 	}
+	var persistencyIdMotionChart = yasr.getPersistencyId('motionchart');
+	var persistencyIdChartConfig = yasr.getPersistencyId('chartConfig');
 	if (yasr.options.gchart.motionChartState == null) {
-		yasr.options.gchart.motionChartState = localStorage.getItem(id + "_motionChartState");
+		yasr.options.gchart.motionChartState = yUtils.storage.get(persistencyIdMotionChart);
 	}
 	if (yasr.options.gchart.chartConfig == null) {
-		yasr.options.gchart.chartConfig = localStorage.getItem(id + "_chartConfig");
+		yasr.options.gchart.chartConfig = yUtils.storage.get(persistencyIdChartConfig);
 	}
 	
 	
@@ -31,7 +33,8 @@ var root = module.exports = function(yasr){
 				chartWrapper = editor.getChartWrapper();
 				if (!deepEq$(chartWrapper.getChartType, "MotionChart", '===')) {
 					yasr.options.gchart.motionChartState = chartWrapper.n;
-//					localStorage.setItem(id + "_motionChartState", yasr.options.gchart.motionChartState);
+
+					yUtils.storage.set(persistencyIdMotionChart, yasr.options.gchart.motionChartState);
 					chartWrapper.setOption("state", yasr.options.gchart.motionChartState);
 					
 					google.visualization.events.addListener(chartWrapper, 'ready', function(){
@@ -39,14 +42,15 @@ var root = module.exports = function(yasr){
 						motionChart = chartWrapper.getChart();
 						google.visualization.events.addListener(motionChart, 'statechange', function(){
 							yasr.options.gchart.motionChartState = motionChart.getState();
-							localStorage.setItem(id + "_motionChartState", yasr.options.gchart.motionChartState);
+							yUtils.storage.set(persistencyIdMotionChart, yasr.options.gchart.motionChartState);
 						});
 					});
 				}
 				tmp = chartWrapper.getDataTable();
 				chartWrapper.setDataTable(null);
 				yasr.options.gchart.chartConfig = chartWrapper.toJSON();
-//				localStorage.setItem(id + "_chartConfig", yasr.options.gchart.chartConfig);
+				
+				yUtils.storage.set(persistencyIdChartConfig, yasr.options.gchart.chartConfig);
 				chartWrapper.setDataTable(tmp);
 				chartWrapper.draw();
 			});
@@ -84,10 +88,14 @@ var root = module.exports = function(yasr){
 					var type = utils.getGoogleType(jsonResults.results.bindings[0][variable]);
 					dataTable.addColumn(type, variable);
 				});
+				var usedPrefixes = null;
+				if (yasr.options.getUsedPrefixes) {
+					usedPrefixes = (typeof yasr.options.getUsedPrefixes == "function"? yasr.options.getUsedPrefixes(yasr):  yasr.options.getUsedPrefixes);
+				}
 				jsonResults.results.bindings.forEach(function(binding) {
 					var row = [];
 					jsonResults.head.vars.forEach(function(variable) {
-						row.push(utils.castGoogleType(binding[variable]));
+						row.push(utils.castGoogleType(binding[variable], usedPrefixes));
 					})
 					dataTable.addRow(row);
 				});
@@ -103,7 +111,7 @@ var root = module.exports = function(yasr){
 							motionChart = wrapper.getChart();
 							google.visualization.events.addListener(motionChart, 'statechange', function(){
 								yasr.options.gchart.motionChartState = motionChart.getState();
-								localStorage.setItem(id + "_motionChartState", yasr.options.gchart.motionChartState);
+								yUtils.storage.set(persistencyIdMotionChart, yasr.options.gchart.motionChartState);
 							});
 						});
 					}

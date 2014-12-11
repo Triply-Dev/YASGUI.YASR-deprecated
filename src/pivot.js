@@ -58,7 +58,7 @@ var root = module.exports = function(yasr) {
 					var val = binding[variable].value;
 					if (mergeLabelPostfix && binding[variable + mergeLabelPostfix]) {
 						val = binding[variable + mergeLabelPostfix].value;
-					} else if (binding.type == "uri") {
+					} else if (binding[variable].type == "uri") {
 						val = utils.uriToPrefixed(usedPrefixes, val);
 					}
 					rowObj[variable] = val;
@@ -180,7 +180,7 @@ root.defaults = {
 	mergeLabelsWithUris: false,
 	useGoogleCharts: true,
 	useD3Chart: true,
-	persistency: 'pivot',
+	persistencyId: 'pivot',
 	pivotTable: {}
 };
 
