@@ -71,16 +71,7 @@ var root = module.exports = function(yasr) {
 	} 
 	
 	var persistencyId = yasr.getPersistencyId(options.persistencyId);
-	var onRefresh = function(pivotObj) {
-		if (persistencyId) {
-			var storeSettings = {
-				cols: pivotObj.cols,
-				rows: pivotObj.rows,
-				rendererName: pivotObj.rendererName,
-			}
-			yUtils.storage.set(persistencyId, storeSettings, "month");
-		}
-	};
+	
 	var getStoredSettings = function() {
 		var settings = yUtils.storage.get(persistencyId);
 		//validate settings. we may have different variables, or renderers might be gone
@@ -107,7 +98,30 @@ var root = module.exports = function(yasr) {
 	};
 	var draw = function() {
 		var doDraw = function() {
-		
+			var onRefresh = function(pivotObj) {
+				if (persistencyId) {
+					var storeSettings = {
+						cols: pivotObj.cols,
+						rows: pivotObj.rows,
+						rendererName: pivotObj.rendererName,
+						aggregatorName: pivotObj.aggregatorName,
+						vals: pivotObj.vals,
+					}
+					yUtils.storage.set(persistencyId, storeSettings, "month");
+				}
+				if (pivotObj.rendererName.toLowerCase().indexOf(' chart') >= 0) {
+					openGchartBtn.show();
+				} else {
+					openGchartBtn.hide();
+				}
+			};
+			
+			
+			var openGchartBtn = $('<button>', {class: 'openPivotGchart yasr_btn'})
+			.text('Chart Config')
+			.click(function() {
+				$pivotWrapper.find('div[dir="ltr"]').dblclick();
+			}).appendTo(yasr.resultsContainer);
 			$pivotWrapper = $('<div>', {class: 'pivotTable'}).appendTo($(yasr.resultsContainer));
 			
 			var settings = $.extend(true, {}, getStoredSettings(), root.defaults.pivotTable);
