@@ -4,6 +4,7 @@
 	
 	.svgImg {
 		display:inline-block;
+		bottom: -2px;/**to properly align img**/
 	} 
 	button.btn_smallscreen {
 		display: none;

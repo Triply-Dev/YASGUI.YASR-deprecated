@@ -9,12 +9,14 @@
 		background-color: #337ab7;
 		color: #fff;
 		padding: 4px 7px;
+		
 		svg {
 			fill: #fff;
 		}
 		div {
 			/**svg container**/
-			margin-left: 6px
+			margin-left: 6px;
+			vertical-align:middle;
 		}
 	}
 	.pvtCols {
