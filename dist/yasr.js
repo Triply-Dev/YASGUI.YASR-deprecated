@@ -3,7 +3,7 @@
 //the current browserify version does not support require-ing js files which are used as entry-point
 //this way, we can still require our main.js file
 module.exports = require('./main.js');
-},{"./main.js":23}],2:[function(require,module,exports){
+},{"./main.js":26}],2:[function(require,module,exports){
 /**
  * jQuery-csv (jQuery Plugin)
  * version: 0.71 (2012-11-19)
@@ -854,6 +854,309 @@ RegExp.escape= function(s) {
 })( jQuery );
 
 },{}],3:[function(require,module,exports){
+// Copyright Joyent, Inc. and other Node contributors.
+//
+// Permission is hereby granted, free of charge, to any person obtaining a
+// copy of this software and associated documentation files (the
+// "Software"), to deal in the Software without restriction, including
+// without limitation the rights to use, copy, modify, merge, publish,
+// distribute, sublicense, and/or sell copies of the Software, and to permit
+// persons to whom the Software is furnished to do so, subject to the
+// following conditions:
+//
+// The above copyright notice and this permission notice shall be included
+// in all copies or substantial portions of the Software.
+//
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+// OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+// MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
+// NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,
+// DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
+// OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE
+// USE OR OTHER DEALINGS IN THE SOFTWARE.
+
+function EventEmitter() {
+  this._events = this._events || {};
+  this._maxListeners = this._maxListeners || undefined;
+}
+module.exports = EventEmitter;
+
+// Backwards-compat with node 0.10.x
+EventEmitter.EventEmitter = EventEmitter;
+
+EventEmitter.prototype._events = undefined;
+EventEmitter.prototype._maxListeners = undefined;
+
+// By default EventEmitters will print a warning if more than 10 listeners are
+// added to it. This is a useful default which helps finding memory leaks.
+EventEmitter.defaultMaxListeners = 10;
+
+// Obviously not all Emitters should be limited to 10. This function allows
+// that to be increased. Set to zero for unlimited.
+EventEmitter.prototype.setMaxListeners = function(n) {
+  if (!isNumber(n) || n < 0 || isNaN(n))
+    throw TypeError('n must be a positive number');
+  this._maxListeners = n;
+  return this;
+};
+
+EventEmitter.prototype.emit = function(type) {
+  var er, handler, len, args, i, listeners;
+
+  if (!this._events)
+    this._events = {};
+
+  // If there is no 'error' event listener then throw.
+  if (type === 'error') {
+    if (!this._events.error ||
+        (isObject(this._events.error) && !this._events.error.length)) {
+      er = arguments[1];
+      if (er instanceof Error) {
+        throw er; // Unhandled 'error' event
+      }
+      throw TypeError('Uncaught, unspecified "error" event.');
+    }
+  }
+
+  handler = this._events[type];
+
+  if (isUndefined(handler))
+    return false;
+
+  if (isFunction(handler)) {
+    switch (arguments.length) {
+      // fast cases
+      case 1:
+        handler.call(this);
+        break;
+      case 2:
+        handler.call(this, arguments[1]);
+        break;
+      case 3:
+        handler.call(this, arguments[1], arguments[2]);
+        break;
+      // slower
+      default:
+        len = arguments.length;
+        args = new Array(len - 1);
+        for (i = 1; i < len; i++)
+          args[i - 1] = arguments[i];
+        handler.apply(this, args);
+    }
+  } else if (isObject(handler)) {
+    len = arguments.length;
+    args = new Array(len - 1);
+    for (i = 1; i < len; i++)
+      args[i - 1] = arguments[i];
+
+    listeners = handler.slice();
+    len = listeners.length;
+    for (i = 0; i < len; i++)
+      listeners[i].apply(this, args);
+  }
+
+  return true;
+};
+
+EventEmitter.prototype.addListener = function(type, listener) {
+  var m;
+
+  if (!isFunction(listener))
+    throw TypeError('listener must be a function');
+
+  if (!this._events)
+    this._events = {};
+
+  // To avoid recursion in the case that type === "newListener"! Before
+  // adding it to the listeners, first emit "newListener".
+  if (this._events.newListener)
+    this.emit('newListener', type,
+              isFunction(listener.listener) ?
+              listener.listener : listener);
+
+  if (!this._events[type])
+    // Optimize the case of one listener. Don't need the extra array object.
+    this._events[type] = listener;
+  else if (isObject(this._events[type]))
+    // If we've already got an array, just append.
+    this._events[type].push(listener);
+  else
+    // Adding the second element, need to change to array.
+    this._events[type] = [this._events[type], listener];
+
+  // Check for listener leak
+  if (isObject(this._events[type]) && !this._events[type].warned) {
+    var m;
+    if (!isUndefined(this._maxListeners)) {
+      m = this._maxListeners;
+    } else {
+      m = EventEmitter.defaultMaxListeners;
+    }
+
+    if (m && m > 0 && this._events[type].length > m) {
+      this._events[type].warned = true;
+      console.error('(node) warning: possible EventEmitter memory ' +
+                    'leak detected. %d listeners added. ' +
+                    'Use emitter.setMaxListeners() to increase limit.',
+                    this._events[type].length);
+      if (typeof console.trace === 'function') {
+        // not supported in IE 10
+        console.trace();
+      }
+    }
+  }
+
+  return this;
+};
+
+EventEmitter.prototype.on = EventEmitter.prototype.addListener;
+
+EventEmitter.prototype.once = function(type, listener) {
+  if (!isFunction(listener))
+    throw TypeError('listener must be a function');
+
+  var fired = false;
+
+  function g() {
+    this.removeListener(type, g);
+
+    if (!fired) {
+      fired = true;
+      listener.apply(this, arguments);
+    }
+  }
+
+  g.listener = listener;
+  this.on(type, g);
+
+  return this;
+};
+
+// emits a 'removeListener' event iff the listener was removed
+EventEmitter.prototype.removeListener = function(type, listener) {
+  var list, position, length, i;
+
+  if (!isFunction(listener))
+    throw TypeError('listener must be a function');
+
+  if (!this._events || !this._events[type])
+    return this;
+
+  list = this._events[type];
+  length = list.length;
+  position = -1;
+
+  if (list === listener ||
+      (isFunction(list.listener) && list.listener === listener)) {
+    delete this._events[type];
+    if (this._events.removeListener)
+      this.emit('removeListener', type, listener);
+
+  } else if (isObject(list)) {
+    for (i = length; i-- > 0;) {
+      if (list[i] === listener ||
+          (list[i].listener && list[i].listener === listener)) {
+        position = i;
+        break;
+      }
+    }
+
+    if (position < 0)
+      return this;
+
+    if (list.length === 1) {
+      list.length = 0;
+      delete this._events[type];
+    } else {
+      list.splice(position, 1);
+    }
+
+    if (this._events.removeListener)
+      this.emit('removeListener', type, listener);
+  }
+
+  return this;
+};
+
+EventEmitter.prototype.removeAllListeners = function(type) {
+  var key, listeners;
+
+  if (!this._events)
+    return this;
+
+  // not listening for removeListener, no need to emit
+  if (!this._events.removeListener) {
+    if (arguments.length === 0)
+      this._events = {};
+    else if (this._events[type])
+      delete this._events[type];
+    return this;
+  }
+
+  // emit removeListener for all listeners on all events
+  if (arguments.length === 0) {
+    for (key in this._events) {
+      if (key === 'removeListener') continue;
+      this.removeAllListeners(key);
+    }
+    this.removeAllListeners('removeListener');
+    this._events = {};
+    return this;
+  }
+
+  listeners = this._events[type];
+
+  if (isFunction(listeners)) {
+    this.removeListener(type, listeners);
+  } else {
+    // LIFO order
+    while (listeners.length)
+      this.removeListener(type, listeners[listeners.length - 1]);
+  }
+  delete this._events[type];
+
+  return this;
+};
+
+EventEmitter.prototype.listeners = function(type) {
+  var ret;
+  if (!this._events || !this._events[type])
+    ret = [];
+  else if (isFunction(this._events[type]))
+    ret = [this._events[type]];
+  else
+    ret = this._events[type].slice();
+  return ret;
+};
+
+EventEmitter.listenerCount = function(emitter, type) {
+  var ret;
+  if (!emitter._events || !emitter._events[type])
+    ret = 0;
+  else if (isFunction(emitter._events[type]))
+    ret = 1;
+  else
+    ret = emitter._events[type].length;
+  return ret;
+};
+
+function isFunction(arg) {
+  return typeof arg === 'function';
+}
+
+function isNumber(arg) {
+  return typeof arg === 'number';
+}
+
+function isObject(arg) {
+  return typeof arg === 'object' && arg !== null;
+}
+
+function isUndefined(arg) {
+  return arg === void 0;
+}
+
+},{}],4:[function(require,module,exports){
 // CodeMirror, copyright (c) by Marijn Haverbeke and others
 // Distributed under an MIT license: http://codemirror.net/LICENSE
 
@@ -975,7 +1278,7 @@ RegExp.escape= function(s) {
   });
 });
 
-},{"codemirror":undefined}],4:[function(require,module,exports){
+},{"codemirror":undefined}],5:[function(require,module,exports){
 // CodeMirror, copyright (c) by Marijn Haverbeke and others
 // Distributed under an MIT license: http://codemirror.net/LICENSE
 
@@ -1082,7 +1385,7 @@ CodeMirror.registerHelper("fold", "include", function(cm, start) {
 
 });
 
-},{"codemirror":undefined}],5:[function(require,module,exports){
+},{"codemirror":undefined}],6:[function(require,module,exports){
 // CodeMirror, copyright (c) by Marijn Haverbeke and others
 // Distributed under an MIT license: http://codemirror.net/LICENSE
 
@@ -1229,7 +1532,7 @@ CodeMirror.registerHelper("fold", "include", function(cm, start) {
   }
 });
 
-},{"codemirror":undefined}],6:[function(require,module,exports){
+},{"codemirror":undefined}],7:[function(require,module,exports){
 // CodeMirror, copyright (c) by Marijn Haverbeke and others
 // Distributed under an MIT license: http://codemirror.net/LICENSE
 
@@ -1365,7 +1668,7 @@ CodeMirror.registerHelper("fold", "include", function(cm, start) {
   }
 });
 
-},{"./foldcode":5,"codemirror":undefined}],7:[function(require,module,exports){
+},{"./foldcode":6,"codemirror":undefined}],8:[function(require,module,exports){
 // CodeMirror, copyright (c) by Marijn Haverbeke and others
 // Distributed under an MIT license: http://codemirror.net/LICENSE
 
@@ -1549,7 +1852,7 @@ CodeMirror.registerHelper("fold", "include", function(cm, start) {
   };
 });
 
-},{"codemirror":undefined}],8:[function(require,module,exports){
+},{"codemirror":undefined}],9:[function(require,module,exports){
 // CodeMirror, copyright (c) by Marijn Haverbeke and others
 // Distributed under an MIT license: http://codemirror.net/LICENSE
 
@@ -2235,7 +2538,7 @@ CodeMirror.defineMIME("application/typescript", { name: "javascript", typescript
 
 });
 
-},{"codemirror":undefined}],9:[function(require,module,exports){
+},{"codemirror":undefined}],10:[function(require,module,exports){
 // CodeMirror, copyright (c) by Marijn Haverbeke and others
 // Distributed under an MIT license: http://codemirror.net/LICENSE
 
@@ -2621,7 +2924,7 @@ if (!CodeMirror.mimeModes.hasOwnProperty("text/html"))
 
 });
 
-},{"codemirror":undefined}],10:[function(require,module,exports){
+},{"codemirror":undefined}],11:[function(require,module,exports){
 // Generated by CoffeeScript 1.4.0
 (function() {
 
@@ -2716,7 +3019,7 @@ if (!CodeMirror.mimeModes.hasOwnProperty("text/html"))
 
 }).call(this);
 
-},{"jquery":undefined}],11:[function(require,module,exports){
+},{"jquery":undefined}],12:[function(require,module,exports){
 // Generated by CoffeeScript 1.4.0
 (function() {
 
@@ -2839,7 +3142,7 @@ if (!CodeMirror.mimeModes.hasOwnProperty("text/html"))
 
 }).call(this);
 
-},{"jquery":undefined}],12:[function(require,module,exports){
+},{"jquery":undefined}],13:[function(require,module,exports){
 ;(function(win){
 	var store = {},
 		doc = win.document,
@@ -3016,7 +3319,7 @@ if (!CodeMirror.mimeModes.hasOwnProperty("text/html"))
 
 })(Function('return this')());
 
-},{}],13:[function(require,module,exports){
+},{}],14:[function(require,module,exports){
 module.exports={
   "name": "yasgui-utils",
   "version": "1.5.0",
@@ -3049,7 +3352,7 @@ module.exports={
   }
 }
 
-},{}],14:[function(require,module,exports){
+},{}],15:[function(require,module,exports){
 window.console = window.console || {"log":function(){}};//make sure any console statements don't break IE
 module.exports = {
 	storage: require("./storage.js"),
@@ -3059,7 +3362,7 @@ module.exports = {
 	}
 };
 
-},{"../package.json":13,"./storage.js":15,"./svg.js":16}],15:[function(require,module,exports){
+},{"../package.json":14,"./storage.js":16,"./svg.js":17}],16:[function(require,module,exports){
 var store = require("store");
 var times = {
 	day: function() {
@@ -3075,7 +3378,7 @@ var times = {
 
 var root = module.exports = {
 	set : function(key, val, exp) {
-		if (val) {
+		if (key && val) {
 			if (typeof exp == "string") {
 				exp = times[exp]();
 			}
@@ -3089,22 +3392,26 @@ var root = module.exports = {
 		}
 	},
 	remove: function(key) {
-		store.remove(key)
+		if (key) store.remove(key)
 	},
 	get : function(key) {
-		var info = store.get(key);
-		if (!info) {
+		if (key) {
+			var info = store.get(key);
+			if (!info) {
+				return null;
+			}
+			if (info.exp && new Date().getTime() - info.time > info.exp) {
+				return null;
+			}
+			return info.val;
+		} else {
 			return null;
 		}
-		if (info.exp && new Date().getTime() - info.time > info.exp) {
-			return null;
-		}
-		return info.val;
 	}
 
 };
 
-},{"store":12}],16:[function(require,module,exports){
+},{"store":13}],17:[function(require,module,exports){
 module.exports = {
 	draw: function(parent, svgString) {
 		if (!parent) return;
@@ -3133,11 +3440,11 @@ module.exports = {
 		return false;
 	}
 };
-},{}],17:[function(require,module,exports){
+},{}],18:[function(require,module,exports){
 module.exports={
   "name": "yasgui-yasr",
   "description": "Yet Another SPARQL Resultset GUI",
-  "version": "2.3.2",
+  "version": "2.4.0",
   "main": "src/main.js",
   "licenses": [
     {
@@ -3250,7 +3557,7 @@ module.exports={
   }
 }
 
-},{}],18:[function(require,module,exports){
+},{}],19:[function(require,module,exports){
 'use strict';
 module.exports = function(result) {
 	var quote = "\"";
@@ -3310,7 +3617,7 @@ module.exports = function(result) {
 	createBody();
 	return csvString;
 };
-},{}],19:[function(require,module,exports){
+},{}],20:[function(require,module,exports){
 'use strict';
 var $ = (function(){try{return require('jquery')}catch(e){return window.jQuery}})();
 
@@ -3370,7 +3677,7 @@ root.version = {
 };
 
 
-},{"../package.json":17,"./imgs.js":22,"jquery":undefined,"yasgui-utils":14}],20:[function(require,module,exports){
+},{"../package.json":18,"./imgs.js":25,"jquery":undefined,"yasgui-utils":15}],21:[function(require,module,exports){
 'use strict';
 var $ = (function(){try{return require('jquery')}catch(e){return window.jQuery}})();
 module.exports = {
@@ -3381,8 +3688,9 @@ module.exports = {
 	 * @default "table"
 	 */
 	output: "table",
-	
+	useGoogleCharts: true, 
 	outputPlugins: ["table", "error", "boolean", "rawResponse"],
+	
 	
 	/**
 	 * Draw the output selector widget
@@ -3417,6 +3725,9 @@ module.exports = {
 	 * @type object
 	 */
 	persistency: {
+		prefix: function(yasr) {
+			return "yasr_" + $(yasr.container).closest('[id]').attr('id') + "_";
+		},
 		/**
 		 * Persistency setting for the selected output
 		 * 
@@ -3425,7 +3736,7 @@ module.exports = {
 		 * @default function (determine unique id)
 		 */
 		outputSelector: function(yasr) {
-			return "selector_" + $(yasr.container).closest('[id]').attr('id');
+			return "selector";
 		},
 		/**
 		 * Persistency setting for query results.
@@ -3444,6 +3755,7 @@ module.exports = {
 			id: function(yasr){
 				return "results_" +  $(yasr.container).closest('[id]').attr('id');
 			},
+			key: 'results',
 			/**
 			 * The result set might too large to fit in local storage. 
 			 * It is impossible to detect how large the local storage is.
@@ -3461,7 +3773,7 @@ module.exports = {
 	
 	
 };
-},{"jquery":undefined}],21:[function(require,module,exports){
+},{"jquery":undefined}],22:[function(require,module,exports){
 'use strict';
 var $ = (function(){try{return require('jquery')}catch(e){return window.jQuery}})();
 
@@ -3527,7 +3839,371 @@ var root = module.exports = function(yasr) {
 root.defaults = {
 	
 };
-},{"jquery":undefined}],22:[function(require,module,exports){
+},{"jquery":undefined}],23:[function(require,module,exports){
+(function (global){
+var EventEmitter = require('events').EventEmitter,
+	$ = (function(){try{return require('jquery')}catch(e){return window.jQuery}})();
+//cannot package google loader via browserify....
+var loadingMain = false;
+var loadingFailed = false;
+var loader = function() {
+	EventEmitter.call(this);
+	var mod = this;
+	this.init = function() {
+		if (!loadingFailed && !(typeof window !== "undefined" ? window.google : typeof global !== "undefined" ? global.google : null) && !loadingMain) {//not initiated yet, not currently loading, and has not failed the previous time
+			loadingMain = true;
+			/**
+			 * It is extremely difficult to catch script loader errors (see http://www.html5rocks.com/en/tutorials/speed/script-loading/)
+			 * Existing libraries either ignore several browsers (e.g. jquery 2.x), or use ugly hacks (timeouts or something)
+			 * So, we use our own custom ugly hack (yes, timeouts)
+			 */
+			loadScript('//google.com/jsapi', function(){
+				loadingMain = false;
+				mod.emit('initDone');
+			});
+			
+			var timeout = 100; //ms
+			var maxTimeout = 6000;//so 6 sec max
+			var startTime = +new Date();
+			var checkAndWait = function() {
+				if (!(typeof window !== "undefined" ? window.google : typeof global !== "undefined" ? global.google : null)) {
+					if ((+new Date() - startTime) > maxTimeout) {
+						//ok, we've waited long enough. Obviously we could not load the googleloader...
+						loadingFailed = true;
+						loadingMain = false;
+						mod.emit('initError');
+						
+						//TODO: clear initDone callbacks. they won't fire anymore anyway
+					
+					} else {
+						setTimeout(checkAndWait, timeout);
+					}
+				} else {
+					//TODO: clear initFailed callbacks. they won't fire anymore anyway
+				}
+			}
+			checkAndWait();
+		} else {
+			if ((typeof window !== "undefined" ? window.google : typeof global !== "undefined" ? global.google : null)) {
+				mod.emit('initError');
+			} else if (loadingFailed) {
+				mod.emit('initError')
+			} else {
+				//hmmm, should never get here
+			}
+			
+		}
+	}
+	this.googleLoad = function() {
+		
+		var load = function() {
+			(typeof window !== "undefined" ? window.google : typeof global !== "undefined" ? global.google : null).load("visualization", "1", {
+				packages : ["corechart", "charteditor" ],
+				callback : function(){mod.emit('done')}
+			})
+		}
+		if (loadingMain) {
+			mod.once('initDone', load);
+			mod.once('initError', function(){
+				mod.emit('error', 'Could not load google loader')
+			});
+		} else if ((typeof window !== "undefined" ? window.google : typeof global !== "undefined" ? global.google : null)) {
+			//google loader is there. use it
+			load();
+		} else if (loadingFailed) {
+			mod.emit('error',  'Could not load google loader');
+		} else {
+			//not loading, no loading error, and not loaded. it must not have been initialized yet. Do that
+			mod.once('initDone', load);
+			mod.once('initError', function(){
+				mod.emit('error', 'Could not load google loader')
+			});
+		}
+	};
+}
+
+
+var loadScript = function(url, callback){
+    var script = document.createElement("script")
+    script.type = "text/javascript";
+
+    if (script.readyState){  //IE
+        script.onreadystatechange = function(){
+            if (script.readyState == "loaded" ||
+                    script.readyState == "complete"){
+                script.onreadystatechange = null;
+                callback();
+            }
+        };
+    } else {  //Others
+        script.onload = function(){
+            callback();
+        };
+    }
+
+    script.src = url;
+    document.body.appendChild(script);
+}
+loader.prototype = new EventEmitter;
+module.exports = new loader();
+
+
+}).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
+},{"events":3,"jquery":undefined}],24:[function(require,module,exports){
+(function (global){
+'use strict';
+/**
+ * todo: chart height as option
+ * 
+ */
+var $ = (function(){try{return require('jquery')}catch(e){return window.jQuery}})(),
+	utils = require('./utils.js'),
+	yUtils = require('yasgui-utils');
+
+var root = module.exports = function(yasr){
+	var options = $.extend(true, {}, root.defaults);
+	var id = yasr.container.closest('[id]').attr('id');
+	if (yasr.options.gchart == null) {
+		yasr.options.gchart = {};
+	}
+	var persistencyIdMotionChart = yasr.getPersistencyId('motionchart');
+	var persistencyIdChartConfig = yasr.getPersistencyId('chartConfig');
+	if (yasr.options.gchart.motionChartState == null) {
+		yasr.options.gchart.motionChartState = yUtils.storage.get(persistencyIdMotionChart);
+	}
+	if (yasr.options.gchart.chartConfig == null) {
+		yasr.options.gchart.chartConfig = yUtils.storage.get(persistencyIdChartConfig);
+	}
+	
+	
+	var editor = null;
+	
+	var initEditor = function(callback) {
+		var google = (typeof window !== "undefined" ? window.google : typeof global !== "undefined" ? global.google : null);
+		editor = new google.visualization.ChartEditor();
+		google.visualization.events.addListener(editor, 'ok', function(){
+				var chartWrapper, tmp;
+				chartWrapper = editor.getChartWrapper();
+				if (!deepEq$(chartWrapper.getChartType, "MotionChart", '===')) {
+					yasr.options.gchart.motionChartState = chartWrapper.n;
+
+					yUtils.storage.set(persistencyIdMotionChart, yasr.options.gchart.motionChartState);
+					chartWrapper.setOption("state", yasr.options.gchart.motionChartState);
+					
+					google.visualization.events.addListener(chartWrapper, 'ready', function(){
+						var motionChart;
+						motionChart = chartWrapper.getChart();
+						google.visualization.events.addListener(motionChart, 'statechange', function(){
+							yasr.options.gchart.motionChartState = motionChart.getState();
+							yUtils.storage.set(persistencyIdMotionChart, yasr.options.gchart.motionChartState);
+						});
+					});
+				}
+				tmp = chartWrapper.getDataTable();
+				chartWrapper.setDataTable(null);
+				yasr.options.gchart.chartConfig = chartWrapper.toJSON();
+				
+				yUtils.storage.set(persistencyIdChartConfig, yasr.options.gchart.chartConfig);
+				chartWrapper.setDataTable(tmp);
+				chartWrapper.draw();
+			});
+			if (callback) callback();
+	};
+
+	return {
+		name: "Google Chart",
+		hideFromSelection: false,
+		priority: 7,
+		canHandleResults: function(yasr){
+			var results, variables;
+			return (results = yasr.results) != null && (variables = results.getVariables()) && variables.length > 0;
+		},
+		getDownloadInfo: function() {
+			if (!yasr.results) return null;
+			var svgEl = yasr.resultsContainer.find('svg');
+			if (svgEl.length == 0) return null;
+			
+			return {
+				getContent: function(){return svgEl[0].outerHTML;},
+				filename: "queryResults.svg",
+				contentType: "image/svg+xml",
+				buttonTitle: "Download SVG Image"
+			};
+		},
+		draw: function(){
+			var doDraw = function () {
+				//clear previous results (if any)
+				yasr.resultsContainer.empty();
+				var wrapperId = id + '_gchartWrapper';
+				var wrapper = null;
+
+				yasr.resultsContainer.append(
+					$('<button>', {class: 'openGchartBtn yasr_btn'})
+						.text('Chart Config')
+						.click(function() {
+							editor.openDialog(wrapper);
+						})
+				).append(
+					$('<div>', {id: wrapperId, class: 'gchartWrapper'})
+				);
+				var dataTable = new google.visualization.DataTable();
+				var jsonResults = yasr.results.getAsJson();
+				
+				jsonResults.head.vars.forEach(function(variable) {
+					var type = utils.getGoogleType(jsonResults.results.bindings[0][variable]);
+					dataTable.addColumn(type, variable);
+				});
+				var usedPrefixes = null;
+				if (yasr.options.getUsedPrefixes) {
+					usedPrefixes = (typeof yasr.options.getUsedPrefixes == "function"? yasr.options.getUsedPrefixes(yasr):  yasr.options.getUsedPrefixes);
+				}
+				jsonResults.results.bindings.forEach(function(binding) {
+					var row = [];
+					jsonResults.head.vars.forEach(function(variable) {
+						row.push(utils.castGoogleType(binding[variable], usedPrefixes));
+					})
+					dataTable.addRow(row);
+				});
+
+				if (yasr.options.gchart.chartConfig) {
+
+					wrapper = new google.visualization.ChartWrapper(yasr.options.gchart.chartConfig);
+					
+					if (wrapper.getChartType() === "MotionChart" && yasr.options.gchart.motionChartState != null) {
+						wrapper.setOption("state", yasr.options.gchart.motionChartState);
+						google.visualization.events.addListener(wrapper, 'ready', function(){
+							var motionChart;
+							motionChart = wrapper.getChart();
+							google.visualization.events.addListener(motionChart, 'statechange', function(){
+								yasr.options.gchart.motionChartState = motionChart.getState();
+								yUtils.storage.set(persistencyIdMotionChart, yasr.options.gchart.motionChartState);
+							});
+						});
+					}
+					wrapper.setDataTable(dataTable);
+				} else {
+					wrapper = new google.visualization.ChartWrapper({
+						chartType: 'Table',
+						dataTable: dataTable,
+						containerId: wrapperId
+					});
+				}
+				wrapper.setOption("width", options.width);
+				wrapper.setOption("height", options.height);
+				wrapper.draw();
+				yasr.updateHeader();
+			}
+			
+			if (!(typeof window !== "undefined" ? window.google : typeof global !== "undefined" ? global.google : null) || !(typeof window !== "undefined" ? window.google : typeof global !== "undefined" ? global.google : null).visualization || !editor) {
+				require('./gChartLoader.js')
+					.on('done', function() {
+						initEditor();
+						doDraw();
+					})
+					.on('error', function() {
+						console.log('errorrr');
+						//TODO: disable or something?
+					})
+					.googleLoad();
+			} else {
+				//everything (editor as well) is already initialized
+				doDraw();
+			}
+		}
+	};
+};
+root.defaults = {
+	height: "600px",
+	width: "100%",
+	persistencyId: 'gchart',
+};
+
+function deepEq$(x, y, type){
+	var toString = {}.toString, hasOwnProperty = {}.hasOwnProperty,
+	    has = function (obj, key) { return hasOwnProperty.call(obj, key); };
+  var first = true;
+  return eq(x, y, []);
+  function eq(a, b, stack) {
+    var className, length, size, result, alength, blength, r, key, ref, sizeB;
+    if (a == null || b == null) { return a === b; }
+    if (a.__placeholder__ || b.__placeholder__) { return true; }
+    if (a === b) { return a !== 0 || 1 / a == 1 / b; }
+    className = toString.call(a);
+    if (toString.call(b) != className) { return false; }
+    switch (className) {
+      case '[object String]': return a == String(b);
+      case '[object Number]':
+        return a != +a ? b != +b : (a == 0 ? 1 / a == 1 / b : a == +b);
+      case '[object Date]':
+      case '[object Boolean]':
+        return +a == +b;
+      case '[object RegExp]':
+        return a.source == b.source &&
+               a.global == b.global &&
+               a.multiline == b.multiline &&
+               a.ignoreCase == b.ignoreCase;
+    }
+    if (typeof a != 'object' || typeof b != 'object') { return false; }
+    length = stack.length;
+    while (length--) { if (stack[length] == a) { return true; } }
+    stack.push(a);
+    size = 0;
+    result = true;
+    if (className == '[object Array]') {
+      alength = a.length;
+      blength = b.length;
+      if (first) {
+        switch (type) {
+        case '===': result = alength === blength; break;
+        case '<==': result = alength <= blength; break;
+        case '<<=': result = alength < blength; break;
+        }
+        size = alength;
+        first = false;
+      } else {
+        result = alength === blength;
+        size = alength;
+      }
+      if (result) {
+        while (size--) {
+          if (!(result = size in a == size in b && eq(a[size], b[size], stack))){ break; }
+        }
+      }
+    } else {
+      if ('constructor' in a != 'constructor' in b || a.constructor != b.constructor) {
+        return false;
+      }
+      for (key in a) {
+        if (has(a, key)) {
+          size++;
+          if (!(result = has(b, key) && eq(a[key], b[key], stack))) { break; }
+        }
+      }
+      if (result) {
+        sizeB = 0;
+        for (key in b) {
+          if (has(b, key)) { ++sizeB; }
+        }
+        if (first) {
+          if (type === '<<=') {
+            result = size < sizeB;
+          } else if (type === '<==') {
+            result = size <= sizeB
+          } else {
+            result = size === sizeB;
+          }
+        } else {
+          first = false;
+          result = size === sizeB;
+        }
+      }
+    }
+    stack.pop();
+    return result;
+  }
+}
+}).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
+},{"./gChartLoader.js":23,"./utils.js":36,"jquery":undefined,"yasgui-utils":15}],25:[function(require,module,exports){
 'use strict';
 module.exports = {
 	cross: '<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" x="0px" y="0px" width="30px" height="30px" viewBox="0 0 100 100" enable-background="new 0 0 100 100" xml:space="preserve"><g>	<path d="M83.288,88.13c-2.114,2.112-5.575,2.112-7.689,0L53.659,66.188c-2.114-2.112-5.573-2.112-7.687,0L24.251,87.907   c-2.113,2.114-5.571,2.114-7.686,0l-4.693-4.691c-2.114-2.114-2.114-5.573,0-7.688l21.719-21.721c2.113-2.114,2.113-5.573,0-7.686   L11.872,24.4c-2.114-2.113-2.114-5.571,0-7.686l4.842-4.842c2.113-2.114,5.571-2.114,7.686,0L46.12,33.591   c2.114,2.114,5.572,2.114,7.688,0l21.721-21.719c2.114-2.114,5.573-2.114,7.687,0l4.695,4.695c2.111,2.113,2.111,5.571-0.003,7.686   L66.188,45.973c-2.112,2.114-2.112,5.573,0,7.686L88.13,75.602c2.112,2.111,2.112,5.572,0,7.687L83.288,88.13z"/></g></svg>',
@@ -3540,7 +4216,7 @@ module.exports = {
 	fullscreen: '<svg   xmlns:dc="http://purl.org/dc/elements/1.1/"   xmlns:cc="http://creativecommons.org/ns#"   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"   xmlns:svg="http://www.w3.org/2000/svg"   xmlns="http://www.w3.org/2000/svg"   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"   version="1.1"      x="0px"   y="0px"   width="100%"   height="100%"   viewBox="5 -10 74.074074 100"   enable-background="new 0 0 100 100"   xml:space="preserve"   inkscape:version="0.48.4 r9939"   sodipodi:docname="noun_2186_cc.svg"><metadata     ><rdf:RDF><cc:Work         rdf:about=""><dc:format>image/svg+xml</dc:format><dc:type           rdf:resource="http://purl.org/dc/dcmitype/StillImage" /></cc:Work></rdf:RDF></metadata><defs      /><sodipodi:namedview     pagecolor="#ffffff"     bordercolor="#666666"     borderopacity="1"     objecttolerance="10"     gridtolerance="10"     guidetolerance="10"     inkscape:pageopacity="0"     inkscape:pageshadow="2"     inkscape:window-width="640"     inkscape:window-height="480"          showgrid="false"     fit-margin-top="0"     fit-margin-left="0"     fit-margin-right="0"     fit-margin-bottom="0"     inkscape:zoom="2.36"     inkscape:cx="44.101509"     inkscape:cy="31.481481"     inkscape:window-x="65"     inkscape:window-y="24"     inkscape:window-maximized="0"     inkscape:current-layer="Layer_1" /><path     d="m -7.962963,-10 v 38.889 l 16.667,-16.667 16.667,16.667 5.555,-5.555 -16.667,-16.667 16.667,-16.667 h -38.889 z"          inkscape:connector-curvature="0"     style="fill:#010101" /><path     d="m 92.037037,-10 v 38.889 l -16.667,-16.667 -16.666,16.667 -5.556,-5.555 16.666,-16.667 -16.666,-16.667 h 38.889 z"          inkscape:connector-curvature="0"     style="fill:#010101" /><path     d="M -7.962963,90 V 51.111 l 16.667,16.666 16.667,-16.666 5.555,5.556 -16.667,16.666 16.667,16.667 h -38.889 z"          inkscape:connector-curvature="0"     style="fill:#010101" /><path     d="M 92.037037,90 V 51.111 l -16.667,16.666 -16.666,-16.666 -5.556,5.556 16.666,16.666 -16.666,16.667 h 38.889 z"          inkscape:connector-curvature="0"     style="fill:#010101" /></svg>',
 	smallscreen: '<svg   xmlns:dc="http://purl.org/dc/elements/1.1/"   xmlns:cc="http://creativecommons.org/ns#"   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"   xmlns:svg="http://www.w3.org/2000/svg"   xmlns="http://www.w3.org/2000/svg"   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"   version="1.1"      x="0px"   y="0px"   width="100%"   height="100%"   viewBox="5 -10 74.074074 100"   enable-background="new 0 0 100 100"   xml:space="preserve"   inkscape:version="0.48.4 r9939"   sodipodi:docname="noun_2186_cc.svg"><metadata     ><rdf:RDF><cc:Work         rdf:about=""><dc:format>image/svg+xml</dc:format><dc:type           rdf:resource="http://purl.org/dc/dcmitype/StillImage" /></cc:Work></rdf:RDF></metadata><defs      /><sodipodi:namedview     pagecolor="#ffffff"     bordercolor="#666666"     borderopacity="1"     objecttolerance="10"     gridtolerance="10"     guidetolerance="10"     inkscape:pageopacity="0"     inkscape:pageshadow="2"     inkscape:window-width="1855"     inkscape:window-height="1056"          showgrid="false"     fit-margin-top="0"     fit-margin-left="0"     fit-margin-right="0"     fit-margin-bottom="0"     inkscape:zoom="2.36"     inkscape:cx="44.101509"     inkscape:cy="31.481481"     inkscape:window-x="65"     inkscape:window-y="24"     inkscape:window-maximized="1"     inkscape:current-layer="Layer_1" /><path     d="m 30.926037,28.889 0,-38.889 -16.667,16.667 -16.667,-16.667 -5.555,5.555 16.667,16.667 -16.667,16.667 38.889,0 z"          inkscape:connector-curvature="0"     style="fill:#010101" /><path     d="m 53.148037,28.889 0,-38.889 16.667,16.667 16.666,-16.667 5.556,5.555 -16.666,16.667 16.666,16.667 -38.889,0 z"          inkscape:connector-curvature="0"     style="fill:#010101" /><path     d="m 30.926037,51.111 0,38.889 -16.667,-16.666 -16.667,16.666 -5.555,-5.556 16.667,-16.666 -16.667,-16.667 38.889,0 z"          inkscape:connector-curvature="0"     style="fill:#010101" /><path     d="m 53.148037,51.111 0,38.889 16.667,-16.666 16.666,16.666 5.556,-5.556 -16.666,-16.666 16.666,-16.667 -38.889,0 z"          inkscape:connector-curvature="0"     style="fill:#010101" /></svg>',
 };
-},{}],23:[function(require,module,exports){
+},{}],26:[function(require,module,exports){
 'use strict';
 var $ = (function(){try{return require('jquery')}catch(e){return window.jQuery}})();
 var utils = require("yasgui-utils");
@@ -3559,12 +4235,38 @@ console = console || {"log":function(){}};//make sure any console statements don
  * @return {doc} YASR document
  */
 var root = module.exports = function(parent, options, queryResults) {
+
+	
 	var yasr = {};
 	yasr.options = $.extend(true, {}, root.defaults, options);
 	yasr.container = $("<div class='yasr'></div>").appendTo(parent);
 	yasr.header = $("<div class='yasr_header'></div>").appendTo(yasr.container);
 	yasr.resultsContainer = $("<div class='yasr_results'></div>").appendTo(yasr.container);
+	yasr.storage = utils.storage;
 	
+	var prefix = null;
+	yasr.getPersistencyId = function(postfix) {
+		if (prefix === null) {
+			//instantiate prefix
+			if (yasr.options.persistency && yasr.options.persistency.prefix) {
+				prefix = (typeof yasr.options.persistency.prefix == 'string'? yasr.options.persistency.prefix : yasr.options.persistency.prefix(yasr));
+			} else {
+				prefix = false;
+			}
+		}
+		if (prefix && postfix) {
+			return prefix + (typeof postfix == 'string'? postfix : postfix(yasr));
+		} else {
+			return null;
+		}
+	};
+	
+	if (yasr.options.useGoogleCharts) {
+		//pre-load google-loader
+		require('./gChartLoader.js')
+			.once('initError', function(){yasr.options.useGoogleCharts = false})
+			.init();
+	}
 	
 	//first initialize plugins
 	yasr.plugins = {};
@@ -3573,10 +4275,27 @@ var root = module.exports = function(parent, options, queryResults) {
 	}
 	
 	
-	
-	
-	
-	
+	yasr.updateHeader = function() {
+		var downloadIcon = yasr.header.find(".yasr_downloadIcon")
+				.removeAttr("title");//and remove previous titles
+		
+		var outputPlugin = yasr.plugins[yasr.options.output];
+		if (outputPlugin) {
+			var info = (outputPlugin.getDownloadInfo? outputPlugin.getDownloadInfo(): null);
+			if (info) {
+				if (info.buttonTitle) downloadIcon.attr('title', info.buttonTitle);
+				downloadIcon.prop("disabled", false);
+				downloadIcon.find("path").each(function(){
+					this.style.fill = "black";
+				});
+			} else {
+				downloadIcon.prop("disabled", true).prop("title", "Download not supported for this result representation");
+				downloadIcon.find("path").each(function(){
+					this.style.fill = "gray";
+				});
+			}
+		}
+	};
 	yasr.draw = function(output) {
 		if (!yasr.results) return false;
 		if (!output) output = yasr.options.output;
@@ -3635,31 +4354,46 @@ var root = module.exports = function(parent, options, queryResults) {
 		yasr.draw();
 		
 		//store if needed
-		if (yasr.options.persistency && yasr.options.persistency.results) {
-			var id = (typeof yasr.options.persistency.results.id == "string" ? yasr.options.persistency.results.id: yasr.options.persistency.results.id(yasr));
+		var resultsId = yasr.getPersistencyId(yasr.options.persistency.results.key);
+		if (resultsId) {
 			if (yasr.results.getOriginalResponseAsString && yasr.results.getOriginalResponseAsString().length < yasr.options.persistency.results.maxSize) {
-				utils.storage.set(id, yasr.results.getAsStoreObject(), "month");
+				utils.storage.set(resultsId, yasr.results.getAsStoreObject(), "month");
 			} else {
-				utils.storage.remove(id);
+				//remove old string
+				utils.storage.remove(resultsId);
 			}
 		}
 	};
+	
 	
 
 	/**
 	 * postprocess
 	 */
-	if (yasr.options.persistency && yasr.options.persistency.outputSelector) {
-		var id = (typeof yasr.options.persistency.outputSelector == "string"? yasr.options.persistency.outputSelector: yasr.options.persistency.outputSelector(yasr));
-		if (id) {
-			var selection = utils.storage.get(id);
-			if (selection) yasr.options.output = selection;
-		}
+	var selectorId = yasr.getPersistencyId(yasr.options.persistency.outputSelector)
+	if (selectorId) {
+		var selection = utils.storage.get(selectorId);
+		if (selection) yasr.options.output = selection;
 	}
 	drawHeader(yasr);
 	if (!queryResults && yasr.options.persistency && yasr.options.persistency.results) {
-		var id = (typeof yasr.options.persistency.results.id == "string" ? yasr.options.persistency.results.id: yasr.options.persistency.results.id(yasr));
-		var fromStorage = utils.storage.get(id);
+		var resultsId = yasr.getPersistencyId(yasr.options.persistency.results.key)
+		var fromStorage;
+		if (resultsId) {
+			fromStorage = utils.storage.get(resultsId);
+		}
+		
+		
+		if (!fromStorage && yasr.options.persistency.results.id) {
+			//deprecated! But keep for backwards compatability
+			//if results are stored under old ID. Fetch the results, and delete that key (results can be large, and clutter space)
+			//setting the results, will automatically store it under the new key, so we don't have to worry about that here
+			var deprId = (typeof yasr.options.persistency.results.id == "string" ? yasr.options.persistency.results.id: yasr.options.persistency.results.id(yasr));
+			if (deprId) {
+				fromStorage = utils.storage.get(deprId);
+				if (fromStorage) utils.storage.remove(deprId);
+			}
+		}
 		if (fromStorage) {
 			if ($.isArray(fromStorage)) {
 				yasr.setResponse.apply(this, fromStorage);
@@ -3672,31 +4406,10 @@ var root = module.exports = function(parent, options, queryResults) {
 	if (queryResults) {
 		yasr.setResponse(queryResults);
 	} 
-	updateHeader(yasr);
+	yasr.updateHeader();
 	return yasr;
 };
-var updateHeader = function(yasr) {
-	var downloadIcon = yasr.header.find(".yasr_downloadIcon");
-		downloadIcon
-			.removeAttr("title");//and remove previous titles
-	
-	var outputPlugin = yasr.plugins[yasr.options.output];
-	if (outputPlugin) {
-		var info = (outputPlugin.getDownloadInfo? outputPlugin.getDownloadInfo(): null);
-		if (info) {
-			if (info.buttonTitle) downloadIcon.attr(info.buttonTitle);
-			downloadIcon.prop("disabled", false);
-			downloadIcon.find("path").each(function(){
-				this.style.fill = "black";
-			});
-		} else {
-			downloadIcon.prop("disabled", true).prop("title", "Download not supported for this result representation");
-			downloadIcon.find("path").each(function(){
-				this.style.fill = "gray";
-			});
-		}
-	}
-};
+
 
 var drawHeader = function(yasr) {
 	var drawOutputSelector = function() {
@@ -3715,14 +4428,14 @@ var drawHeader = function(yasr) {
 				yasr.options.output = pluginName;
 				
 				//store if needed
-				if (yasr.options.persistency && yasr.options.persistency.outputSelector) {
-					var id = (typeof yasr.options.persistency.outputSelector == "string"? yasr.options.persistency.outputSelector: yasr.options.persistency.outputSelector(yasr));
-					utils.storage.set(id, yasr.options.output, "month");
+				var selectorId = yasr.getPersistencyId(yasr.options.persistency.outputSelector);
+				if (selectorId) {
+					utils.storage.set(selectorId, yasr.options.output, "month");
 				}
 				
 				
 				yasr.draw();
-				updateHeader(yasr);
+				yasr.updateHeader();
 			})
 			.appendTo(btnGroup);
 			if (yasr.options.output == pluginName) button.addClass("selected");
@@ -3782,12 +4495,7 @@ root.registerOutput = function(name, constructor) {
 };
 
 
-//put these in a try-catch. When using the unbundled version, and when some dependencies are missing, then YASR as a whole will still function
-try {root.registerOutput('boolean', require("./boolean.js"))} catch(e){};
-try {root.registerOutput('rawResponse', require("./rawResponse.js"))} catch(e){};
-try {root.registerOutput('table', require("./table.js"))} catch(e){};
-try {root.registerOutput('error', require("./error.js"))} catch(e){};
-try {root.registerOutput('pivot', require("./pivot.js"))} catch(e){};
+
 
 /**
  * The default options of YASR. Either change the default options by setting YASR.defaults, or by
@@ -3804,13 +4512,21 @@ root.version = {
 root.$ = $;
 
 
-},{"../package.json":17,"./boolean.js":19,"./defaults.js":20,"./error.js":21,"./imgs.js":22,"./parsers/wrapper.js":28,"./pivot.js":30,"./rawResponse.js":31,"./table.js":32,"jquery":undefined,"yasgui-utils":14}],24:[function(require,module,exports){
+
+//put these in a try-catch. When using the unbundled version, and when some dependencies are missing, then YASR as a whole will still function
+try {root.registerOutput('boolean', require("./boolean.js"))} catch(e){};
+try {root.registerOutput('rawResponse', require("./rawResponse.js"))} catch(e){};
+try {root.registerOutput('table', require("./table.js"))} catch(e){};
+try {root.registerOutput('error', require("./error.js"))} catch(e){};
+try {root.registerOutput('pivot', require("./pivot.js"))} catch(e){};
+if (root.defaults.useGoogleCharts) try {root.registerOutput('gchart', require("./gchart.js"))} catch(e){};
+},{"../package.json":18,"./boolean.js":20,"./defaults.js":21,"./error.js":22,"./gChartLoader.js":23,"./gchart.js":24,"./imgs.js":25,"./parsers/wrapper.js":31,"./pivot.js":33,"./rawResponse.js":34,"./table.js":35,"jquery":undefined,"yasgui-utils":15}],27:[function(require,module,exports){
 'use strict';
 var $ = (function(){try{return require('jquery')}catch(e){return window.jQuery}})();
 var root = module.exports = function(queryResponse) {
 	return require("./dlv.js")(queryResponse, ",");
 };
-},{"./dlv.js":25,"jquery":undefined}],25:[function(require,module,exports){
+},{"./dlv.js":28,"jquery":undefined}],28:[function(require,module,exports){
 'use strict';
 var $ = jQuery = (function(){try{return require('jquery')}catch(e){return window.jQuery}})();
 require("../../lib/jquery.csv-0.71.js");
@@ -3872,7 +4588,7 @@ var root = module.exports = function(queryResponse, separator) {
 	
 	return json;
 };
-},{"../../lib/jquery.csv-0.71.js":2,"jquery":undefined}],26:[function(require,module,exports){
+},{"../../lib/jquery.csv-0.71.js":2,"jquery":undefined}],29:[function(require,module,exports){
 'use strict';
 var $ = (function(){try{return require('jquery')}catch(e){return window.jQuery}})();
 var root = module.exports = function(queryResponse) {
@@ -3890,13 +4606,13 @@ var root = module.exports = function(queryResponse) {
 	return false;
 	
 };
-},{"jquery":undefined}],27:[function(require,module,exports){
+},{"jquery":undefined}],30:[function(require,module,exports){
 'use strict';
 var $ = (function(){try{return require('jquery')}catch(e){return window.jQuery}})();
 var root = module.exports = function(queryResponse) {
 	return require("./dlv.js")(queryResponse, "\t");
 };
-},{"./dlv.js":25,"jquery":undefined}],28:[function(require,module,exports){
+},{"./dlv.js":28,"jquery":undefined}],31:[function(require,module,exports){
 'use strict';
 var $ = (function(){try{return require('jquery')}catch(e){return window.jQuery}})();
 
@@ -4130,7 +4846,7 @@ var root = module.exports = function(dataOrJqXhr, textStatus, jqXhrOrErrorString
 
 
 
-},{"./csv.js":24,"./json.js":26,"./tsv.js":27,"./xml.js":29,"jquery":undefined}],29:[function(require,module,exports){
+},{"./csv.js":27,"./json.js":29,"./tsv.js":30,"./xml.js":32,"jquery":undefined}],32:[function(require,module,exports){
 'use strict';
 var $ = (function(){try{return require('jquery')}catch(e){return window.jQuery}})();
 var root = module.exports = function(xml) {
@@ -4216,8 +4932,7 @@ var root = module.exports = function(xml) {
 	return json;
 };
 
-},{"jquery":undefined}],30:[function(require,module,exports){
-(function (global){
+},{"jquery":undefined}],33:[function(require,module,exports){
 'use strict';
 var $ = (function(){try{return require('jquery')}catch(e){return window.jQuery}})(),
 	utils = require('./utils.js'),
@@ -4228,9 +4943,6 @@ var $ = (function(){try{return require('jquery')}catch(e){return window.jQuery}}
 
 if (!$.fn.pivotUI) throw new Error("Pivot lib not loaded");
 var root = module.exports = function(yasr) {
-	var drawOnGChartCallback = false;
-	var loadingGChart = false;
-	var renderers = $.pivotUtilities.renderers;
 	var plugin = {};
 	var options = $.extend(true, {}, root.defaults);
 	
@@ -4241,47 +4953,9 @@ var root = module.exports = function(yasr) {
 		} catch (e) {
 			//do nothing. just make sure we don't use this renderer
 		}
-		if ($.pivotUtilities.d3_renderers) $.extend(true, renderers, $.pivotUtilities.d3_renderers);
+		if ($.pivotUtilities.d3_renderers) $.extend(true,  $.pivotUtilities.renderers, $.pivotUtilities.d3_renderers);
 	}
 	
-	var loadGoogleApi = function() {
-		var finishAjax = function() {
-			try {
-				require('../node_modules/pivottable/dist/gchart_renderers.js');
-				$.extend(true, renderers, $.pivotUtilities.gchart_renderers);
-			} catch (e) {
-				//hmm, something went wrong. forget about it;
-			}
-			loadingGChart = false;
-			if (drawOnGChartCallback) draw();
-			drawOnGChartCallback = false;
-		};
-		
-		
-		//cannot package google loader via browserify...
-		$.ajax({
-			  cache: true,
-			  dataType: "script",
-			  url: "//google.com/jsapi",
-			})
-			.done(function(data, textStatus, jqxhr) {
-				var googleLoader = (typeof window !== "undefined" ? window.google : typeof global !== "undefined" ? global.google : null);// shimmed to global google variable
-				googleLoader.load("visualization", "1", {
-					packages : [ "corechart", "charteditor" ],
-					callback : finishAjax
-				})
-			})
-			.fail(finishAjax);
-	};
-	
-	
-	
-	//only load this script 
-	if (options.useGChart && !$.pivotUtilities.gchart_renderers) {
-		loadingGChart = true;
-		//gchart not loaded yet. load them!
-		loadGoogleApi();
-	}
 	
 	
 	var $pivotWrapper;
@@ -4319,7 +4993,7 @@ var root = module.exports = function(yasr) {
 					var val = binding[variable].value;
 					if (mergeLabelPostfix && binding[variable + mergeLabelPostfix]) {
 						val = binding[variable + mergeLabelPostfix].value;
-					} else if (binding.type == "uri") {
+					} else if (binding[variable].type == "uri") {
 						val = utils.uriToPrefixed(usedPrefixes, val);
 					}
 					rowObj[variable] = val;
@@ -4330,31 +5004,11 @@ var root = module.exports = function(yasr) {
 			callback(rowObj);
 		});
 	} 
-	var settingsPersistencyId = null
-	var getPersistencyId = function() {
-		if (settingsPersistencyId === null) {
-			if (typeof options.persistency == "string") {
-				settingsPersistencyId = options.persistency;
-			} else if (typeof options.persistency == "function") {
-				settingsPersistencyId = options.persistency(yasr);
-			} else {
-				settingsPersistencyId = false;
-			}
-		}
-		return settingsPersistencyId;
-	};
-	var onRefresh = function(pivotObj) {
-		if (getPersistencyId()) {
-			var storeSettings = {
-				cols: pivotObj.cols,
-				rows: pivotObj.rows,
-				rendererName: pivotObj.rendererName,
-			}
-			yUtils.storage.set(getPersistencyId(), storeSettings, "month");
-		}
-	};
+	
+	var persistencyId = yasr.getPersistencyId(options.persistencyId);
+	
 	var getStoredSettings = function() {
-		var settings = yUtils.storage.get(getPersistencyId());
+		var settings = yUtils.storage.get(persistencyId);
 		//validate settings. we may have different variables, or renderers might be gone
 		if (settings) {
 			var vars = yasr.results.getVariables();
@@ -4371,56 +5025,114 @@ var root = module.exports = function(yasr) {
 				settings.cols = [];
 				settings.rows = [];
 			}
-			if (!renderers[settings.rendererName]) delete settings.rendererName;
+			if (! $.pivotUtilities.renderers[settings.rendererName]) delete settings.rendererName;
 		} else {
 			settings = {};
 		}
 		return settings;
 	};
 	var draw = function() {
-		if (loadingGChart) {
-			//postpone drawing until we've loaded everything
-			drawOnGChartCallback = true;
-			return;
+		var doDraw = function() {
+			var onRefresh = function(pivotObj) {
+				if (persistencyId) {
+					var storeSettings = {
+						cols: pivotObj.cols,
+						rows: pivotObj.rows,
+						rendererName: pivotObj.rendererName,
+						aggregatorName: pivotObj.aggregatorName,
+						vals: pivotObj.vals,
+					}
+					yUtils.storage.set(persistencyId, storeSettings, "month");
+				}
+				if (pivotObj.rendererName.toLowerCase().indexOf(' chart') >= 0) {
+					openGchartBtn.show();
+				} else {
+					openGchartBtn.hide();
+				}
+				yasr.updateHeader();
+			};
+			
+			
+			var openGchartBtn = $('<button>', {class: 'openPivotGchart yasr_btn'})
+			.text('Chart Config')
+			.click(function() {
+				$pivotWrapper.find('div[dir="ltr"]').dblclick();
+			}).appendTo(yasr.resultsContainer);
+			$pivotWrapper = $('<div>', {class: 'pivotTable'}).appendTo($(yasr.resultsContainer));
+			
+			var settings = $.extend(true, {}, getStoredSettings(), root.defaults.pivotTable);
+			
+			settings.onRefresh = (function() {
+			    var originalRefresh = settings.onRefresh;
+			    return function(pivotObj) {
+			    	onRefresh(pivotObj);
+			    	if (originalRefresh) originalRefresh(pivotObj);
+			    };
+			})();
+			
+			window.pivot = $pivotWrapper.pivotUI(formatForPivot, settings);
+	
+			/**
+			 * post process
+			 */
+			//use 'move' handler for variables
+			var icon = $(yUtils.svg.getElement(imgs.move));
+			$pivotWrapper.find('.pvtTriangle').replaceWith(icon);
+			
+			//add headers to selector rows
+			$('.pvtCols').prepend($('<div>', {class: 'containerHeader'}).text("Columns"));
+			$('.pvtRows').prepend($('<div>', {class: 'containerHeader'}).text("Rows"));
+			$('.pvtUnused').prepend($('<div>', {class: 'containerHeader'}).text("Available Variables"));
+			$('.pvtVals').prepend($('<div>', {class: 'containerHeader'}).text("Cells"));
+			
+			//hmmm, directly after the callback finishes (i.e., directly after this line), the svg is draw.
+			//just use a short timeout to update the header
+			setTimeout(yasr.updateHeader, 400);
 		}
 		
-		
-		$pivotWrapper = $('<div>', {class: 'pivotTable'}).appendTo($(yasr.resultsContainer));
-		
-		var renderers = $.pivotUtilities.renderers;
-		var settings = $.extend(true, {}, getStoredSettings(), root.defaults.pivotTable);
-		
-		settings.onRefresh = (function() {
-		    var originalRefresh = settings.onRefresh;
-		    return function(pivotObj) {
-		    	onRefresh(pivotObj);
-		    	if (originalRefresh) originalRefresh(pivotObj);
-		    };
-		})();
-		
-		window.pivot = $pivotWrapper.pivotUI(formatForPivot, settings);
-
-		/**
-		 * post process
-		 */
-		//use 'move' handler for variables
-		var icon = $(yUtils.svg.getElement(imgs.move));
-		$pivotWrapper.find('.pvtTriangle').replaceWith(icon);
-		
-		//add headers to selector rows
-		$('.pvtCols').prepend($('<div>', {class: 'containerHeader'}).text("Columns"));
-		$('.pvtRows').prepend($('<div>', {class: 'containerHeader'}).text("Rows"));
-		$('.pvtUnused').prepend($('<div>', {class: 'containerHeader'}).text("Available Variables"));
-		$('.pvtVals').prepend($('<div>', {class: 'containerHeader'}).text("Cells"));
-		
+		if (yasr.options.useGoogleCharts && options.useGoogleCharts && !$.pivotUtilities.gchart_renderers) {
+			require('./gChartLoader.js')
+				.on('done', function() {
+					try {
+						require('../node_modules/pivottable/dist/gchart_renderers.js');
+						$.extend(true,  $.pivotUtilities.renderers, $.pivotUtilities.gchart_renderers);
+					} catch (e) {
+						//hmm, still something went wrong. forget about it;
+						options.useGoogleCharts = false;
+					}
+					doDraw();
+				})
+				.on('error', function() {
+					console.log('could not load gchart');
+					options.useGoogleCharts = false;
+					doDraw();
+				})
+				.googleLoad();
+		} else {
+			//everything is already loaded. just draw
+			doDraw();
+		}
 	};
 	var canHandleResults = function(){
 		return yasr.results && yasr.results.getVariables && yasr.results.getVariables() && yasr.results.getVariables().length > 0;
 	};
 	
-	
+	var getDownloadInfo =  function() {
+		if (!yasr.results) return null;
+		var svgEl = yasr.resultsContainer.find('.pvtRendererArea svg');
+		if (svgEl.length == 0) return null;
+		
+		return {
+			getContent: function(){return svgEl[0].outerHTML;},
+			filename: "queryResults.svg",
+			contentType: "image/svg+xml",
+			buttonTitle: "Download SVG Image"
+		};
+	};
 	
 	return {
+		getDownloadInfo: getDownloadInfo,
+		options: options,
 		draw: draw,
 		name: "Pivot Table",
 		canHandleResults: canHandleResults,
@@ -4432,9 +5144,9 @@ var root = module.exports = function(yasr) {
 
 root.defaults = {
 	mergeLabelsWithUris: false,
-	useGChart: true,
+	useGoogleCharts: true,
 	useD3Chart: true,
-	persistency: function(yasr) {return "yasr_pivot_" + $(yasr.container).closest('[id]').attr('id')},
+	persistencyId: 'pivot',
 	pivotTable: {}
 };
 
@@ -4442,8 +5154,7 @@ root.version = {
 	"YASR-rawResponse" : require("../package.json").version,
 	"jquery": $.fn.jquery,
 };
-}).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"../node_modules/pivottable/dist/d3_renderers.js":10,"../node_modules/pivottable/dist/gchart_renderers.js":11,"../package.json":17,"./imgs.js":22,"./utils.js":33,"d3":undefined,"jquery":undefined,"jquery-ui/sortable":undefined,"pivottable":undefined,"yasgui-utils":14}],31:[function(require,module,exports){
+},{"../node_modules/pivottable/dist/d3_renderers.js":11,"../node_modules/pivottable/dist/gchart_renderers.js":12,"../package.json":18,"./gChartLoader.js":23,"./imgs.js":25,"./utils.js":36,"d3":undefined,"jquery":undefined,"jquery-ui/sortable":undefined,"pivottable":undefined,"yasgui-utils":15}],34:[function(require,module,exports){
 'use strict';
 var $ = (function(){try{return require('jquery')}catch(e){return window.jQuery}})(),
 	CodeMirror = (function(){try{return require('codemirror')}catch(e){return window.CodeMirror}})();
@@ -4532,7 +5243,7 @@ root.version = {
 	"jquery": $.fn.jquery,
 	"CodeMirror" : CodeMirror.version
 };
-},{"../package.json":17,"codemirror":undefined,"codemirror/addon/edit/matchbrackets.js":3,"codemirror/addon/fold/brace-fold.js":4,"codemirror/addon/fold/foldcode.js":5,"codemirror/addon/fold/foldgutter.js":6,"codemirror/addon/fold/xml-fold.js":7,"codemirror/mode/javascript/javascript.js":8,"codemirror/mode/xml/xml.js":9,"jquery":undefined}],32:[function(require,module,exports){
+},{"../package.json":18,"codemirror":undefined,"codemirror/addon/edit/matchbrackets.js":4,"codemirror/addon/fold/brace-fold.js":5,"codemirror/addon/fold/foldcode.js":6,"codemirror/addon/fold/foldgutter.js":7,"codemirror/addon/fold/xml-fold.js":8,"codemirror/mode/javascript/javascript.js":9,"codemirror/mode/xml/xml.js":10,"jquery":undefined}],35:[function(require,module,exports){
 'use strict';
 var $ = (function(){try{return require('jquery')}catch(e){return window.jQuery}})(),
 	yutils = require("yasgui-utils"),
@@ -4558,7 +5269,7 @@ var root = module.exports = function(yasr) {
 		getPriority: 10,
 	};
 	var options = plugin.options = $.extend(true, {}, root.defaults);
-	
+	var tableLengthPersistencyId = (options.persistency? yasr.getPersistencyId(options.persistency.tableLength): null);
 
 	var getRows = function() {
 		var rows = [];
@@ -4594,10 +5305,9 @@ var root = module.exports = function(yasr) {
 		table.on( 'order.dt', function () {
 		    drawSvgIcons();
 		});
-		if (options.persistency && options.persistency.tableLength) {
+		if (tableLengthPersistencyId) {
 			table.on('length.dt', function(e, settings, len) {
-				var persistencyId = (typeof options.persistency.tableLength == "string" ? options.persistency.tableLength: options.persistency.tableLength(yasr));
-				yutils.storage.set(persistencyId, len, "month");
+				yutils.storage.set(tableLengthPersistencyId, len, "month");
 			});
 		}
 		$.extend(true, options.callbacks, options.handlers);
@@ -4634,11 +5344,8 @@ var root = module.exports = function(yasr) {
 		dataTableConfig.columns = options.getColumns(yasr, plugin);
 		
 		//fetch stored datatables length value
-		if (options.persistency && options.persistency.tableLength) {
-			var persistencyId = (typeof options.persistency.tableLength == "string" ? options.persistency.tableLength: options.persistency.tableLength(yasr));
-			var pLength = yutils.storage.get(persistencyId);
-			if (pLength) dataTableConfig.pageLength = pLength;
-		}
+		var pLength = yutils.storage.get(tableLengthPersistencyId);
+		if (pLength) dataTableConfig.pageLength = pLength;
 		
 		
 		
@@ -4797,9 +5504,7 @@ root.defaults = {
 	getCellContent: getCellContent,
 	
 	persistency: {
-		tableLength: function (yasr){
-			return "tableLength_" + $(yasr.container).closest('[id]').attr('id');
-		},
+		tableLength: "tableLength",
 	},
 	
 	getColumns: function(yasr, plugin) {
@@ -4912,7 +5617,7 @@ root.version = {
 	"jquery-datatables": $.fn.DataTable.version
 };
 
-},{"../package.json":17,"./bindingsToCsv.js":18,"./imgs.js":22,"datatables":undefined,"jquery":undefined,"yasgui-utils":14}],33:[function(require,module,exports){
+},{"../package.json":18,"./bindingsToCsv.js":19,"./imgs.js":25,"datatables":undefined,"jquery":undefined,"yasgui-utils":15}],36:[function(require,module,exports){
 'use strict';
 var $ = (function(){try{return require('jquery')}catch(e){return window.jQuery}})();
 module.exports = {
@@ -4925,7 +5630,67 @@ module.exports = {
 				}
 			}
 		}
-	}
+		return uri;
+	},
+	getGoogleType: function(binding) {
+		if (binding.type != null && (binding.type === 'typed-literal' || binding.type === 'literal')) {
+			switch (binding.datatype) {
+			case 'http://www.w3.org/2001/XMLSchema#float':
+			case 'http://www.w3.org/2001/XMLSchema#decimal':
+			case 'http://www.w3.org/2001/XMLSchema#int':
+			case 'http://www.w3.org/2001/XMLSchema#integer':
+			case 'http://www.w3.org/2001/XMLSchema#long':
+			case 'http://www.w3.org/2001/XMLSchema#gYearMonth':
+			case 'http://www.w3.org/2001/XMLSchema#gYear':
+			case 'http://www.w3.org/2001/XMLSchema#gMonthDay':
+			case 'http://www.w3.org/2001/XMLSchema#gDay':
+			case 'http://www.w3.org/2001/XMLSchema#gMonth':
+				return "number";
+			case 'http://www.w3.org/2001/XMLSchema#date':
+				return "date";
+			case 'http://www.w3.org/2001/XMLSchema#dateTime':
+				return "datetime";
+			case 'http://www.w3.org/2001/XMLSchema#time':
+				return "timeofday";
+			default:
+				return "string";
+			}
+		} else {
+			return "string";
+		}
+	},
+	castGoogleType: function(binding, prefixes){
+		if (binding == null) {
+			return null;
+		}
+		if (binding.type != null && (binding.type === 'typed-literal' || binding.type === 'literal')) {
+			switch (binding.datatype) {
+			case 'http://www.w3.org/2001/XMLSchema#float':
+			case 'http://www.w3.org/2001/XMLSchema#decimal':
+			case 'http://www.w3.org/2001/XMLSchema#int':
+			case 'http://www.w3.org/2001/XMLSchema#integer':
+			case 'http://www.w3.org/2001/XMLSchema#long':
+			case 'http://www.w3.org/2001/XMLSchema#gYearMonth':
+			case 'http://www.w3.org/2001/XMLSchema#gYear':
+			case 'http://www.w3.org/2001/XMLSchema#gMonthDay':
+			case 'http://www.w3.org/2001/XMLSchema#gDay':
+			case 'http://www.w3.org/2001/XMLSchema#gMonth':
+				return Number(binding.value);
+			case 'http://www.w3.org/2001/XMLSchema#date':
+			case 'http://www.w3.org/2001/XMLSchema#dateTime':
+			case 'http://www.w3.org/2001/XMLSchema#time':
+				return new Date(binding.value);
+			default:
+				return binding.value;
+			}
+		} else {
+			if (binding.type = 'uri') {
+				return module.exports.uriToPrefixed(prefixes, binding.value);
+			} else {
+				return binding.value;
+			}
+		}
+	},
 };
 },{"jquery":undefined}]},{},[1])(1)
 });

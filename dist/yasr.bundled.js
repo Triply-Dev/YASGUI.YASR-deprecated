@@ -3,7 +3,7 @@
 //the current browserify version does not support require-ing js files which are used as entry-point
 //this way, we can still require our main.js file
 module.exports = require('./main.js');
-},{"./main.js":32}],2:[function(require,module,exports){
+},{"./main.js":35}],2:[function(require,module,exports){
 /*! DataTables 1.10.2
  * ©2008-2014 SpryMedia Ltd - datatables.net/license
  */
@@ -14627,7 +14627,7 @@ module.exports = require('./main.js');
 }(window, document));
 
 
-},{"jquery":17}],3:[function(require,module,exports){
+},{"jquery":18}],3:[function(require,module,exports){
 /**
  * jQuery-csv (jQuery Plugin)
  * version: 0.71 (2012-11-19)
@@ -15478,6 +15478,309 @@ RegExp.escape= function(s) {
 })( jQuery );
 
 },{}],4:[function(require,module,exports){
+// Copyright Joyent, Inc. and other Node contributors.
+//
+// Permission is hereby granted, free of charge, to any person obtaining a
+// copy of this software and associated documentation files (the
+// "Software"), to deal in the Software without restriction, including
+// without limitation the rights to use, copy, modify, merge, publish,
+// distribute, sublicense, and/or sell copies of the Software, and to permit
+// persons to whom the Software is furnished to do so, subject to the
+// following conditions:
+//
+// The above copyright notice and this permission notice shall be included
+// in all copies or substantial portions of the Software.
+//
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+// OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+// MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
+// NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,
+// DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
+// OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE
+// USE OR OTHER DEALINGS IN THE SOFTWARE.
+
+function EventEmitter() {
+  this._events = this._events || {};
+  this._maxListeners = this._maxListeners || undefined;
+}
+module.exports = EventEmitter;
+
+// Backwards-compat with node 0.10.x
+EventEmitter.EventEmitter = EventEmitter;
+
+EventEmitter.prototype._events = undefined;
+EventEmitter.prototype._maxListeners = undefined;
+
+// By default EventEmitters will print a warning if more than 10 listeners are
+// added to it. This is a useful default which helps finding memory leaks.
+EventEmitter.defaultMaxListeners = 10;
+
+// Obviously not all Emitters should be limited to 10. This function allows
+// that to be increased. Set to zero for unlimited.
+EventEmitter.prototype.setMaxListeners = function(n) {
+  if (!isNumber(n) || n < 0 || isNaN(n))
+    throw TypeError('n must be a positive number');
+  this._maxListeners = n;
+  return this;
+};
+
+EventEmitter.prototype.emit = function(type) {
+  var er, handler, len, args, i, listeners;
+
+  if (!this._events)
+    this._events = {};
+
+  // If there is no 'error' event listener then throw.
+  if (type === 'error') {
+    if (!this._events.error ||
+        (isObject(this._events.error) && !this._events.error.length)) {
+      er = arguments[1];
+      if (er instanceof Error) {
+        throw er; // Unhandled 'error' event
+      }
+      throw TypeError('Uncaught, unspecified "error" event.');
+    }
+  }
+
+  handler = this._events[type];
+
+  if (isUndefined(handler))
+    return false;
+
+  if (isFunction(handler)) {
+    switch (arguments.length) {
+      // fast cases
+      case 1:
+        handler.call(this);
+        break;
+      case 2:
+        handler.call(this, arguments[1]);
+        break;
+      case 3:
+        handler.call(this, arguments[1], arguments[2]);
+        break;
+      // slower
+      default:
+        len = arguments.length;
+        args = new Array(len - 1);
+        for (i = 1; i < len; i++)
+          args[i - 1] = arguments[i];
+        handler.apply(this, args);
+    }
+  } else if (isObject(handler)) {
+    len = arguments.length;
+    args = new Array(len - 1);
+    for (i = 1; i < len; i++)
+      args[i - 1] = arguments[i];
+
+    listeners = handler.slice();
+    len = listeners.length;
+    for (i = 0; i < len; i++)
+      listeners[i].apply(this, args);
+  }
+
+  return true;
+};
+
+EventEmitter.prototype.addListener = function(type, listener) {
+  var m;
+
+  if (!isFunction(listener))
+    throw TypeError('listener must be a function');
+
+  if (!this._events)
+    this._events = {};
+
+  // To avoid recursion in the case that type === "newListener"! Before
+  // adding it to the listeners, first emit "newListener".
+  if (this._events.newListener)
+    this.emit('newListener', type,
+              isFunction(listener.listener) ?
+              listener.listener : listener);
+
+  if (!this._events[type])
+    // Optimize the case of one listener. Don't need the extra array object.
+    this._events[type] = listener;
+  else if (isObject(this._events[type]))
+    // If we've already got an array, just append.
+    this._events[type].push(listener);
+  else
+    // Adding the second element, need to change to array.
+    this._events[type] = [this._events[type], listener];
+
+  // Check for listener leak
+  if (isObject(this._events[type]) && !this._events[type].warned) {
+    var m;
+    if (!isUndefined(this._maxListeners)) {
+      m = this._maxListeners;
+    } else {
+      m = EventEmitter.defaultMaxListeners;
+    }
+
+    if (m && m > 0 && this._events[type].length > m) {
+      this._events[type].warned = true;
+      console.error('(node) warning: possible EventEmitter memory ' +
+                    'leak detected. %d listeners added. ' +
+                    'Use emitter.setMaxListeners() to increase limit.',
+                    this._events[type].length);
+      if (typeof console.trace === 'function') {
+        // not supported in IE 10
+        console.trace();
+      }
+    }
+  }
+
+  return this;
+};
+
+EventEmitter.prototype.on = EventEmitter.prototype.addListener;
+
+EventEmitter.prototype.once = function(type, listener) {
+  if (!isFunction(listener))
+    throw TypeError('listener must be a function');
+
+  var fired = false;
+
+  function g() {
+    this.removeListener(type, g);
+
+    if (!fired) {
+      fired = true;
+      listener.apply(this, arguments);
+    }
+  }
+
+  g.listener = listener;
+  this.on(type, g);
+
+  return this;
+};
+
+// emits a 'removeListener' event iff the listener was removed
+EventEmitter.prototype.removeListener = function(type, listener) {
+  var list, position, length, i;
+
+  if (!isFunction(listener))
+    throw TypeError('listener must be a function');
+
+  if (!this._events || !this._events[type])
+    return this;
+
+  list = this._events[type];
+  length = list.length;
+  position = -1;
+
+  if (list === listener ||
+      (isFunction(list.listener) && list.listener === listener)) {
+    delete this._events[type];
+    if (this._events.removeListener)
+      this.emit('removeListener', type, listener);
+
+  } else if (isObject(list)) {
+    for (i = length; i-- > 0;) {
+      if (list[i] === listener ||
+          (list[i].listener && list[i].listener === listener)) {
+        position = i;
+        break;
+      }
+    }
+
+    if (position < 0)
+      return this;
+
+    if (list.length === 1) {
+      list.length = 0;
+      delete this._events[type];
+    } else {
+      list.splice(position, 1);
+    }
+
+    if (this._events.removeListener)
+      this.emit('removeListener', type, listener);
+  }
+
+  return this;
+};
+
+EventEmitter.prototype.removeAllListeners = function(type) {
+  var key, listeners;
+
+  if (!this._events)
+    return this;
+
+  // not listening for removeListener, no need to emit
+  if (!this._events.removeListener) {
+    if (arguments.length === 0)
+      this._events = {};
+    else if (this._events[type])
+      delete this._events[type];
+    return this;
+  }
+
+  // emit removeListener for all listeners on all events
+  if (arguments.length === 0) {
+    for (key in this._events) {
+      if (key === 'removeListener') continue;
+      this.removeAllListeners(key);
+    }
+    this.removeAllListeners('removeListener');
+    this._events = {};
+    return this;
+  }
+
+  listeners = this._events[type];
+
+  if (isFunction(listeners)) {
+    this.removeListener(type, listeners);
+  } else {
+    // LIFO order
+    while (listeners.length)
+      this.removeListener(type, listeners[listeners.length - 1]);
+  }
+  delete this._events[type];
+
+  return this;
+};
+
+EventEmitter.prototype.listeners = function(type) {
+  var ret;
+  if (!this._events || !this._events[type])
+    ret = [];
+  else if (isFunction(this._events[type]))
+    ret = [this._events[type]];
+  else
+    ret = this._events[type].slice();
+  return ret;
+};
+
+EventEmitter.listenerCount = function(emitter, type) {
+  var ret;
+  if (!emitter._events || !emitter._events[type])
+    ret = 0;
+  else if (isFunction(emitter._events[type]))
+    ret = 1;
+  else
+    ret = emitter._events[type].length;
+  return ret;
+};
+
+function isFunction(arg) {
+  return typeof arg === 'function';
+}
+
+function isNumber(arg) {
+  return typeof arg === 'number';
+}
+
+function isObject(arg) {
+  return typeof arg === 'object' && arg !== null;
+}
+
+function isUndefined(arg) {
+  return arg === void 0;
+}
+
+},{}],5:[function(require,module,exports){
 // CodeMirror, copyright (c) by Marijn Haverbeke and others
 // Distributed under an MIT license: http://codemirror.net/LICENSE
 
@@ -15599,7 +15902,7 @@ RegExp.escape= function(s) {
   });
 });
 
-},{"../../lib/codemirror":9}],5:[function(require,module,exports){
+},{"../../lib/codemirror":10}],6:[function(require,module,exports){
 // CodeMirror, copyright (c) by Marijn Haverbeke and others
 // Distributed under an MIT license: http://codemirror.net/LICENSE
 
@@ -15706,7 +16009,7 @@ CodeMirror.registerHelper("fold", "include", function(cm, start) {
 
 });
 
-},{"../../lib/codemirror":9}],6:[function(require,module,exports){
+},{"../../lib/codemirror":10}],7:[function(require,module,exports){
 // CodeMirror, copyright (c) by Marijn Haverbeke and others
 // Distributed under an MIT license: http://codemirror.net/LICENSE
 
@@ -15853,7 +16156,7 @@ CodeMirror.registerHelper("fold", "include", function(cm, start) {
   }
 });
 
-},{"../../lib/codemirror":9}],7:[function(require,module,exports){
+},{"../../lib/codemirror":10}],8:[function(require,module,exports){
 // CodeMirror, copyright (c) by Marijn Haverbeke and others
 // Distributed under an MIT license: http://codemirror.net/LICENSE
 
@@ -15989,7 +16292,7 @@ CodeMirror.registerHelper("fold", "include", function(cm, start) {
   }
 });
 
-},{"../../lib/codemirror":9,"./foldcode":6}],8:[function(require,module,exports){
+},{"../../lib/codemirror":10,"./foldcode":7}],9:[function(require,module,exports){
 // CodeMirror, copyright (c) by Marijn Haverbeke and others
 // Distributed under an MIT license: http://codemirror.net/LICENSE
 
@@ -16173,7 +16476,7 @@ CodeMirror.registerHelper("fold", "include", function(cm, start) {
   };
 });
 
-},{"../../lib/codemirror":9}],9:[function(require,module,exports){
+},{"../../lib/codemirror":10}],10:[function(require,module,exports){
 // CodeMirror, copyright (c) by Marijn Haverbeke and others
 // Distributed under an MIT license: http://codemirror.net/LICENSE
 
@@ -24097,7 +24400,7 @@ CodeMirror.registerHelper("fold", "include", function(cm, start) {
   return CodeMirror;
 });
 
-},{}],10:[function(require,module,exports){
+},{}],11:[function(require,module,exports){
 // CodeMirror, copyright (c) by Marijn Haverbeke and others
 // Distributed under an MIT license: http://codemirror.net/LICENSE
 
@@ -24783,7 +25086,7 @@ CodeMirror.defineMIME("application/typescript", { name: "javascript", typescript
 
 });
 
-},{"../../lib/codemirror":9}],11:[function(require,module,exports){
+},{"../../lib/codemirror":10}],12:[function(require,module,exports){
 // CodeMirror, copyright (c) by Marijn Haverbeke and others
 // Distributed under an MIT license: http://codemirror.net/LICENSE
 
@@ -25169,10 +25472,10 @@ if (!CodeMirror.mimeModes.hasOwnProperty("text/html"))
 
 });
 
-},{"../../lib/codemirror":9}],12:[function(require,module,exports){
+},{"../../lib/codemirror":10}],13:[function(require,module,exports){
 !function() {
   var d3 = {
-    version: "3.4.13"
+    version: "3.5.2"
   };
   if (!Date.now) Date.now = function() {
     return +new Date();
@@ -25214,10 +25517,16 @@ if (!CodeMirror.mimeModes.hasOwnProperty("text/html"))
   d3.min = function(array, f) {
     var i = -1, n = array.length, a, b;
     if (arguments.length === 1) {
-      while (++i < n && !((a = array[i]) != null && a <= a)) a = undefined;
+      while (++i < n) if ((b = array[i]) != null && b >= b) {
+        a = b;
+        break;
+      }
       while (++i < n) if ((b = array[i]) != null && a > b) a = b;
     } else {
-      while (++i < n && !((a = f.call(array, array[i], i)) != null && a <= a)) a = undefined;
+      while (++i < n) if ((b = f.call(array, array[i], i)) != null && b >= b) {
+        a = b;
+        break;
+      }
       while (++i < n) if ((b = f.call(array, array[i], i)) != null && a > b) a = b;
     }
     return a;
@@ -25225,10 +25534,16 @@ if (!CodeMirror.mimeModes.hasOwnProperty("text/html"))
   d3.max = function(array, f) {
     var i = -1, n = array.length, a, b;
     if (arguments.length === 1) {
-      while (++i < n && !((a = array[i]) != null && a <= a)) a = undefined;
+      while (++i < n) if ((b = array[i]) != null && b >= b) {
+        a = b;
+        break;
+      }
       while (++i < n) if ((b = array[i]) != null && b > a) a = b;
     } else {
-      while (++i < n && !((a = f.call(array, array[i], i)) != null && a <= a)) a = undefined;
+      while (++i < n) if ((b = f.call(array, array[i], i)) != null && b >= b) {
+        a = b;
+        break;
+      }
       while (++i < n) if ((b = f.call(array, array[i], i)) != null && b > a) a = b;
     }
     return a;
@@ -25236,13 +25551,19 @@ if (!CodeMirror.mimeModes.hasOwnProperty("text/html"))
   d3.extent = function(array, f) {
     var i = -1, n = array.length, a, b, c;
     if (arguments.length === 1) {
-      while (++i < n && !((a = c = array[i]) != null && a <= a)) a = c = undefined;
+      while (++i < n) if ((b = array[i]) != null && b >= b) {
+        a = c = b;
+        break;
+      }
       while (++i < n) if ((b = array[i]) != null) {
         if (a > b) a = b;
         if (c < b) c = b;
       }
     } else {
-      while (++i < n && !((a = c = f.call(array, array[i], i)) != null && a <= a)) a = undefined;
+      while (++i < n) if ((b = f.call(array, array[i], i)) != null && b >= b) {
+        a = c = b;
+        break;
+      }
       while (++i < n) if ((b = f.call(array, array[i], i)) != null) {
         if (a > b) a = b;
         if (c < b) c = b;
@@ -25272,7 +25593,7 @@ if (!CodeMirror.mimeModes.hasOwnProperty("text/html"))
     } else {
       while (++i < n) if (d3_numeric(a = d3_number(f.call(array, array[i], i)))) s += a; else --j;
     }
-    return j ? s / j : undefined;
+    if (j) return s / j;
   };
   d3.quantile = function(values, p) {
     var H = (values.length - 1) * p + 1, h = Math.floor(H), v = +values[h - 1], e = H - h;
@@ -25285,7 +25606,32 @@ if (!CodeMirror.mimeModes.hasOwnProperty("text/html"))
     } else {
       while (++i < n) if (d3_numeric(a = d3_number(f.call(array, array[i], i)))) numbers.push(a);
     }
-    return numbers.length ? d3.quantile(numbers.sort(d3_ascending), .5) : undefined;
+    if (numbers.length) return d3.quantile(numbers.sort(d3_ascending), .5);
+  };
+  d3.variance = function(array, f) {
+    var n = array.length, m = 0, a, d, s = 0, i = -1, j = 0;
+    if (arguments.length === 1) {
+      while (++i < n) {
+        if (d3_numeric(a = d3_number(array[i]))) {
+          d = a - m;
+          m += d / ++j;
+          s += d * (a - m);
+        }
+      }
+    } else {
+      while (++i < n) {
+        if (d3_numeric(a = d3_number(f.call(array, array[i], i)))) {
+          d = a - m;
+          m += d / ++j;
+          s += d * (a - m);
+        }
+      }
+    }
+    if (j > 1) return s / (j - 1);
+  };
+  d3.deviation = function() {
+    var v = d3.variance.apply(this, arguments);
+    return v ? Math.sqrt(v) : v;
   };
   function d3_bisector(compare) {
     return {
@@ -25317,11 +25663,15 @@ if (!CodeMirror.mimeModes.hasOwnProperty("text/html"))
       return d3_ascending(f(d), x);
     } : f);
   };
-  d3.shuffle = function(array) {
-    var m = array.length, t, i;
+  d3.shuffle = function(array, i0, i1) {
+    if ((m = arguments.length) < 3) {
+      i1 = array.length;
+      if (m < 2) i0 = 0;
+    }
+    var m = i1 - i0, t, i;
     while (m) {
       i = Math.random() * m-- | 0;
-      t = array[m], array[m] = array[i], array[i] = t;
+      t = array[m + i0], array[m + i0] = array[i + i0], array[i + i0] = t;
     }
     return array;
   };
@@ -25409,11 +25759,18 @@ if (!CodeMirror.mimeModes.hasOwnProperty("text/html"))
       });
     }
   }
-  d3.map = function(object) {
+  d3.map = function(object, f) {
     var map = new d3_Map();
-    if (object instanceof d3_Map) object.forEach(function(key, value) {
-      map.set(key, value);
-    }); else for (var key in object) map.set(key, object[key]);
+    if (object instanceof d3_Map) {
+      object.forEach(function(key, value) {
+        map.set(key, value);
+      });
+    } else if (Array.isArray(object)) {
+      var i = -1, n = object.length, o;
+      if (arguments.length === 1) while (++i < n) map.set(i, object[i]); else while (++i < n) map.set(f.call(object, o = object[i], i), o);
+    } else {
+      for (var key in object) map.set(key, object[key]);
+    }
     return map;
   };
   function d3_Map() {
@@ -25918,11 +26275,12 @@ if (!CodeMirror.mimeModes.hasOwnProperty("text/html"))
     });
   };
   d3_selectionPrototype.remove = function() {
-    return this.each(function() {
-      var parent = this.parentNode;
-      if (parent) parent.removeChild(this);
-    });
+    return this.each(d3_selectionRemove);
   };
+  function d3_selectionRemove() {
+    var parent = this.parentNode;
+    if (parent) parent.removeChild(this);
+  }
   d3_selectionPrototype.data = function(value, key) {
     var i = -1, n = this.length, group, node;
     if (!arguments.length) {
@@ -26131,29 +26489,6 @@ if (!CodeMirror.mimeModes.hasOwnProperty("text/html"))
       return node;
     };
   }
-  d3_selectionPrototype.transition = function() {
-    var id = d3_transitionInheritId || ++d3_transitionId, subgroups = [], subgroup, node, transition = d3_transitionInherit || {
-      time: Date.now(),
-      ease: d3_ease_cubicInOut,
-      delay: 0,
-      duration: 250
-    };
-    for (var j = -1, m = this.length; ++j < m; ) {
-      subgroups.push(subgroup = []);
-      for (var group = this[j], i = -1, n = group.length; ++i < n; ) {
-        if (node = group[i]) d3_transitionNode(node, i, id, transition);
-        subgroup.push(node);
-      }
-    }
-    return d3_transition(subgroups, id);
-  };
-  d3_selectionPrototype.interrupt = function() {
-    return this.each(d3_selection_interrupt);
-  };
-  function d3_selection_interrupt() {
-    var lock = this.__transition__;
-    if (lock) ++lock.active;
-  }
   d3.select = function(node) {
     var group = [ typeof node === "string" ? d3_select(node, d3_document) : node ];
     group.parentNode = d3_documentElement;
@@ -26247,9 +26582,9 @@ if (!CodeMirror.mimeModes.hasOwnProperty("text/html"))
       w.on(name, null);
       if (d3_event_dragSelect) style[d3_event_dragSelect] = select;
       if (suppressClick) {
-        function off() {
+        var off = function() {
           w.on(click, null);
-        }
+        };
         w.on(click, function() {
           d3_eventPreventDefault();
           off();
@@ -26362,7 +26697,7 @@ if (!CodeMirror.mimeModes.hasOwnProperty("text/html"))
       return point;
     }) : [];
   };
-  var π = Math.PI, τ = 2 * π, halfπ = π / 2, ε = 1e-6, ε2 = ε * ε, d3_radians = π / 180, d3_degrees = 180 / π;
+  var ε = 1e-6, ε2 = ε * ε, π = Math.PI, τ = 2 * π, τε = τ - ε, halfπ = π / 2, d3_radians = π / 180, d3_degrees = 180 / π;
   function d3_sgn(x) {
     return x > 0 ? 1 : x < 0 ? -1 : 0;
   }
@@ -26407,7 +26742,7 @@ if (!CodeMirror.mimeModes.hasOwnProperty("text/html"))
       x: 0,
       y: 0,
       k: 1
-    }, translate0, center0, center, size = [ 960, 500 ], scaleExtent = d3_behavior_zoomInfinity, mousedown = "mousedown.zoom", mousemove = "mousemove.zoom", mouseup = "mouseup.zoom", mousewheelTimer, touchstart = "touchstart.zoom", touchtime, event = d3_eventDispatch(zoom, "zoomstart", "zoom", "zoomend"), x0, x1, y0, y1;
+    }, translate0, center0, center, size = [ 960, 500 ], scaleExtent = d3_behavior_zoomInfinity, duration = 250, zooming = 0, mousedown = "mousedown.zoom", mousemove = "mousemove.zoom", mouseup = "mouseup.zoom", mousewheelTimer, touchstart = "touchstart.zoom", touchtime, event = d3_eventDispatch(zoom, "zoomstart", "zoom", "zoomend"), x0, x1, y0, y1;
     function zoom(g) {
       g.on(mousedown, mousedowned).on(d3_behavior_zoomWheel + ".zoom", mousewheeled).on("dblclick.zoom", dblclicked).on(touchstart, touchstarted);
     }
@@ -26423,7 +26758,7 @@ if (!CodeMirror.mimeModes.hasOwnProperty("text/html"))
             };
             zoomstarted(dispatch);
           }).tween("zoom:zoom", function() {
-            var dx = size[0], dy = size[1], cx = dx / 2, cy = dy / 2, i = d3.interpolateZoom([ (cx - view.x) / view.k, (cy - view.y) / view.k, dx / view.k ], [ (cx - view1.x) / view1.k, (cy - view1.y) / view1.k, dx / view1.k ]);
+            var dx = size[0], dy = size[1], cx = center0 ? center0[0] : dx / 2, cy = center0 ? center0[1] : dy / 2, i = d3.interpolateZoom([ (cx - view.x) / view.k, (cy - view.y) / view.k, dx / view.k ], [ (cx - view1.x) / view1.k, (cy - view1.y) / view1.k, dx / view1.k ]);
             return function(t) {
               var l = i(t), k = dx / l[2];
               this.__chart__ = view = {
@@ -26433,6 +26768,8 @@ if (!CodeMirror.mimeModes.hasOwnProperty("text/html"))
               };
               zoomed(dispatch);
             };
+          }).each("interrupt.zoom", function() {
+            zoomended(dispatch);
           }).each("end.zoom", function() {
             zoomended(dispatch);
           });
@@ -26479,6 +26816,11 @@ if (!CodeMirror.mimeModes.hasOwnProperty("text/html"))
       size = _ && [ +_[0], +_[1] ];
       return zoom;
     };
+    zoom.duration = function(_) {
+      if (!arguments.length) return duration;
+      duration = +_;
+      return zoom;
+    };
     zoom.x = function(z) {
       if (!arguments.length) return x1;
       x1 = z;
@@ -26515,6 +26857,18 @@ if (!CodeMirror.mimeModes.hasOwnProperty("text/html"))
       view.x += p[0] - l[0];
       view.y += p[1] - l[1];
     }
+    function zoomTo(that, p, l, k) {
+      that.__chart__ = {
+        x: view.x,
+        y: view.y,
+        k: view.k
+      };
+      scaleTo(Math.pow(2, k));
+      translateTo(center0 = p, l);
+      that = d3.select(that);
+      if (duration > 0) that = that.transition().duration(duration);
+      that.call(zoom.event);
+    }
     function rescale() {
       if (x1) x1.domain(x0.range().map(function(x) {
         return (x - view.x) / view.k;
@@ -26524,7 +26878,7 @@ if (!CodeMirror.mimeModes.hasOwnProperty("text/html"))
       }).map(y0.invert));
     }
     function zoomstarted(dispatch) {
-      dispatch({
+      if (!zooming++) dispatch({
         type: "zoomstart"
       });
     }
@@ -26537,9 +26891,10 @@ if (!CodeMirror.mimeModes.hasOwnProperty("text/html"))
       });
     }
     function zoomended(dispatch) {
-      dispatch({
+      if (!--zooming) dispatch({
         type: "zoomend"
       });
+      center0 = null;
     }
     function mousedowned() {
       var that = this, target = d3.event.target, dispatch = event.of(that, arguments), dragged = 0, subject = d3.select(d3_window).on(mousemove, moved).on(mouseup, ended), location0 = location(d3.mouse(that)), dragRestore = d3_event_dragSuppress();
@@ -26558,7 +26913,6 @@ if (!CodeMirror.mimeModes.hasOwnProperty("text/html"))
     }
     function touchstarted() {
       var that = this, dispatch = event.of(that, arguments), locations0 = {}, distance0 = 0, scale0, zoomName = ".zoom-" + d3.event.changedTouches[0].identifier, touchmove = "touchmove" + zoomName, touchend = "touchend" + zoomName, targets = [], subject = d3.select(that), dragRestore = d3_event_dragSuppress();
-      d3_selection_interrupt.call(that);
       started();
       zoomstarted(dispatch);
       subject.on(mousedown, null).on(touchstart, started);
@@ -26581,11 +26935,9 @@ if (!CodeMirror.mimeModes.hasOwnProperty("text/html"))
         var touches = relocate(), now = Date.now();
         if (touches.length === 1) {
           if (now - touchtime < 500) {
-            var p = touches[0], l = locations0[p.identifier];
-            scaleTo(view.k * 2);
-            translateTo(p, l);
+            var p = touches[0];
+            zoomTo(that, p, locations0[p.identifier], Math.floor(Math.log(view.k) / Math.LN2) + 1);
             d3_eventPreventDefault();
-            zoomed(dispatch);
           }
           touchtime = now;
         } else if (touches.length > 1) {
@@ -26595,6 +26947,7 @@ if (!CodeMirror.mimeModes.hasOwnProperty("text/html"))
       }
       function moved() {
         var touches = d3.touches(that), p0, l0, p1, l1;
+        d3_selection_interrupt.call(that);
         for (var i = 0, n = touches.length; i < n; ++i, l1 = null) {
           p1 = touches[i];
           if (l1 = locations0[p1.identifier]) {
@@ -26642,12 +26995,8 @@ if (!CodeMirror.mimeModes.hasOwnProperty("text/html"))
       zoomed(dispatch);
     }
     function dblclicked() {
-      var dispatch = event.of(this, arguments), p = d3.mouse(this), l = location(p), k = Math.log(view.k) / Math.LN2;
-      zoomstarted(dispatch);
-      scaleTo(Math.pow(2, d3.event.shiftKey ? Math.ceil(k) - 1 : Math.floor(k) + 1));
-      translateTo(p, l);
-      zoomed(dispatch);
-      zoomended(dispatch);
+      var p = d3.mouse(this), k = Math.log(view.k) / Math.LN2;
+      zoomTo(this, p, location(p), d3.event.shiftKey ? Math.ceil(k) - 1 : Math.floor(k) + 1);
     }
     return d3.rebind(zoom, event, "on");
   };
@@ -28303,6 +28652,15 @@ if (!CodeMirror.mimeModes.hasOwnProperty("text/html"))
       d3_geo_centroidPointXYZ(x0, y0, z0);
     }
   }
+  function d3_geo_compose(a, b) {
+    function compose(x, y) {
+      return x = a(x, y), b(x[0], x[1]);
+    }
+    if (a.invert && b.invert) compose.invert = function(x, y) {
+      return x = b.invert(x, y), x && a.invert(x[0], x[1]);
+    };
+    return compose;
+  }
   function d3_true() {
     return true;
   }
@@ -28901,15 +29259,6 @@ if (!CodeMirror.mimeModes.hasOwnProperty("text/html"))
       return ca !== cb ? ca - cb : ca === 0 ? b[1] - a[1] : ca === 1 ? a[0] - b[0] : ca === 2 ? a[1] - b[1] : b[0] - a[0];
     }
   }
-  function d3_geo_compose(a, b) {
-    function compose(x, y) {
-      return x = a(x, y), b(x[0], x[1]);
-    }
-    if (a.invert && b.invert) compose.invert = function(x, y) {
-      return x = b.invert(x, y), x && a.invert(x[0], x[1]);
-    };
-    return compose;
-  }
   function d3_geo_conic(projectAt) {
     var φ0 = 0, φ1 = π / 3, m = d3_geo_projectionMutator(projectAt), p = m(φ0, φ1);
     p.parallels = function(_) {
@@ -29181,7 +29530,7 @@ if (!CodeMirror.mimeModes.hasOwnProperty("text/html"))
       result: d3_noop
     };
     function point(x, y) {
-      context.moveTo(x, y);
+      context.moveTo(x + pointRadius, y);
       context.arc(x, y, pointRadius, 0, τ);
     }
     function pointLineStart(x, y) {
@@ -30689,11 +31038,11 @@ if (!CodeMirror.mimeModes.hasOwnProperty("text/html"))
         }
       }
       function insertChild(n, d, x, y, x1, y1, x2, y2) {
-        var sx = (x1 + x2) * .5, sy = (y1 + y2) * .5, right = x >= sx, bottom = y >= sy, i = (bottom << 1) + right;
+        var xm = (x1 + x2) * .5, ym = (y1 + y2) * .5, right = x >= xm, below = y >= ym, i = below << 1 | right;
         n.leaf = false;
         n = n.nodes[i] || (n.nodes[i] = d3_geom_quadtreeNode());
-        if (right) x1 = sx; else x2 = sx;
-        if (bottom) y1 = sy; else y2 = sy;
+        if (right) x1 = xm; else x2 = xm;
+        if (below) y1 = ym; else y2 = ym;
         insert(n, d, x, y, x1, y1, x2, y2);
       }
       var root = d3_geom_quadtreeNode();
@@ -30702,6 +31051,9 @@ if (!CodeMirror.mimeModes.hasOwnProperty("text/html"))
       };
       root.visit = function(f) {
         d3_geom_quadtreeVisit(f, root, x1_, y1_, x2_, y2_);
+      };
+      root.find = function(point) {
+        return d3_geom_quadtreeFind(root, point[0], point[1], x1_, y1_, x2_, y2_);
       };
       i = -1;
       if (x1 == null) {
@@ -30755,6 +31107,42 @@ if (!CodeMirror.mimeModes.hasOwnProperty("text/html"))
       if (children[2]) d3_geom_quadtreeVisit(f, children[2], x1, sy, sx, y2);
       if (children[3]) d3_geom_quadtreeVisit(f, children[3], sx, sy, x2, y2);
     }
+  }
+  function d3_geom_quadtreeFind(root, x, y, x0, y0, x3, y3) {
+    var minDistance2 = Infinity, closestPoint;
+    (function find(node, x1, y1, x2, y2) {
+      if (x1 > x3 || y1 > y3 || x2 < x0 || y2 < y0) return;
+      if (point = node.point) {
+        var point, dx = x - point[0], dy = y - point[1], distance2 = dx * dx + dy * dy;
+        if (distance2 < minDistance2) {
+          var distance = Math.sqrt(minDistance2 = distance2);
+          x0 = x - distance, y0 = y - distance;
+          x3 = x + distance, y3 = y + distance;
+          closestPoint = point;
+        }
+      }
+      var children = node.nodes, xm = (x1 + x2) * .5, ym = (y1 + y2) * .5, right = x >= xm, below = y >= ym;
+      for (var i = below << 1 | right, j = i + 4; i < j; ++i) {
+        if (node = children[i & 3]) switch (i & 3) {
+         case 0:
+          find(node, x1, y1, xm, ym);
+          break;
+
+         case 1:
+          find(node, xm, y1, x2, ym);
+          break;
+
+         case 2:
+          find(node, x1, ym, xm, y2);
+          break;
+
+         case 3:
+          find(node, xm, ym, x2, y2);
+          break;
+        }
+      }
+    })(root, x0, y0, x3, y3);
+    return closestPoint;
   }
   d3.interpolateRgb = d3_interpolateRgb;
   function d3_interpolateRgb(a, b) {
@@ -31647,49 +32035,50 @@ if (!CodeMirror.mimeModes.hasOwnProperty("text/html"))
     return d3_layout_hierarchyRebind(partition, hierarchy);
   };
   d3.layout.pie = function() {
-    var value = Number, sort = d3_layout_pieSortByValue, startAngle = 0, endAngle = τ;
+    var value = Number, sort = d3_layout_pieSortByValue, startAngle = 0, endAngle = τ, padAngle = 0;
     function pie(data) {
-      var values = data.map(function(d, i) {
+      var n = data.length, values = data.map(function(d, i) {
         return +value.call(pie, d, i);
-      });
-      var a = +(typeof startAngle === "function" ? startAngle.apply(this, arguments) : startAngle);
-      var k = ((typeof endAngle === "function" ? endAngle.apply(this, arguments) : endAngle) - a) / d3.sum(values);
-      var index = d3.range(data.length);
+      }), a = +(typeof startAngle === "function" ? startAngle.apply(this, arguments) : startAngle), da = (typeof endAngle === "function" ? endAngle.apply(this, arguments) : endAngle) - a, p = Math.min(Math.abs(da) / n, +(typeof padAngle === "function" ? padAngle.apply(this, arguments) : padAngle)), pa = p * (da < 0 ? -1 : 1), k = (da - n * pa) / d3.sum(values), index = d3.range(n), arcs = [], v;
       if (sort != null) index.sort(sort === d3_layout_pieSortByValue ? function(i, j) {
         return values[j] - values[i];
       } : function(i, j) {
         return sort(data[i], data[j]);
       });
-      var arcs = [];
       index.forEach(function(i) {
-        var d;
         arcs[i] = {
           data: data[i],
-          value: d = values[i],
+          value: v = values[i],
           startAngle: a,
-          endAngle: a += d * k
+          endAngle: a += v * k + pa,
+          padAngle: p
         };
       });
       return arcs;
     }
-    pie.value = function(x) {
+    pie.value = function(_) {
       if (!arguments.length) return value;
-      value = x;
+      value = _;
       return pie;
     };
-    pie.sort = function(x) {
+    pie.sort = function(_) {
       if (!arguments.length) return sort;
-      sort = x;
+      sort = _;
       return pie;
     };
-    pie.startAngle = function(x) {
+    pie.startAngle = function(_) {
       if (!arguments.length) return startAngle;
-      startAngle = x;
+      startAngle = _;
       return pie;
     };
-    pie.endAngle = function(x) {
+    pie.endAngle = function(_) {
       if (!arguments.length) return endAngle;
-      endAngle = x;
+      endAngle = _;
+      return pie;
+    };
+    pie.padAngle = function(_) {
+      if (!arguments.length) return padAngle;
+      padAngle = _;
       return pie;
     };
     return pie;
@@ -32788,11 +33177,24 @@ if (!CodeMirror.mimeModes.hasOwnProperty("text/html"))
     };
     scale.rangePoints = function(x, padding) {
       if (arguments.length < 2) padding = 0;
-      var start = x[0], stop = x[1], step = (stop - start) / (Math.max(1, domain.length - 1) + padding);
-      range = steps(domain.length < 2 ? (start + stop) / 2 : start + step * padding / 2, step);
+      var start = x[0], stop = x[1], step = domain.length < 2 ? (start = (start + stop) / 2, 
+      0) : (stop - start) / (domain.length - 1 + padding);
+      range = steps(start + step * padding / 2, step);
       rangeBand = 0;
       ranger = {
         t: "rangePoints",
+        a: arguments
+      };
+      return scale;
+    };
+    scale.rangeRoundPoints = function(x, padding) {
+      if (arguments.length < 2) padding = 0;
+      var start = x[0], stop = x[1], step = domain.length < 2 ? (start = stop = Math.round((start + stop) / 2), 
+      0) : (stop - start) / (domain.length - 1 + padding) | 0;
+      range = steps(start + Math.round(step * padding / 2 + (stop - start - (domain.length - 1 + padding) * step) / 2), step);
+      rangeBand = 0;
+      ranger = {
+        t: "rangeRoundPoints",
         a: arguments
       };
       return scale;
@@ -32813,8 +33215,8 @@ if (!CodeMirror.mimeModes.hasOwnProperty("text/html"))
     scale.rangeRoundBands = function(x, padding, outerPadding) {
       if (arguments.length < 2) padding = 0;
       if (arguments.length < 3) outerPadding = padding;
-      var reverse = x[1] < x[0], start = x[reverse - 0], stop = x[1 - reverse], step = Math.floor((stop - start) / (domain.length - padding + 2 * outerPadding)), error = stop - start - (domain.length - padding) * step;
-      range = steps(start + Math.round(error / 2), step);
+      var reverse = x[1] < x[0], start = x[reverse - 0], stop = x[1 - reverse], step = Math.floor((stop - start) / (domain.length - padding + 2 * outerPadding));
+      range = steps(start + Math.round((stop - start - (domain.length - padding) * step) / 2), step);
       if (reverse) range.reverse();
       rangeBand = Math.round(step * (1 - padding));
       ranger = {
@@ -32971,12 +33373,86 @@ if (!CodeMirror.mimeModes.hasOwnProperty("text/html"))
     return identity;
   }
   d3.svg = {};
+  function d3_zero() {
+    return 0;
+  }
   d3.svg.arc = function() {
-    var innerRadius = d3_svg_arcInnerRadius, outerRadius = d3_svg_arcOuterRadius, startAngle = d3_svg_arcStartAngle, endAngle = d3_svg_arcEndAngle;
+    var innerRadius = d3_svg_arcInnerRadius, outerRadius = d3_svg_arcOuterRadius, cornerRadius = d3_zero, padRadius = d3_svg_arcAuto, startAngle = d3_svg_arcStartAngle, endAngle = d3_svg_arcEndAngle, padAngle = d3_svg_arcPadAngle;
     function arc() {
-      var r0 = innerRadius.apply(this, arguments), r1 = outerRadius.apply(this, arguments), a0 = startAngle.apply(this, arguments) + d3_svg_arcOffset, a1 = endAngle.apply(this, arguments) + d3_svg_arcOffset, da = (a1 < a0 && (da = a0, 
-      a0 = a1, a1 = da), a1 - a0), df = da < π ? "0" : "1", c0 = Math.cos(a0), s0 = Math.sin(a0), c1 = Math.cos(a1), s1 = Math.sin(a1);
-      return da >= d3_svg_arcMax ? r0 ? "M0," + r1 + "A" + r1 + "," + r1 + " 0 1,1 0," + -r1 + "A" + r1 + "," + r1 + " 0 1,1 0," + r1 + "M0," + r0 + "A" + r0 + "," + r0 + " 0 1,0 0," + -r0 + "A" + r0 + "," + r0 + " 0 1,0 0," + r0 + "Z" : "M0," + r1 + "A" + r1 + "," + r1 + " 0 1,1 0," + -r1 + "A" + r1 + "," + r1 + " 0 1,1 0," + r1 + "Z" : r0 ? "M" + r1 * c0 + "," + r1 * s0 + "A" + r1 + "," + r1 + " 0 " + df + ",1 " + r1 * c1 + "," + r1 * s1 + "L" + r0 * c1 + "," + r0 * s1 + "A" + r0 + "," + r0 + " 0 " + df + ",0 " + r0 * c0 + "," + r0 * s0 + "Z" : "M" + r1 * c0 + "," + r1 * s0 + "A" + r1 + "," + r1 + " 0 " + df + ",1 " + r1 * c1 + "," + r1 * s1 + "L0,0" + "Z";
+      var r0 = Math.max(0, +innerRadius.apply(this, arguments)), r1 = Math.max(0, +outerRadius.apply(this, arguments)), a0 = startAngle.apply(this, arguments) - halfπ, a1 = endAngle.apply(this, arguments) - halfπ, da = Math.abs(a1 - a0), cw = a0 > a1 ? 0 : 1;
+      if (r1 < r0) rc = r1, r1 = r0, r0 = rc;
+      if (da >= τε) return circleSegment(r1, cw) + (r0 ? circleSegment(r0, 1 - cw) : "") + "Z";
+      var rc, cr, rp, ap, p0 = 0, p1 = 0, x0, y0, x1, y1, x2, y2, x3, y3, path = [];
+      if (ap = (+padAngle.apply(this, arguments) || 0) / 2) {
+        rp = padRadius === d3_svg_arcAuto ? Math.sqrt(r0 * r0 + r1 * r1) : +padRadius.apply(this, arguments);
+        if (!cw) p1 *= -1;
+        if (r1) p1 = d3_asin(rp / r1 * Math.sin(ap));
+        if (r0) p0 = d3_asin(rp / r0 * Math.sin(ap));
+      }
+      if (r1) {
+        x0 = r1 * Math.cos(a0 + p1);
+        y0 = r1 * Math.sin(a0 + p1);
+        x1 = r1 * Math.cos(a1 - p1);
+        y1 = r1 * Math.sin(a1 - p1);
+        var l1 = Math.abs(a1 - a0 - 2 * p1) <= π ? 0 : 1;
+        if (p1 && d3_svg_arcSweep(x0, y0, x1, y1) === cw ^ l1) {
+          var h1 = (a0 + a1) / 2;
+          x0 = r1 * Math.cos(h1);
+          y0 = r1 * Math.sin(h1);
+          x1 = y1 = null;
+        }
+      } else {
+        x0 = y0 = 0;
+      }
+      if (r0) {
+        x2 = r0 * Math.cos(a1 - p0);
+        y2 = r0 * Math.sin(a1 - p0);
+        x3 = r0 * Math.cos(a0 + p0);
+        y3 = r0 * Math.sin(a0 + p0);
+        var l0 = Math.abs(a0 - a1 + 2 * p0) <= π ? 0 : 1;
+        if (p0 && d3_svg_arcSweep(x2, y2, x3, y3) === 1 - cw ^ l0) {
+          var h0 = (a0 + a1) / 2;
+          x2 = r0 * Math.cos(h0);
+          y2 = r0 * Math.sin(h0);
+          x3 = y3 = null;
+        }
+      } else {
+        x2 = y2 = 0;
+      }
+      if ((rc = Math.min(Math.abs(r1 - r0) / 2, +cornerRadius.apply(this, arguments))) > .001) {
+        cr = r0 < r1 ^ cw ? 0 : 1;
+        var oc = x3 == null ? [ x2, y2 ] : x1 == null ? [ x0, y0 ] : d3_geom_polygonIntersect([ x0, y0 ], [ x3, y3 ], [ x1, y1 ], [ x2, y2 ]), ax = x0 - oc[0], ay = y0 - oc[1], bx = x1 - oc[0], by = y1 - oc[1], kc = 1 / Math.sin(Math.acos((ax * bx + ay * by) / (Math.sqrt(ax * ax + ay * ay) * Math.sqrt(bx * bx + by * by))) / 2), lc = Math.sqrt(oc[0] * oc[0] + oc[1] * oc[1]);
+        if (x1 != null) {
+          var rc1 = Math.min(rc, (r1 - lc) / (kc + 1)), t30 = d3_svg_arcCornerTangents(x3 == null ? [ x2, y2 ] : [ x3, y3 ], [ x0, y0 ], r1, rc1, cw), t12 = d3_svg_arcCornerTangents([ x1, y1 ], [ x2, y2 ], r1, rc1, cw);
+          if (rc === rc1) {
+            path.push("M", t30[0], "A", rc1, ",", rc1, " 0 0,", cr, " ", t30[1], "A", r1, ",", r1, " 0 ", 1 - cw ^ d3_svg_arcSweep(t30[1][0], t30[1][1], t12[1][0], t12[1][1]), ",", cw, " ", t12[1], "A", rc1, ",", rc1, " 0 0,", cr, " ", t12[0]);
+          } else {
+            path.push("M", t30[0], "A", rc1, ",", rc1, " 0 1,", cr, " ", t12[0]);
+          }
+        } else {
+          path.push("M", x0, ",", y0);
+        }
+        if (x3 != null) {
+          var rc0 = Math.min(rc, (r0 - lc) / (kc - 1)), t03 = d3_svg_arcCornerTangents([ x0, y0 ], [ x3, y3 ], r0, -rc0, cw), t21 = d3_svg_arcCornerTangents([ x2, y2 ], x1 == null ? [ x0, y0 ] : [ x1, y1 ], r0, -rc0, cw);
+          if (rc === rc0) {
+            path.push("L", t21[0], "A", rc0, ",", rc0, " 0 0,", cr, " ", t21[1], "A", r0, ",", r0, " 0 ", cw ^ d3_svg_arcSweep(t21[1][0], t21[1][1], t03[1][0], t03[1][1]), ",", 1 - cw, " ", t03[1], "A", rc0, ",", rc0, " 0 0,", cr, " ", t03[0]);
+          } else {
+            path.push("L", t21[0], "A", rc0, ",", rc0, " 0 0,", cr, " ", t03[0]);
+          }
+        } else {
+          path.push("L", x2, ",", y2);
+        }
+      } else {
+        path.push("M", x0, ",", y0);
+        if (x1 != null) path.push("A", r1, ",", r1, " 0 ", l1, ",", cw, " ", x1, ",", y1);
+        path.push("L", x2, ",", y2);
+        if (x3 != null) path.push("A", r0, ",", r0, " 0 ", l0, ",", 1 - cw, " ", x3, ",", y3);
+      }
+      path.push("Z");
+      return path.join("");
+    }
+    function circleSegment(r1, cw) {
+      return "M0," + r1 + "A" + r1 + "," + r1 + " 0 1," + cw + " 0," + -r1 + "A" + r1 + "," + r1 + " 0 1," + cw + " 0," + r1;
     }
     arc.innerRadius = function(v) {
       if (!arguments.length) return innerRadius;
@@ -32986,6 +33462,16 @@ if (!CodeMirror.mimeModes.hasOwnProperty("text/html"))
     arc.outerRadius = function(v) {
       if (!arguments.length) return outerRadius;
       outerRadius = d3_functor(v);
+      return arc;
+    };
+    arc.cornerRadius = function(v) {
+      if (!arguments.length) return cornerRadius;
+      cornerRadius = d3_functor(v);
+      return arc;
+    };
+    arc.padRadius = function(v) {
+      if (!arguments.length) return padRadius;
+      padRadius = v == d3_svg_arcAuto ? d3_svg_arcAuto : d3_functor(v);
       return arc;
     };
     arc.startAngle = function(v) {
@@ -32998,13 +33484,18 @@ if (!CodeMirror.mimeModes.hasOwnProperty("text/html"))
       endAngle = d3_functor(v);
       return arc;
     };
+    arc.padAngle = function(v) {
+      if (!arguments.length) return padAngle;
+      padAngle = d3_functor(v);
+      return arc;
+    };
     arc.centroid = function() {
-      var r = (innerRadius.apply(this, arguments) + outerRadius.apply(this, arguments)) / 2, a = (startAngle.apply(this, arguments) + endAngle.apply(this, arguments)) / 2 + d3_svg_arcOffset;
+      var r = (+innerRadius.apply(this, arguments) + +outerRadius.apply(this, arguments)) / 2, a = (+startAngle.apply(this, arguments) + +endAngle.apply(this, arguments)) / 2 - halfπ;
       return [ Math.cos(a) * r, Math.sin(a) * r ];
     };
     return arc;
   };
-  var d3_svg_arcOffset = -halfπ, d3_svg_arcMax = τ - ε;
+  var d3_svg_arcAuto = "auto";
   function d3_svg_arcInnerRadius(d) {
     return d.innerRadius;
   }
@@ -33016,6 +33507,17 @@ if (!CodeMirror.mimeModes.hasOwnProperty("text/html"))
   }
   function d3_svg_arcEndAngle(d) {
     return d.endAngle;
+  }
+  function d3_svg_arcPadAngle(d) {
+    return d && d.padAngle;
+  }
+  function d3_svg_arcSweep(x0, y0, x1, y1) {
+    return (x0 - x1) * y0 - (y0 - y1) * x0 > 0 ? 0 : 1;
+  }
+  function d3_svg_arcCornerTangents(p0, p1, r1, rc, cw) {
+    var x01 = p0[0] - p1[0], y01 = p0[1] - p1[1], lo = (cw ? rc : -rc) / Math.sqrt(x01 * x01 + y01 * y01), ox = lo * y01, oy = -lo * x01, x1 = p0[0] + ox, y1 = p0[1] + oy, x2 = p1[0] + ox, y2 = p1[1] + oy, x3 = (x1 + x2) / 2, y3 = (y1 + y2) / 2, dx = x2 - x1, dy = y2 - y1, d2 = dx * dx + dy * dy, r = r1 - rc, D = x1 * y2 - x2 * y1, d = (dy < 0 ? -1 : 1) * Math.sqrt(r * r * d2 - D * D), cx0 = (D * dy - dx * d) / d2, cy0 = (-D * dx - dy * d) / d2, cx1 = (D * dy + dx * d) / d2, cy1 = (-D * dx + dy * d) / d2, dx0 = cx0 - x3, dy0 = cy0 - y3, dx1 = cx1 - x3, dy1 = cy1 - y3;
+    if (dx0 * dx0 + dy0 * dy0 > dx1 * dx1 + dy1 * dy1) cx0 = cx1, cy0 = cy1;
+    return [ [ cx0 - ox, cy0 - oy ], [ cx0 * r1 / r, cy0 * r1 / r ] ];
   }
   function d3_svg_line(projection) {
     var x = d3_geom_pointX, y = d3_geom_pointY, defined = d3_true, interpolate = d3_svg_lineLinear, interpolateKey = interpolate.key, tension = .7;
@@ -33107,7 +33609,7 @@ if (!CodeMirror.mimeModes.hasOwnProperty("text/html"))
     return path.join("");
   }
   function d3_svg_lineCardinalOpen(points, tension) {
-    return points.length < 4 ? d3_svg_lineLinear(points) : points[1] + d3_svg_lineHermite(points.slice(1, points.length - 1), d3_svg_lineCardinalTangents(points, tension));
+    return points.length < 4 ? d3_svg_lineLinear(points) : points[1] + d3_svg_lineHermite(points.slice(1, -1), d3_svg_lineCardinalTangents(points, tension));
   }
   function d3_svg_lineCardinalClosed(points, tension) {
     return points.length < 3 ? d3_svg_lineLinear(points) : points[0] + d3_svg_lineHermite((points.push(points[0]), 
@@ -33277,7 +33779,7 @@ if (!CodeMirror.mimeModes.hasOwnProperty("text/html"))
     while (++i < n) {
       point = points[i];
       r = point[0];
-      a = point[1] + d3_svg_arcOffset;
+      a = point[1] - halfπ;
       point[0] = r * Math.cos(a);
       point[1] = r * Math.sin(a);
     }
@@ -33378,7 +33880,7 @@ if (!CodeMirror.mimeModes.hasOwnProperty("text/html"))
       return "M" + s.p0 + arc(s.r, s.p1, s.a1 - s.a0) + (equals(s, t) ? curve(s.r, s.p1, s.r, s.p0) : curve(s.r, s.p1, t.r, t.p0) + arc(t.r, t.p1, t.a1 - t.a0) + curve(t.r, t.p1, s.r, s.p0)) + "Z";
     }
     function subgroup(self, f, d, i) {
-      var subgroup = f.call(self, d, i), r = radius.call(self, subgroup, i), a0 = startAngle.call(self, subgroup, i) + d3_svg_arcOffset, a1 = endAngle.call(self, subgroup, i) + d3_svg_arcOffset;
+      var subgroup = f.call(self, d, i), r = radius.call(self, subgroup, i), a0 = startAngle.call(self, subgroup, i) - halfπ, a1 = endAngle.call(self, subgroup, i) - halfπ;
       return {
         r: r,
         a0: a0,
@@ -33468,7 +33970,7 @@ if (!CodeMirror.mimeModes.hasOwnProperty("text/html"))
   };
   function d3_svg_diagonalRadialProjection(projection) {
     return function() {
-      var d = projection.apply(this, arguments), r = d[0], a = d[1] + d3_svg_arcOffset;
+      var d = projection.apply(this, arguments), r = d[0], a = d[1] - halfπ;
       return [ r * Math.cos(a), r * Math.sin(a) ];
     };
   }
@@ -33524,8 +34026,43 @@ if (!CodeMirror.mimeModes.hasOwnProperty("text/html"))
   });
   d3.svg.symbolTypes = d3_svg_symbols.keys();
   var d3_svg_symbolSqrt3 = Math.sqrt(3), d3_svg_symbolTan30 = Math.tan(30 * d3_radians);
-  function d3_transition(groups, id) {
+  d3_selectionPrototype.transition = function(name) {
+    var id = d3_transitionInheritId || ++d3_transitionId, ns = d3_transitionNamespace(name), subgroups = [], subgroup, node, transition = d3_transitionInherit || {
+      time: Date.now(),
+      ease: d3_ease_cubicInOut,
+      delay: 0,
+      duration: 250
+    };
+    for (var j = -1, m = this.length; ++j < m; ) {
+      subgroups.push(subgroup = []);
+      for (var group = this[j], i = -1, n = group.length; ++i < n; ) {
+        if (node = group[i]) d3_transitionNode(node, i, ns, id, transition);
+        subgroup.push(node);
+      }
+    }
+    return d3_transition(subgroups, ns, id);
+  };
+  d3_selectionPrototype.interrupt = function(name) {
+    return this.each(name == null ? d3_selection_interrupt : d3_selection_interruptNS(d3_transitionNamespace(name)));
+  };
+  var d3_selection_interrupt = d3_selection_interruptNS(d3_transitionNamespace());
+  function d3_selection_interruptNS(ns) {
+    return function() {
+      var lock, active;
+      if ((lock = this[ns]) && (active = lock[lock.active])) {
+        if (--lock.count) {
+          delete lock[lock.active];
+          lock.active += .5;
+        } else {
+          delete this[ns];
+        }
+        active.event && active.event.interrupt.call(this, this.__data__, active.index);
+      }
+    };
+  }
+  function d3_transition(groups, ns, id) {
     d3_subclass(groups, d3_transitionPrototype);
+    groups.namespace = ns;
     groups.id = id;
     return groups;
   }
@@ -33534,44 +34071,44 @@ if (!CodeMirror.mimeModes.hasOwnProperty("text/html"))
   d3_transitionPrototype.empty = d3_selectionPrototype.empty;
   d3_transitionPrototype.node = d3_selectionPrototype.node;
   d3_transitionPrototype.size = d3_selectionPrototype.size;
-  d3.transition = function(selection) {
-    return arguments.length ? d3_transitionInheritId ? selection.transition() : selection : d3_selectionRoot.transition();
+  d3.transition = function(selection, name) {
+    return selection && selection.transition ? d3_transitionInheritId ? selection.transition(name) : selection : d3_selectionRoot.transition(selection);
   };
   d3.transition.prototype = d3_transitionPrototype;
   d3_transitionPrototype.select = function(selector) {
-    var id = this.id, subgroups = [], subgroup, subnode, node;
+    var id = this.id, ns = this.namespace, subgroups = [], subgroup, subnode, node;
     selector = d3_selection_selector(selector);
     for (var j = -1, m = this.length; ++j < m; ) {
       subgroups.push(subgroup = []);
       for (var group = this[j], i = -1, n = group.length; ++i < n; ) {
         if ((node = group[i]) && (subnode = selector.call(node, node.__data__, i, j))) {
           if ("__data__" in node) subnode.__data__ = node.__data__;
-          d3_transitionNode(subnode, i, id, node.__transition__[id]);
+          d3_transitionNode(subnode, i, ns, id, node[ns][id]);
           subgroup.push(subnode);
         } else {
           subgroup.push(null);
         }
       }
     }
-    return d3_transition(subgroups, id);
+    return d3_transition(subgroups, ns, id);
   };
   d3_transitionPrototype.selectAll = function(selector) {
-    var id = this.id, subgroups = [], subgroup, subnodes, node, subnode, transition;
+    var id = this.id, ns = this.namespace, subgroups = [], subgroup, subnodes, node, subnode, transition;
     selector = d3_selection_selectorAll(selector);
     for (var j = -1, m = this.length; ++j < m; ) {
       for (var group = this[j], i = -1, n = group.length; ++i < n; ) {
         if (node = group[i]) {
-          transition = node.__transition__[id];
+          transition = node[ns][id];
           subnodes = selector.call(node, node.__data__, i, j);
           subgroups.push(subgroup = []);
           for (var k = -1, o = subnodes.length; ++k < o; ) {
-            if (subnode = subnodes[k]) d3_transitionNode(subnode, k, id, transition);
+            if (subnode = subnodes[k]) d3_transitionNode(subnode, k, ns, id, transition);
             subgroup.push(subnode);
           }
         }
       }
     }
-    return d3_transition(subgroups, id);
+    return d3_transition(subgroups, ns, id);
   };
   d3_transitionPrototype.filter = function(filter) {
     var subgroups = [], subgroup, group, node;
@@ -33584,23 +34121,23 @@ if (!CodeMirror.mimeModes.hasOwnProperty("text/html"))
         }
       }
     }
-    return d3_transition(subgroups, this.id);
+    return d3_transition(subgroups, this.namespace, this.id);
   };
   d3_transitionPrototype.tween = function(name, tween) {
-    var id = this.id;
-    if (arguments.length < 2) return this.node().__transition__[id].tween.get(name);
+    var id = this.id, ns = this.namespace;
+    if (arguments.length < 2) return this.node()[ns][id].tween.get(name);
     return d3_selection_each(this, tween == null ? function(node) {
-      node.__transition__[id].tween.remove(name);
+      node[ns][id].tween.remove(name);
     } : function(node) {
-      node.__transition__[id].tween.set(name, tween);
+      node[ns][id].tween.set(name, tween);
     });
   };
   function d3_transition_tween(groups, name, value, tween) {
-    var id = groups.id;
+    var id = groups.id, ns = groups.namespace;
     return d3_selection_each(groups, typeof value === "function" ? function(node, i, j) {
-      node.__transition__[id].tween.set(name, tween(value.call(node, node.__data__, i, j)));
+      node[ns][id].tween.set(name, tween(value.call(node, node.__data__, i, j)));
     } : (value = tween(value), function(node) {
-      node.__transition__[id].tween.set(name, value);
+      node[ns][id].tween.set(name, value);
     }));
   }
   d3_transitionPrototype.attr = function(nameNS, value) {
@@ -33692,73 +34229,84 @@ if (!CodeMirror.mimeModes.hasOwnProperty("text/html"))
     };
   }
   d3_transitionPrototype.remove = function() {
+    var ns = this.namespace;
     return this.each("end.transition", function() {
       var p;
-      if (this.__transition__.count < 2 && (p = this.parentNode)) p.removeChild(this);
+      if (this[ns].count < 2 && (p = this.parentNode)) p.removeChild(this);
     });
   };
   d3_transitionPrototype.ease = function(value) {
-    var id = this.id;
-    if (arguments.length < 1) return this.node().__transition__[id].ease;
+    var id = this.id, ns = this.namespace;
+    if (arguments.length < 1) return this.node()[ns][id].ease;
     if (typeof value !== "function") value = d3.ease.apply(d3, arguments);
     return d3_selection_each(this, function(node) {
-      node.__transition__[id].ease = value;
+      node[ns][id].ease = value;
     });
   };
   d3_transitionPrototype.delay = function(value) {
-    var id = this.id;
-    if (arguments.length < 1) return this.node().__transition__[id].delay;
+    var id = this.id, ns = this.namespace;
+    if (arguments.length < 1) return this.node()[ns][id].delay;
     return d3_selection_each(this, typeof value === "function" ? function(node, i, j) {
-      node.__transition__[id].delay = +value.call(node, node.__data__, i, j);
+      node[ns][id].delay = +value.call(node, node.__data__, i, j);
     } : (value = +value, function(node) {
-      node.__transition__[id].delay = value;
+      node[ns][id].delay = value;
     }));
   };
   d3_transitionPrototype.duration = function(value) {
-    var id = this.id;
-    if (arguments.length < 1) return this.node().__transition__[id].duration;
+    var id = this.id, ns = this.namespace;
+    if (arguments.length < 1) return this.node()[ns][id].duration;
     return d3_selection_each(this, typeof value === "function" ? function(node, i, j) {
-      node.__transition__[id].duration = Math.max(1, value.call(node, node.__data__, i, j));
+      node[ns][id].duration = Math.max(1, value.call(node, node.__data__, i, j));
     } : (value = Math.max(1, value), function(node) {
-      node.__transition__[id].duration = value;
+      node[ns][id].duration = value;
     }));
   };
   d3_transitionPrototype.each = function(type, listener) {
-    var id = this.id;
+    var id = this.id, ns = this.namespace;
     if (arguments.length < 2) {
       var inherit = d3_transitionInherit, inheritId = d3_transitionInheritId;
-      d3_transitionInheritId = id;
-      d3_selection_each(this, function(node, i, j) {
-        d3_transitionInherit = node.__transition__[id];
-        type.call(node, node.__data__, i, j);
-      });
-      d3_transitionInherit = inherit;
-      d3_transitionInheritId = inheritId;
+      try {
+        d3_transitionInheritId = id;
+        d3_selection_each(this, function(node, i, j) {
+          d3_transitionInherit = node[ns][id];
+          type.call(node, node.__data__, i, j);
+        });
+      } finally {
+        d3_transitionInherit = inherit;
+        d3_transitionInheritId = inheritId;
+      }
     } else {
       d3_selection_each(this, function(node) {
-        var transition = node.__transition__[id];
-        (transition.event || (transition.event = d3.dispatch("start", "end"))).on(type, listener);
+        var transition = node[ns][id];
+        (transition.event || (transition.event = d3.dispatch("start", "end", "interrupt"))).on(type, listener);
       });
     }
     return this;
   };
   d3_transitionPrototype.transition = function() {
-    var id0 = this.id, id1 = ++d3_transitionId, subgroups = [], subgroup, group, node, transition;
+    var id0 = this.id, id1 = ++d3_transitionId, ns = this.namespace, subgroups = [], subgroup, group, node, transition;
     for (var j = 0, m = this.length; j < m; j++) {
       subgroups.push(subgroup = []);
       for (var group = this[j], i = 0, n = group.length; i < n; i++) {
         if (node = group[i]) {
-          transition = Object.create(node.__transition__[id0]);
-          transition.delay += transition.duration;
-          d3_transitionNode(node, i, id1, transition);
+          transition = node[ns][id0];
+          d3_transitionNode(node, i, ns, id1, {
+            time: transition.time,
+            ease: transition.ease,
+            delay: transition.delay + transition.duration,
+            duration: transition.duration
+          });
         }
         subgroup.push(node);
       }
     }
-    return d3_transition(subgroups, id1);
+    return d3_transition(subgroups, ns, id1);
   };
-  function d3_transitionNode(node, i, id, inherit) {
-    var lock = node.__transition__ || (node.__transition__ = {
+  function d3_transitionNamespace(name) {
+    return name == null ? "__transition__" : "__transition_" + name + "__";
+  }
+  function d3_transitionNode(node, i, ns, id, inherit) {
+    var lock = node[ns] || (node[ns] = {
       active: 0,
       count: 0
     }), transition = lock[id];
@@ -33767,43 +34315,53 @@ if (!CodeMirror.mimeModes.hasOwnProperty("text/html"))
       transition = lock[id] = {
         tween: new d3_Map(),
         time: time,
-        ease: inherit.ease,
         delay: inherit.delay,
-        duration: inherit.duration
+        duration: inherit.duration,
+        ease: inherit.ease,
+        index: i
       };
+      inherit = null;
       ++lock.count;
       d3.timer(function(elapsed) {
-        var d = node.__data__, ease = transition.ease, delay = transition.delay, duration = transition.duration, timer = d3_timer_active, tweened = [];
+        var delay = transition.delay, duration, ease, timer = d3_timer_active, tweened = [];
         timer.t = delay + time;
         if (delay <= elapsed) return start(elapsed - delay);
         timer.c = start;
         function start(elapsed) {
           if (lock.active > id) return stop();
+          var active = lock[lock.active];
+          if (active) {
+            --lock.count;
+            delete lock[lock.active];
+            active.event && active.event.interrupt.call(node, node.__data__, active.index);
+          }
           lock.active = id;
-          transition.event && transition.event.start.call(node, d, i);
+          transition.event && transition.event.start.call(node, node.__data__, i);
           transition.tween.forEach(function(key, value) {
-            if (value = value.call(node, d, i)) {
+            if (value = value.call(node, node.__data__, i)) {
               tweened.push(value);
             }
           });
+          ease = transition.ease;
+          duration = transition.duration;
           d3.timer(function() {
             timer.c = tick(elapsed || 1) ? d3_true : tick;
             return 1;
           }, 0, time);
         }
         function tick(elapsed) {
-          if (lock.active !== id) return stop();
+          if (lock.active !== id) return 1;
           var t = elapsed / duration, e = ease(t), n = tweened.length;
           while (n > 0) {
             tweened[--n].call(node, e);
           }
           if (t >= 1) {
-            transition.event && transition.event.end.call(node, d, i);
+            transition.event && transition.event.end.call(node, node.__data__, i);
             return stop();
           }
         }
         function stop() {
-          if (--lock.count) delete lock[id]; else delete node.__transition__;
+          if (--lock.count) delete lock[id]; else delete node[ns];
           return 1;
         }
       }, 0, time);
@@ -34385,7 +34943,7 @@ if (!CodeMirror.mimeModes.hasOwnProperty("text/html"))
   if (typeof define === "function" && define.amd) define(d3); else if (typeof module === "object" && module.exports) module.exports = d3;
   this.d3 = d3;
 }();
-},{}],13:[function(require,module,exports){
+},{}],14:[function(require,module,exports){
 var jQuery = require('jquery');
 
 /*!
@@ -34709,7 +35267,7 @@ $.extend( $.ui, {
 
 })( jQuery );
 
-},{"jquery":17}],14:[function(require,module,exports){
+},{"jquery":18}],15:[function(require,module,exports){
 var jQuery = require('jquery');
 require('./widget');
 
@@ -34883,7 +35441,7 @@ $.widget("ui.mouse", {
 
 })(jQuery);
 
-},{"./widget":16,"jquery":17}],15:[function(require,module,exports){
+},{"./widget":17,"jquery":18}],16:[function(require,module,exports){
 var jQuery = require('jquery');
 require('./core');
 require('./mouse');
@@ -36179,7 +36737,7 @@ $.widget("ui.sortable", $.ui.mouse, {
 
 })(jQuery);
 
-},{"./core":13,"./mouse":14,"./widget":16,"jquery":17}],16:[function(require,module,exports){
+},{"./core":14,"./mouse":15,"./widget":17,"jquery":18}],17:[function(require,module,exports){
 var jQuery = require('jquery');
 
 /*!
@@ -36704,7 +37262,7 @@ $.each( { show: "fadeIn", hide: "fadeOut" }, function( method, defaultEffect ) {
 
 })( jQuery );
 
-},{"jquery":17}],17:[function(require,module,exports){
+},{"jquery":18}],18:[function(require,module,exports){
 /*!
  * jQuery JavaScript Library v1.11.1
  * http://jquery.com/
@@ -47014,7 +47572,7 @@ return jQuery;
 
 }));
 
-},{}],18:[function(require,module,exports){
+},{}],19:[function(require,module,exports){
 // Generated by CoffeeScript 1.4.0
 (function() {
 
@@ -47109,7 +47667,7 @@ return jQuery;
 
 }).call(this);
 
-},{"jquery":17}],19:[function(require,module,exports){
+},{"jquery":18}],20:[function(require,module,exports){
 // Generated by CoffeeScript 1.4.0
 (function() {
 
@@ -47232,7 +47790,7 @@ return jQuery;
 
 }).call(this);
 
-},{"jquery":17}],20:[function(require,module,exports){
+},{"jquery":18}],21:[function(require,module,exports){
 // Generated by CoffeeScript 1.4.0
 (function() {
   var __indexOf = [].indexOf || function(item) { for (var i = 0, l = this.length; i < l; i++) { if (i in this && this[i] === item) return i; } return -1; },
@@ -48585,7 +49143,7 @@ return jQuery;
 
 }).call(this);
 
-},{"jquery":17}],21:[function(require,module,exports){
+},{"jquery":18}],22:[function(require,module,exports){
 ;(function(win){
 	var store = {},
 		doc = win.document,
@@ -48762,7 +49320,7 @@ return jQuery;
 
 })(Function('return this')());
 
-},{}],22:[function(require,module,exports){
+},{}],23:[function(require,module,exports){
 module.exports={
   "name": "yasgui-utils",
   "version": "1.5.0",
@@ -48795,7 +49353,7 @@ module.exports={
   }
 }
 
-},{}],23:[function(require,module,exports){
+},{}],24:[function(require,module,exports){
 window.console = window.console || {"log":function(){}};//make sure any console statements don't break IE
 module.exports = {
 	storage: require("./storage.js"),
@@ -48805,7 +49363,7 @@ module.exports = {
 	}
 };
 
-},{"../package.json":22,"./storage.js":24,"./svg.js":25}],24:[function(require,module,exports){
+},{"../package.json":23,"./storage.js":25,"./svg.js":26}],25:[function(require,module,exports){
 var store = require("store");
 var times = {
 	day: function() {
@@ -48821,7 +49379,7 @@ var times = {
 
 var root = module.exports = {
 	set : function(key, val, exp) {
-		if (val) {
+		if (key && val) {
 			if (typeof exp == "string") {
 				exp = times[exp]();
 			}
@@ -48835,22 +49393,26 @@ var root = module.exports = {
 		}
 	},
 	remove: function(key) {
-		store.remove(key)
+		if (key) store.remove(key)
 	},
 	get : function(key) {
-		var info = store.get(key);
-		if (!info) {
+		if (key) {
+			var info = store.get(key);
+			if (!info) {
+				return null;
+			}
+			if (info.exp && new Date().getTime() - info.time > info.exp) {
+				return null;
+			}
+			return info.val;
+		} else {
 			return null;
 		}
-		if (info.exp && new Date().getTime() - info.time > info.exp) {
-			return null;
-		}
-		return info.val;
 	}
 
 };
 
-},{"store":21}],25:[function(require,module,exports){
+},{"store":22}],26:[function(require,module,exports){
 module.exports = {
 	draw: function(parent, svgString) {
 		if (!parent) return;
@@ -48879,11 +49441,11 @@ module.exports = {
 		return false;
 	}
 };
-},{}],26:[function(require,module,exports){
+},{}],27:[function(require,module,exports){
 module.exports={
   "name": "yasgui-yasr",
   "description": "Yet Another SPARQL Resultset GUI",
-  "version": "2.3.2",
+  "version": "2.4.0",
   "main": "src/main.js",
   "licenses": [
     {
@@ -48996,7 +49558,7 @@ module.exports={
   }
 }
 
-},{}],27:[function(require,module,exports){
+},{}],28:[function(require,module,exports){
 'use strict';
 module.exports = function(result) {
 	var quote = "\"";
@@ -49056,7 +49618,7 @@ module.exports = function(result) {
 	createBody();
 	return csvString;
 };
-},{}],28:[function(require,module,exports){
+},{}],29:[function(require,module,exports){
 'use strict';
 var $ = require("jquery");
 
@@ -49116,7 +49678,7 @@ root.version = {
 };
 
 
-},{"../package.json":26,"./imgs.js":31,"jquery":17,"yasgui-utils":23}],29:[function(require,module,exports){
+},{"../package.json":27,"./imgs.js":34,"jquery":18,"yasgui-utils":24}],30:[function(require,module,exports){
 'use strict';
 var $ = require('jquery');
 module.exports = {
@@ -49127,8 +49689,9 @@ module.exports = {
 	 * @default "table"
 	 */
 	output: "table",
-	
+	useGoogleCharts: true, 
 	outputPlugins: ["table", "error", "boolean", "rawResponse"],
+	
 	
 	/**
 	 * Draw the output selector widget
@@ -49163,6 +49726,9 @@ module.exports = {
 	 * @type object
 	 */
 	persistency: {
+		prefix: function(yasr) {
+			return "yasr_" + $(yasr.container).closest('[id]').attr('id') + "_";
+		},
 		/**
 		 * Persistency setting for the selected output
 		 * 
@@ -49171,7 +49737,7 @@ module.exports = {
 		 * @default function (determine unique id)
 		 */
 		outputSelector: function(yasr) {
-			return "selector_" + $(yasr.container).closest('[id]').attr('id');
+			return "selector";
 		},
 		/**
 		 * Persistency setting for query results.
@@ -49190,6 +49756,7 @@ module.exports = {
 			id: function(yasr){
 				return "results_" +  $(yasr.container).closest('[id]').attr('id');
 			},
+			key: 'results',
 			/**
 			 * The result set might too large to fit in local storage. 
 			 * It is impossible to detect how large the local storage is.
@@ -49207,7 +49774,7 @@ module.exports = {
 	
 	
 };
-},{"jquery":17}],30:[function(require,module,exports){
+},{"jquery":18}],31:[function(require,module,exports){
 'use strict';
 var $ = require("jquery");
 
@@ -49273,7 +49840,371 @@ var root = module.exports = function(yasr) {
 root.defaults = {
 	
 };
-},{"jquery":17}],31:[function(require,module,exports){
+},{"jquery":18}],32:[function(require,module,exports){
+(function (global){
+var EventEmitter = require('events').EventEmitter,
+	$ = require('jquery');
+//cannot package google loader via browserify....
+var loadingMain = false;
+var loadingFailed = false;
+var loader = function() {
+	EventEmitter.call(this);
+	var mod = this;
+	this.init = function() {
+		if (!loadingFailed && !(typeof window !== "undefined" ? window.google : typeof global !== "undefined" ? global.google : null) && !loadingMain) {//not initiated yet, not currently loading, and has not failed the previous time
+			loadingMain = true;
+			/**
+			 * It is extremely difficult to catch script loader errors (see http://www.html5rocks.com/en/tutorials/speed/script-loading/)
+			 * Existing libraries either ignore several browsers (e.g. jquery 2.x), or use ugly hacks (timeouts or something)
+			 * So, we use our own custom ugly hack (yes, timeouts)
+			 */
+			loadScript('//google.com/jsapi', function(){
+				loadingMain = false;
+				mod.emit('initDone');
+			});
+			
+			var timeout = 100; //ms
+			var maxTimeout = 6000;//so 6 sec max
+			var startTime = +new Date();
+			var checkAndWait = function() {
+				if (!(typeof window !== "undefined" ? window.google : typeof global !== "undefined" ? global.google : null)) {
+					if ((+new Date() - startTime) > maxTimeout) {
+						//ok, we've waited long enough. Obviously we could not load the googleloader...
+						loadingFailed = true;
+						loadingMain = false;
+						mod.emit('initError');
+						
+						//TODO: clear initDone callbacks. they won't fire anymore anyway
+					
+					} else {
+						setTimeout(checkAndWait, timeout);
+					}
+				} else {
+					//TODO: clear initFailed callbacks. they won't fire anymore anyway
+				}
+			}
+			checkAndWait();
+		} else {
+			if ((typeof window !== "undefined" ? window.google : typeof global !== "undefined" ? global.google : null)) {
+				mod.emit('initError');
+			} else if (loadingFailed) {
+				mod.emit('initError')
+			} else {
+				//hmmm, should never get here
+			}
+			
+		}
+	}
+	this.googleLoad = function() {
+		
+		var load = function() {
+			(typeof window !== "undefined" ? window.google : typeof global !== "undefined" ? global.google : null).load("visualization", "1", {
+				packages : ["corechart", "charteditor" ],
+				callback : function(){mod.emit('done')}
+			})
+		}
+		if (loadingMain) {
+			mod.once('initDone', load);
+			mod.once('initError', function(){
+				mod.emit('error', 'Could not load google loader')
+			});
+		} else if ((typeof window !== "undefined" ? window.google : typeof global !== "undefined" ? global.google : null)) {
+			//google loader is there. use it
+			load();
+		} else if (loadingFailed) {
+			mod.emit('error',  'Could not load google loader');
+		} else {
+			//not loading, no loading error, and not loaded. it must not have been initialized yet. Do that
+			mod.once('initDone', load);
+			mod.once('initError', function(){
+				mod.emit('error', 'Could not load google loader')
+			});
+		}
+	};
+}
+
+
+var loadScript = function(url, callback){
+    var script = document.createElement("script")
+    script.type = "text/javascript";
+
+    if (script.readyState){  //IE
+        script.onreadystatechange = function(){
+            if (script.readyState == "loaded" ||
+                    script.readyState == "complete"){
+                script.onreadystatechange = null;
+                callback();
+            }
+        };
+    } else {  //Others
+        script.onload = function(){
+            callback();
+        };
+    }
+
+    script.src = url;
+    document.body.appendChild(script);
+}
+loader.prototype = new EventEmitter;
+module.exports = new loader();
+
+
+}).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
+},{"events":4,"jquery":18}],33:[function(require,module,exports){
+(function (global){
+'use strict';
+/**
+ * todo: chart height as option
+ * 
+ */
+var $ = require('jquery'),
+	utils = require('./utils.js'),
+	yUtils = require('yasgui-utils');
+
+var root = module.exports = function(yasr){
+	var options = $.extend(true, {}, root.defaults);
+	var id = yasr.container.closest('[id]').attr('id');
+	if (yasr.options.gchart == null) {
+		yasr.options.gchart = {};
+	}
+	var persistencyIdMotionChart = yasr.getPersistencyId('motionchart');
+	var persistencyIdChartConfig = yasr.getPersistencyId('chartConfig');
+	if (yasr.options.gchart.motionChartState == null) {
+		yasr.options.gchart.motionChartState = yUtils.storage.get(persistencyIdMotionChart);
+	}
+	if (yasr.options.gchart.chartConfig == null) {
+		yasr.options.gchart.chartConfig = yUtils.storage.get(persistencyIdChartConfig);
+	}
+	
+	
+	var editor = null;
+	
+	var initEditor = function(callback) {
+		var google = (typeof window !== "undefined" ? window.google : typeof global !== "undefined" ? global.google : null);
+		editor = new google.visualization.ChartEditor();
+		google.visualization.events.addListener(editor, 'ok', function(){
+				var chartWrapper, tmp;
+				chartWrapper = editor.getChartWrapper();
+				if (!deepEq$(chartWrapper.getChartType, "MotionChart", '===')) {
+					yasr.options.gchart.motionChartState = chartWrapper.n;
+
+					yUtils.storage.set(persistencyIdMotionChart, yasr.options.gchart.motionChartState);
+					chartWrapper.setOption("state", yasr.options.gchart.motionChartState);
+					
+					google.visualization.events.addListener(chartWrapper, 'ready', function(){
+						var motionChart;
+						motionChart = chartWrapper.getChart();
+						google.visualization.events.addListener(motionChart, 'statechange', function(){
+							yasr.options.gchart.motionChartState = motionChart.getState();
+							yUtils.storage.set(persistencyIdMotionChart, yasr.options.gchart.motionChartState);
+						});
+					});
+				}
+				tmp = chartWrapper.getDataTable();
+				chartWrapper.setDataTable(null);
+				yasr.options.gchart.chartConfig = chartWrapper.toJSON();
+				
+				yUtils.storage.set(persistencyIdChartConfig, yasr.options.gchart.chartConfig);
+				chartWrapper.setDataTable(tmp);
+				chartWrapper.draw();
+			});
+			if (callback) callback();
+	};
+
+	return {
+		name: "Google Chart",
+		hideFromSelection: false,
+		priority: 7,
+		canHandleResults: function(yasr){
+			var results, variables;
+			return (results = yasr.results) != null && (variables = results.getVariables()) && variables.length > 0;
+		},
+		getDownloadInfo: function() {
+			if (!yasr.results) return null;
+			var svgEl = yasr.resultsContainer.find('svg');
+			if (svgEl.length == 0) return null;
+			
+			return {
+				getContent: function(){return svgEl[0].outerHTML;},
+				filename: "queryResults.svg",
+				contentType: "image/svg+xml",
+				buttonTitle: "Download SVG Image"
+			};
+		},
+		draw: function(){
+			var doDraw = function () {
+				//clear previous results (if any)
+				yasr.resultsContainer.empty();
+				var wrapperId = id + '_gchartWrapper';
+				var wrapper = null;
+
+				yasr.resultsContainer.append(
+					$('<button>', {class: 'openGchartBtn yasr_btn'})
+						.text('Chart Config')
+						.click(function() {
+							editor.openDialog(wrapper);
+						})
+				).append(
+					$('<div>', {id: wrapperId, class: 'gchartWrapper'})
+				);
+				var dataTable = new google.visualization.DataTable();
+				var jsonResults = yasr.results.getAsJson();
+				
+				jsonResults.head.vars.forEach(function(variable) {
+					var type = utils.getGoogleType(jsonResults.results.bindings[0][variable]);
+					dataTable.addColumn(type, variable);
+				});
+				var usedPrefixes = null;
+				if (yasr.options.getUsedPrefixes) {
+					usedPrefixes = (typeof yasr.options.getUsedPrefixes == "function"? yasr.options.getUsedPrefixes(yasr):  yasr.options.getUsedPrefixes);
+				}
+				jsonResults.results.bindings.forEach(function(binding) {
+					var row = [];
+					jsonResults.head.vars.forEach(function(variable) {
+						row.push(utils.castGoogleType(binding[variable], usedPrefixes));
+					})
+					dataTable.addRow(row);
+				});
+
+				if (yasr.options.gchart.chartConfig) {
+
+					wrapper = new google.visualization.ChartWrapper(yasr.options.gchart.chartConfig);
+					
+					if (wrapper.getChartType() === "MotionChart" && yasr.options.gchart.motionChartState != null) {
+						wrapper.setOption("state", yasr.options.gchart.motionChartState);
+						google.visualization.events.addListener(wrapper, 'ready', function(){
+							var motionChart;
+							motionChart = wrapper.getChart();
+							google.visualization.events.addListener(motionChart, 'statechange', function(){
+								yasr.options.gchart.motionChartState = motionChart.getState();
+								yUtils.storage.set(persistencyIdMotionChart, yasr.options.gchart.motionChartState);
+							});
+						});
+					}
+					wrapper.setDataTable(dataTable);
+				} else {
+					wrapper = new google.visualization.ChartWrapper({
+						chartType: 'Table',
+						dataTable: dataTable,
+						containerId: wrapperId
+					});
+				}
+				wrapper.setOption("width", options.width);
+				wrapper.setOption("height", options.height);
+				wrapper.draw();
+				yasr.updateHeader();
+			}
+			
+			if (!(typeof window !== "undefined" ? window.google : typeof global !== "undefined" ? global.google : null) || !(typeof window !== "undefined" ? window.google : typeof global !== "undefined" ? global.google : null).visualization || !editor) {
+				require('./gChartLoader.js')
+					.on('done', function() {
+						initEditor();
+						doDraw();
+					})
+					.on('error', function() {
+						console.log('errorrr');
+						//TODO: disable or something?
+					})
+					.googleLoad();
+			} else {
+				//everything (editor as well) is already initialized
+				doDraw();
+			}
+		}
+	};
+};
+root.defaults = {
+	height: "600px",
+	width: "100%",
+	persistencyId: 'gchart',
+};
+
+function deepEq$(x, y, type){
+	var toString = {}.toString, hasOwnProperty = {}.hasOwnProperty,
+	    has = function (obj, key) { return hasOwnProperty.call(obj, key); };
+  var first = true;
+  return eq(x, y, []);
+  function eq(a, b, stack) {
+    var className, length, size, result, alength, blength, r, key, ref, sizeB;
+    if (a == null || b == null) { return a === b; }
+    if (a.__placeholder__ || b.__placeholder__) { return true; }
+    if (a === b) { return a !== 0 || 1 / a == 1 / b; }
+    className = toString.call(a);
+    if (toString.call(b) != className) { return false; }
+    switch (className) {
+      case '[object String]': return a == String(b);
+      case '[object Number]':
+        return a != +a ? b != +b : (a == 0 ? 1 / a == 1 / b : a == +b);
+      case '[object Date]':
+      case '[object Boolean]':
+        return +a == +b;
+      case '[object RegExp]':
+        return a.source == b.source &&
+               a.global == b.global &&
+               a.multiline == b.multiline &&
+               a.ignoreCase == b.ignoreCase;
+    }
+    if (typeof a != 'object' || typeof b != 'object') { return false; }
+    length = stack.length;
+    while (length--) { if (stack[length] == a) { return true; } }
+    stack.push(a);
+    size = 0;
+    result = true;
+    if (className == '[object Array]') {
+      alength = a.length;
+      blength = b.length;
+      if (first) {
+        switch (type) {
+        case '===': result = alength === blength; break;
+        case '<==': result = alength <= blength; break;
+        case '<<=': result = alength < blength; break;
+        }
+        size = alength;
+        first = false;
+      } else {
+        result = alength === blength;
+        size = alength;
+      }
+      if (result) {
+        while (size--) {
+          if (!(result = size in a == size in b && eq(a[size], b[size], stack))){ break; }
+        }
+      }
+    } else {
+      if ('constructor' in a != 'constructor' in b || a.constructor != b.constructor) {
+        return false;
+      }
+      for (key in a) {
+        if (has(a, key)) {
+          size++;
+          if (!(result = has(b, key) && eq(a[key], b[key], stack))) { break; }
+        }
+      }
+      if (result) {
+        sizeB = 0;
+        for (key in b) {
+          if (has(b, key)) { ++sizeB; }
+        }
+        if (first) {
+          if (type === '<<=') {
+            result = size < sizeB;
+          } else if (type === '<==') {
+            result = size <= sizeB
+          } else {
+            result = size === sizeB;
+          }
+        } else {
+          first = false;
+          result = size === sizeB;
+        }
+      }
+    }
+    stack.pop();
+    return result;
+  }
+}
+}).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
+},{"./gChartLoader.js":32,"./utils.js":45,"jquery":18,"yasgui-utils":24}],34:[function(require,module,exports){
 'use strict';
 module.exports = {
 	cross: '<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" x="0px" y="0px" width="30px" height="30px" viewBox="0 0 100 100" enable-background="new 0 0 100 100" xml:space="preserve"><g>	<path d="M83.288,88.13c-2.114,2.112-5.575,2.112-7.689,0L53.659,66.188c-2.114-2.112-5.573-2.112-7.687,0L24.251,87.907   c-2.113,2.114-5.571,2.114-7.686,0l-4.693-4.691c-2.114-2.114-2.114-5.573,0-7.688l21.719-21.721c2.113-2.114,2.113-5.573,0-7.686   L11.872,24.4c-2.114-2.113-2.114-5.571,0-7.686l4.842-4.842c2.113-2.114,5.571-2.114,7.686,0L46.12,33.591   c2.114,2.114,5.572,2.114,7.688,0l21.721-21.719c2.114-2.114,5.573-2.114,7.687,0l4.695,4.695c2.111,2.113,2.111,5.571-0.003,7.686   L66.188,45.973c-2.112,2.114-2.112,5.573,0,7.686L88.13,75.602c2.112,2.111,2.112,5.572,0,7.687L83.288,88.13z"/></g></svg>',
@@ -49286,7 +50217,7 @@ module.exports = {
 	fullscreen: '<svg   xmlns:dc="http://purl.org/dc/elements/1.1/"   xmlns:cc="http://creativecommons.org/ns#"   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"   xmlns:svg="http://www.w3.org/2000/svg"   xmlns="http://www.w3.org/2000/svg"   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"   version="1.1"      x="0px"   y="0px"   width="100%"   height="100%"   viewBox="5 -10 74.074074 100"   enable-background="new 0 0 100 100"   xml:space="preserve"   inkscape:version="0.48.4 r9939"   sodipodi:docname="noun_2186_cc.svg"><metadata     ><rdf:RDF><cc:Work         rdf:about=""><dc:format>image/svg+xml</dc:format><dc:type           rdf:resource="http://purl.org/dc/dcmitype/StillImage" /></cc:Work></rdf:RDF></metadata><defs      /><sodipodi:namedview     pagecolor="#ffffff"     bordercolor="#666666"     borderopacity="1"     objecttolerance="10"     gridtolerance="10"     guidetolerance="10"     inkscape:pageopacity="0"     inkscape:pageshadow="2"     inkscape:window-width="640"     inkscape:window-height="480"          showgrid="false"     fit-margin-top="0"     fit-margin-left="0"     fit-margin-right="0"     fit-margin-bottom="0"     inkscape:zoom="2.36"     inkscape:cx="44.101509"     inkscape:cy="31.481481"     inkscape:window-x="65"     inkscape:window-y="24"     inkscape:window-maximized="0"     inkscape:current-layer="Layer_1" /><path     d="m -7.962963,-10 v 38.889 l 16.667,-16.667 16.667,16.667 5.555,-5.555 -16.667,-16.667 16.667,-16.667 h -38.889 z"          inkscape:connector-curvature="0"     style="fill:#010101" /><path     d="m 92.037037,-10 v 38.889 l -16.667,-16.667 -16.666,16.667 -5.556,-5.555 16.666,-16.667 -16.666,-16.667 h 38.889 z"          inkscape:connector-curvature="0"     style="fill:#010101" /><path     d="M -7.962963,90 V 51.111 l 16.667,16.666 16.667,-16.666 5.555,5.556 -16.667,16.666 16.667,16.667 h -38.889 z"          inkscape:connector-curvature="0"     style="fill:#010101" /><path     d="M 92.037037,90 V 51.111 l -16.667,16.666 -16.666,-16.666 -5.556,5.556 16.666,16.666 -16.666,16.667 h 38.889 z"          inkscape:connector-curvature="0"     style="fill:#010101" /></svg>',
 	smallscreen: '<svg   xmlns:dc="http://purl.org/dc/elements/1.1/"   xmlns:cc="http://creativecommons.org/ns#"   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"   xmlns:svg="http://www.w3.org/2000/svg"   xmlns="http://www.w3.org/2000/svg"   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"   version="1.1"      x="0px"   y="0px"   width="100%"   height="100%"   viewBox="5 -10 74.074074 100"   enable-background="new 0 0 100 100"   xml:space="preserve"   inkscape:version="0.48.4 r9939"   sodipodi:docname="noun_2186_cc.svg"><metadata     ><rdf:RDF><cc:Work         rdf:about=""><dc:format>image/svg+xml</dc:format><dc:type           rdf:resource="http://purl.org/dc/dcmitype/StillImage" /></cc:Work></rdf:RDF></metadata><defs      /><sodipodi:namedview     pagecolor="#ffffff"     bordercolor="#666666"     borderopacity="1"     objecttolerance="10"     gridtolerance="10"     guidetolerance="10"     inkscape:pageopacity="0"     inkscape:pageshadow="2"     inkscape:window-width="1855"     inkscape:window-height="1056"          showgrid="false"     fit-margin-top="0"     fit-margin-left="0"     fit-margin-right="0"     fit-margin-bottom="0"     inkscape:zoom="2.36"     inkscape:cx="44.101509"     inkscape:cy="31.481481"     inkscape:window-x="65"     inkscape:window-y="24"     inkscape:window-maximized="1"     inkscape:current-layer="Layer_1" /><path     d="m 30.926037,28.889 0,-38.889 -16.667,16.667 -16.667,-16.667 -5.555,5.555 16.667,16.667 -16.667,16.667 38.889,0 z"          inkscape:connector-curvature="0"     style="fill:#010101" /><path     d="m 53.148037,28.889 0,-38.889 16.667,16.667 16.666,-16.667 5.556,5.555 -16.666,16.667 16.666,16.667 -38.889,0 z"          inkscape:connector-curvature="0"     style="fill:#010101" /><path     d="m 30.926037,51.111 0,38.889 -16.667,-16.666 -16.667,16.666 -5.555,-5.556 16.667,-16.666 -16.667,-16.667 38.889,0 z"          inkscape:connector-curvature="0"     style="fill:#010101" /><path     d="m 53.148037,51.111 0,38.889 16.667,-16.666 16.666,16.666 5.556,-5.556 -16.666,-16.666 16.666,-16.667 -38.889,0 z"          inkscape:connector-curvature="0"     style="fill:#010101" /></svg>',
 };
-},{}],32:[function(require,module,exports){
+},{}],35:[function(require,module,exports){
 'use strict';
 var $ = require("jquery");
 var utils = require("yasgui-utils");
@@ -49305,12 +50236,38 @@ console = console || {"log":function(){}};//make sure any console statements don
  * @return {doc} YASR document
  */
 var root = module.exports = function(parent, options, queryResults) {
+
+	
 	var yasr = {};
 	yasr.options = $.extend(true, {}, root.defaults, options);
 	yasr.container = $("<div class='yasr'></div>").appendTo(parent);
 	yasr.header = $("<div class='yasr_header'></div>").appendTo(yasr.container);
 	yasr.resultsContainer = $("<div class='yasr_results'></div>").appendTo(yasr.container);
+	yasr.storage = utils.storage;
 	
+	var prefix = null;
+	yasr.getPersistencyId = function(postfix) {
+		if (prefix === null) {
+			//instantiate prefix
+			if (yasr.options.persistency && yasr.options.persistency.prefix) {
+				prefix = (typeof yasr.options.persistency.prefix == 'string'? yasr.options.persistency.prefix : yasr.options.persistency.prefix(yasr));
+			} else {
+				prefix = false;
+			}
+		}
+		if (prefix && postfix) {
+			return prefix + (typeof postfix == 'string'? postfix : postfix(yasr));
+		} else {
+			return null;
+		}
+	};
+	
+	if (yasr.options.useGoogleCharts) {
+		//pre-load google-loader
+		require('./gChartLoader.js')
+			.once('initError', function(){yasr.options.useGoogleCharts = false})
+			.init();
+	}
 	
 	//first initialize plugins
 	yasr.plugins = {};
@@ -49319,10 +50276,27 @@ var root = module.exports = function(parent, options, queryResults) {
 	}
 	
 	
-	
-	
-	
-	
+	yasr.updateHeader = function() {
+		var downloadIcon = yasr.header.find(".yasr_downloadIcon")
+				.removeAttr("title");//and remove previous titles
+		
+		var outputPlugin = yasr.plugins[yasr.options.output];
+		if (outputPlugin) {
+			var info = (outputPlugin.getDownloadInfo? outputPlugin.getDownloadInfo(): null);
+			if (info) {
+				if (info.buttonTitle) downloadIcon.attr('title', info.buttonTitle);
+				downloadIcon.prop("disabled", false);
+				downloadIcon.find("path").each(function(){
+					this.style.fill = "black";
+				});
+			} else {
+				downloadIcon.prop("disabled", true).prop("title", "Download not supported for this result representation");
+				downloadIcon.find("path").each(function(){
+					this.style.fill = "gray";
+				});
+			}
+		}
+	};
 	yasr.draw = function(output) {
 		if (!yasr.results) return false;
 		if (!output) output = yasr.options.output;
@@ -49381,31 +50355,46 @@ var root = module.exports = function(parent, options, queryResults) {
 		yasr.draw();
 		
 		//store if needed
-		if (yasr.options.persistency && yasr.options.persistency.results) {
-			var id = (typeof yasr.options.persistency.results.id == "string" ? yasr.options.persistency.results.id: yasr.options.persistency.results.id(yasr));
+		var resultsId = yasr.getPersistencyId(yasr.options.persistency.results.key);
+		if (resultsId) {
 			if (yasr.results.getOriginalResponseAsString && yasr.results.getOriginalResponseAsString().length < yasr.options.persistency.results.maxSize) {
-				utils.storage.set(id, yasr.results.getAsStoreObject(), "month");
+				utils.storage.set(resultsId, yasr.results.getAsStoreObject(), "month");
 			} else {
-				utils.storage.remove(id);
+				//remove old string
+				utils.storage.remove(resultsId);
 			}
 		}
 	};
+	
 	
 
 	/**
 	 * postprocess
 	 */
-	if (yasr.options.persistency && yasr.options.persistency.outputSelector) {
-		var id = (typeof yasr.options.persistency.outputSelector == "string"? yasr.options.persistency.outputSelector: yasr.options.persistency.outputSelector(yasr));
-		if (id) {
-			var selection = utils.storage.get(id);
-			if (selection) yasr.options.output = selection;
-		}
+	var selectorId = yasr.getPersistencyId(yasr.options.persistency.outputSelector)
+	if (selectorId) {
+		var selection = utils.storage.get(selectorId);
+		if (selection) yasr.options.output = selection;
 	}
 	drawHeader(yasr);
 	if (!queryResults && yasr.options.persistency && yasr.options.persistency.results) {
-		var id = (typeof yasr.options.persistency.results.id == "string" ? yasr.options.persistency.results.id: yasr.options.persistency.results.id(yasr));
-		var fromStorage = utils.storage.get(id);
+		var resultsId = yasr.getPersistencyId(yasr.options.persistency.results.key)
+		var fromStorage;
+		if (resultsId) {
+			fromStorage = utils.storage.get(resultsId);
+		}
+		
+		
+		if (!fromStorage && yasr.options.persistency.results.id) {
+			//deprecated! But keep for backwards compatability
+			//if results are stored under old ID. Fetch the results, and delete that key (results can be large, and clutter space)
+			//setting the results, will automatically store it under the new key, so we don't have to worry about that here
+			var deprId = (typeof yasr.options.persistency.results.id == "string" ? yasr.options.persistency.results.id: yasr.options.persistency.results.id(yasr));
+			if (deprId) {
+				fromStorage = utils.storage.get(deprId);
+				if (fromStorage) utils.storage.remove(deprId);
+			}
+		}
 		if (fromStorage) {
 			if ($.isArray(fromStorage)) {
 				yasr.setResponse.apply(this, fromStorage);
@@ -49418,31 +50407,10 @@ var root = module.exports = function(parent, options, queryResults) {
 	if (queryResults) {
 		yasr.setResponse(queryResults);
 	} 
-	updateHeader(yasr);
+	yasr.updateHeader();
 	return yasr;
 };
-var updateHeader = function(yasr) {
-	var downloadIcon = yasr.header.find(".yasr_downloadIcon");
-		downloadIcon
-			.removeAttr("title");//and remove previous titles
-	
-	var outputPlugin = yasr.plugins[yasr.options.output];
-	if (outputPlugin) {
-		var info = (outputPlugin.getDownloadInfo? outputPlugin.getDownloadInfo(): null);
-		if (info) {
-			if (info.buttonTitle) downloadIcon.attr(info.buttonTitle);
-			downloadIcon.prop("disabled", false);
-			downloadIcon.find("path").each(function(){
-				this.style.fill = "black";
-			});
-		} else {
-			downloadIcon.prop("disabled", true).prop("title", "Download not supported for this result representation");
-			downloadIcon.find("path").each(function(){
-				this.style.fill = "gray";
-			});
-		}
-	}
-};
+
 
 var drawHeader = function(yasr) {
 	var drawOutputSelector = function() {
@@ -49461,14 +50429,14 @@ var drawHeader = function(yasr) {
 				yasr.options.output = pluginName;
 				
 				//store if needed
-				if (yasr.options.persistency && yasr.options.persistency.outputSelector) {
-					var id = (typeof yasr.options.persistency.outputSelector == "string"? yasr.options.persistency.outputSelector: yasr.options.persistency.outputSelector(yasr));
-					utils.storage.set(id, yasr.options.output, "month");
+				var selectorId = yasr.getPersistencyId(yasr.options.persistency.outputSelector);
+				if (selectorId) {
+					utils.storage.set(selectorId, yasr.options.output, "month");
 				}
 				
 				
 				yasr.draw();
-				updateHeader(yasr);
+				yasr.updateHeader();
 			})
 			.appendTo(btnGroup);
 			if (yasr.options.output == pluginName) button.addClass("selected");
@@ -49528,12 +50496,7 @@ root.registerOutput = function(name, constructor) {
 };
 
 
-//put these in a try-catch. When using the unbundled version, and when some dependencies are missing, then YASR as a whole will still function
-try {root.registerOutput('boolean', require("./boolean.js"))} catch(e){};
-try {root.registerOutput('rawResponse', require("./rawResponse.js"))} catch(e){};
-try {root.registerOutput('table', require("./table.js"))} catch(e){};
-try {root.registerOutput('error', require("./error.js"))} catch(e){};
-try {root.registerOutput('pivot', require("./pivot.js"))} catch(e){};
+
 
 /**
  * The default options of YASR. Either change the default options by setting YASR.defaults, or by
@@ -49550,13 +50513,21 @@ root.version = {
 root.$ = $;
 
 
-},{"../package.json":26,"./boolean.js":28,"./defaults.js":29,"./error.js":30,"./imgs.js":31,"./parsers/wrapper.js":37,"./pivot.js":39,"./rawResponse.js":40,"./table.js":41,"jquery":17,"yasgui-utils":23}],33:[function(require,module,exports){
+
+//put these in a try-catch. When using the unbundled version, and when some dependencies are missing, then YASR as a whole will still function
+try {root.registerOutput('boolean', require("./boolean.js"))} catch(e){};
+try {root.registerOutput('rawResponse', require("./rawResponse.js"))} catch(e){};
+try {root.registerOutput('table', require("./table.js"))} catch(e){};
+try {root.registerOutput('error', require("./error.js"))} catch(e){};
+try {root.registerOutput('pivot', require("./pivot.js"))} catch(e){};
+if (root.defaults.useGoogleCharts) try {root.registerOutput('gchart', require("./gchart.js"))} catch(e){};
+},{"../package.json":27,"./boolean.js":29,"./defaults.js":30,"./error.js":31,"./gChartLoader.js":32,"./gchart.js":33,"./imgs.js":34,"./parsers/wrapper.js":40,"./pivot.js":42,"./rawResponse.js":43,"./table.js":44,"jquery":18,"yasgui-utils":24}],36:[function(require,module,exports){
 'use strict';
 var $ = require("jquery");
 var root = module.exports = function(queryResponse) {
 	return require("./dlv.js")(queryResponse, ",");
 };
-},{"./dlv.js":34,"jquery":17}],34:[function(require,module,exports){
+},{"./dlv.js":37,"jquery":18}],37:[function(require,module,exports){
 'use strict';
 var $ = jQuery = require('jquery');
 require("../../lib/jquery.csv-0.71.js");
@@ -49618,7 +50589,7 @@ var root = module.exports = function(queryResponse, separator) {
 	
 	return json;
 };
-},{"../../lib/jquery.csv-0.71.js":3,"jquery":17}],35:[function(require,module,exports){
+},{"../../lib/jquery.csv-0.71.js":3,"jquery":18}],38:[function(require,module,exports){
 'use strict';
 var $ = require("jquery");
 var root = module.exports = function(queryResponse) {
@@ -49636,13 +50607,13 @@ var root = module.exports = function(queryResponse) {
 	return false;
 	
 };
-},{"jquery":17}],36:[function(require,module,exports){
+},{"jquery":18}],39:[function(require,module,exports){
 'use strict';
 var $ = require("jquery");
 var root = module.exports = function(queryResponse) {
 	return require("./dlv.js")(queryResponse, "\t");
 };
-},{"./dlv.js":34,"jquery":17}],37:[function(require,module,exports){
+},{"./dlv.js":37,"jquery":18}],40:[function(require,module,exports){
 'use strict';
 var $ = require("jquery");
 
@@ -49876,7 +50847,7 @@ var root = module.exports = function(dataOrJqXhr, textStatus, jqXhrOrErrorString
 
 
 
-},{"./csv.js":33,"./json.js":35,"./tsv.js":36,"./xml.js":38,"jquery":17}],38:[function(require,module,exports){
+},{"./csv.js":36,"./json.js":38,"./tsv.js":39,"./xml.js":41,"jquery":18}],41:[function(require,module,exports){
 'use strict';
 var $ = require("jquery");
 var root = module.exports = function(xml) {
@@ -49962,8 +50933,7 @@ var root = module.exports = function(xml) {
 	return json;
 };
 
-},{"jquery":17}],39:[function(require,module,exports){
-(function (global){
+},{"jquery":18}],42:[function(require,module,exports){
 'use strict';
 var $ = require("jquery"),
 	utils = require('./utils.js'),
@@ -49974,9 +50944,6 @@ require('pivottable');
 
 if (!$.fn.pivotUI) throw new Error("Pivot lib not loaded");
 var root = module.exports = function(yasr) {
-	var drawOnGChartCallback = false;
-	var loadingGChart = false;
-	var renderers = $.pivotUtilities.renderers;
 	var plugin = {};
 	var options = $.extend(true, {}, root.defaults);
 	
@@ -49987,47 +50954,9 @@ var root = module.exports = function(yasr) {
 		} catch (e) {
 			//do nothing. just make sure we don't use this renderer
 		}
-		if ($.pivotUtilities.d3_renderers) $.extend(true, renderers, $.pivotUtilities.d3_renderers);
+		if ($.pivotUtilities.d3_renderers) $.extend(true,  $.pivotUtilities.renderers, $.pivotUtilities.d3_renderers);
 	}
 	
-	var loadGoogleApi = function() {
-		var finishAjax = function() {
-			try {
-				require('../node_modules/pivottable/dist/gchart_renderers.js');
-				$.extend(true, renderers, $.pivotUtilities.gchart_renderers);
-			} catch (e) {
-				//hmm, something went wrong. forget about it;
-			}
-			loadingGChart = false;
-			if (drawOnGChartCallback) draw();
-			drawOnGChartCallback = false;
-		};
-		
-		
-		//cannot package google loader via browserify...
-		$.ajax({
-			  cache: true,
-			  dataType: "script",
-			  url: "//google.com/jsapi",
-			})
-			.done(function(data, textStatus, jqxhr) {
-				var googleLoader = (typeof window !== "undefined" ? window.google : typeof global !== "undefined" ? global.google : null);// shimmed to global google variable
-				googleLoader.load("visualization", "1", {
-					packages : [ "corechart", "charteditor" ],
-					callback : finishAjax
-				})
-			})
-			.fail(finishAjax);
-	};
-	
-	
-	
-	//only load this script 
-	if (options.useGChart && !$.pivotUtilities.gchart_renderers) {
-		loadingGChart = true;
-		//gchart not loaded yet. load them!
-		loadGoogleApi();
-	}
 	
 	
 	var $pivotWrapper;
@@ -50065,7 +50994,7 @@ var root = module.exports = function(yasr) {
 					var val = binding[variable].value;
 					if (mergeLabelPostfix && binding[variable + mergeLabelPostfix]) {
 						val = binding[variable + mergeLabelPostfix].value;
-					} else if (binding.type == "uri") {
+					} else if (binding[variable].type == "uri") {
 						val = utils.uriToPrefixed(usedPrefixes, val);
 					}
 					rowObj[variable] = val;
@@ -50076,31 +51005,11 @@ var root = module.exports = function(yasr) {
 			callback(rowObj);
 		});
 	} 
-	var settingsPersistencyId = null
-	var getPersistencyId = function() {
-		if (settingsPersistencyId === null) {
-			if (typeof options.persistency == "string") {
-				settingsPersistencyId = options.persistency;
-			} else if (typeof options.persistency == "function") {
-				settingsPersistencyId = options.persistency(yasr);
-			} else {
-				settingsPersistencyId = false;
-			}
-		}
-		return settingsPersistencyId;
-	};
-	var onRefresh = function(pivotObj) {
-		if (getPersistencyId()) {
-			var storeSettings = {
-				cols: pivotObj.cols,
-				rows: pivotObj.rows,
-				rendererName: pivotObj.rendererName,
-			}
-			yUtils.storage.set(getPersistencyId(), storeSettings, "month");
-		}
-	};
+	
+	var persistencyId = yasr.getPersistencyId(options.persistencyId);
+	
 	var getStoredSettings = function() {
-		var settings = yUtils.storage.get(getPersistencyId());
+		var settings = yUtils.storage.get(persistencyId);
 		//validate settings. we may have different variables, or renderers might be gone
 		if (settings) {
 			var vars = yasr.results.getVariables();
@@ -50117,56 +51026,114 @@ var root = module.exports = function(yasr) {
 				settings.cols = [];
 				settings.rows = [];
 			}
-			if (!renderers[settings.rendererName]) delete settings.rendererName;
+			if (! $.pivotUtilities.renderers[settings.rendererName]) delete settings.rendererName;
 		} else {
 			settings = {};
 		}
 		return settings;
 	};
 	var draw = function() {
-		if (loadingGChart) {
-			//postpone drawing until we've loaded everything
-			drawOnGChartCallback = true;
-			return;
+		var doDraw = function() {
+			var onRefresh = function(pivotObj) {
+				if (persistencyId) {
+					var storeSettings = {
+						cols: pivotObj.cols,
+						rows: pivotObj.rows,
+						rendererName: pivotObj.rendererName,
+						aggregatorName: pivotObj.aggregatorName,
+						vals: pivotObj.vals,
+					}
+					yUtils.storage.set(persistencyId, storeSettings, "month");
+				}
+				if (pivotObj.rendererName.toLowerCase().indexOf(' chart') >= 0) {
+					openGchartBtn.show();
+				} else {
+					openGchartBtn.hide();
+				}
+				yasr.updateHeader();
+			};
+			
+			
+			var openGchartBtn = $('<button>', {class: 'openPivotGchart yasr_btn'})
+			.text('Chart Config')
+			.click(function() {
+				$pivotWrapper.find('div[dir="ltr"]').dblclick();
+			}).appendTo(yasr.resultsContainer);
+			$pivotWrapper = $('<div>', {class: 'pivotTable'}).appendTo($(yasr.resultsContainer));
+			
+			var settings = $.extend(true, {}, getStoredSettings(), root.defaults.pivotTable);
+			
+			settings.onRefresh = (function() {
+			    var originalRefresh = settings.onRefresh;
+			    return function(pivotObj) {
+			    	onRefresh(pivotObj);
+			    	if (originalRefresh) originalRefresh(pivotObj);
+			    };
+			})();
+			
+			window.pivot = $pivotWrapper.pivotUI(formatForPivot, settings);
+	
+			/**
+			 * post process
+			 */
+			//use 'move' handler for variables
+			var icon = $(yUtils.svg.getElement(imgs.move));
+			$pivotWrapper.find('.pvtTriangle').replaceWith(icon);
+			
+			//add headers to selector rows
+			$('.pvtCols').prepend($('<div>', {class: 'containerHeader'}).text("Columns"));
+			$('.pvtRows').prepend($('<div>', {class: 'containerHeader'}).text("Rows"));
+			$('.pvtUnused').prepend($('<div>', {class: 'containerHeader'}).text("Available Variables"));
+			$('.pvtVals').prepend($('<div>', {class: 'containerHeader'}).text("Cells"));
+			
+			//hmmm, directly after the callback finishes (i.e., directly after this line), the svg is draw.
+			//just use a short timeout to update the header
+			setTimeout(yasr.updateHeader, 400);
 		}
 		
-		
-		$pivotWrapper = $('<div>', {class: 'pivotTable'}).appendTo($(yasr.resultsContainer));
-		
-		var renderers = $.pivotUtilities.renderers;
-		var settings = $.extend(true, {}, getStoredSettings(), root.defaults.pivotTable);
-		
-		settings.onRefresh = (function() {
-		    var originalRefresh = settings.onRefresh;
-		    return function(pivotObj) {
-		    	onRefresh(pivotObj);
-		    	if (originalRefresh) originalRefresh(pivotObj);
-		    };
-		})();
-		
-		window.pivot = $pivotWrapper.pivotUI(formatForPivot, settings);
-
-		/**
-		 * post process
-		 */
-		//use 'move' handler for variables
-		var icon = $(yUtils.svg.getElement(imgs.move));
-		$pivotWrapper.find('.pvtTriangle').replaceWith(icon);
-		
-		//add headers to selector rows
-		$('.pvtCols').prepend($('<div>', {class: 'containerHeader'}).text("Columns"));
-		$('.pvtRows').prepend($('<div>', {class: 'containerHeader'}).text("Rows"));
-		$('.pvtUnused').prepend($('<div>', {class: 'containerHeader'}).text("Available Variables"));
-		$('.pvtVals').prepend($('<div>', {class: 'containerHeader'}).text("Cells"));
-		
+		if (yasr.options.useGoogleCharts && options.useGoogleCharts && !$.pivotUtilities.gchart_renderers) {
+			require('./gChartLoader.js')
+				.on('done', function() {
+					try {
+						require('../node_modules/pivottable/dist/gchart_renderers.js');
+						$.extend(true,  $.pivotUtilities.renderers, $.pivotUtilities.gchart_renderers);
+					} catch (e) {
+						//hmm, still something went wrong. forget about it;
+						options.useGoogleCharts = false;
+					}
+					doDraw();
+				})
+				.on('error', function() {
+					console.log('could not load gchart');
+					options.useGoogleCharts = false;
+					doDraw();
+				})
+				.googleLoad();
+		} else {
+			//everything is already loaded. just draw
+			doDraw();
+		}
 	};
 	var canHandleResults = function(){
 		return yasr.results && yasr.results.getVariables && yasr.results.getVariables() && yasr.results.getVariables().length > 0;
 	};
 	
-	
+	var getDownloadInfo =  function() {
+		if (!yasr.results) return null;
+		var svgEl = yasr.resultsContainer.find('.pvtRendererArea svg');
+		if (svgEl.length == 0) return null;
+		
+		return {
+			getContent: function(){return svgEl[0].outerHTML;},
+			filename: "queryResults.svg",
+			contentType: "image/svg+xml",
+			buttonTitle: "Download SVG Image"
+		};
+	};
 	
 	return {
+		getDownloadInfo: getDownloadInfo,
+		options: options,
 		draw: draw,
 		name: "Pivot Table",
 		canHandleResults: canHandleResults,
@@ -50178,9 +51145,9 @@ var root = module.exports = function(yasr) {
 
 root.defaults = {
 	mergeLabelsWithUris: false,
-	useGChart: true,
+	useGoogleCharts: true,
 	useD3Chart: true,
-	persistency: function(yasr) {return "yasr_pivot_" + $(yasr.container).closest('[id]').attr('id')},
+	persistencyId: 'pivot',
 	pivotTable: {}
 };
 
@@ -50188,8 +51155,7 @@ root.version = {
 	"YASR-rawResponse" : require("../package.json").version,
 	"jquery": $.fn.jquery,
 };
-}).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"../node_modules/pivottable/dist/d3_renderers.js":18,"../node_modules/pivottable/dist/gchart_renderers.js":19,"../package.json":26,"./imgs.js":31,"./utils.js":42,"d3":12,"jquery":17,"jquery-ui/sortable":15,"pivottable":20,"yasgui-utils":23}],40:[function(require,module,exports){
+},{"../node_modules/pivottable/dist/d3_renderers.js":19,"../node_modules/pivottable/dist/gchart_renderers.js":20,"../package.json":27,"./gChartLoader.js":32,"./imgs.js":34,"./utils.js":45,"d3":13,"jquery":18,"jquery-ui/sortable":16,"pivottable":21,"yasgui-utils":24}],43:[function(require,module,exports){
 'use strict';
 var $ = require("jquery"),
 	CodeMirror = require("codemirror");
@@ -50278,7 +51244,7 @@ root.version = {
 	"jquery": $.fn.jquery,
 	"CodeMirror" : CodeMirror.version
 };
-},{"../package.json":26,"codemirror":9,"codemirror/addon/edit/matchbrackets.js":4,"codemirror/addon/fold/brace-fold.js":5,"codemirror/addon/fold/foldcode.js":6,"codemirror/addon/fold/foldgutter.js":7,"codemirror/addon/fold/xml-fold.js":8,"codemirror/mode/javascript/javascript.js":10,"codemirror/mode/xml/xml.js":11,"jquery":17}],41:[function(require,module,exports){
+},{"../package.json":27,"codemirror":10,"codemirror/addon/edit/matchbrackets.js":5,"codemirror/addon/fold/brace-fold.js":6,"codemirror/addon/fold/foldcode.js":7,"codemirror/addon/fold/foldgutter.js":8,"codemirror/addon/fold/xml-fold.js":9,"codemirror/mode/javascript/javascript.js":11,"codemirror/mode/xml/xml.js":12,"jquery":18}],44:[function(require,module,exports){
 'use strict';
 var $ = require("jquery"),
 	yutils = require("yasgui-utils"),
@@ -50304,7 +51270,7 @@ var root = module.exports = function(yasr) {
 		getPriority: 10,
 	};
 	var options = plugin.options = $.extend(true, {}, root.defaults);
-	
+	var tableLengthPersistencyId = (options.persistency? yasr.getPersistencyId(options.persistency.tableLength): null);
 
 	var getRows = function() {
 		var rows = [];
@@ -50340,10 +51306,9 @@ var root = module.exports = function(yasr) {
 		table.on( 'order.dt', function () {
 		    drawSvgIcons();
 		});
-		if (options.persistency && options.persistency.tableLength) {
+		if (tableLengthPersistencyId) {
 			table.on('length.dt', function(e, settings, len) {
-				var persistencyId = (typeof options.persistency.tableLength == "string" ? options.persistency.tableLength: options.persistency.tableLength(yasr));
-				yutils.storage.set(persistencyId, len, "month");
+				yutils.storage.set(tableLengthPersistencyId, len, "month");
 			});
 		}
 		$.extend(true, options.callbacks, options.handlers);
@@ -50380,11 +51345,8 @@ var root = module.exports = function(yasr) {
 		dataTableConfig.columns = options.getColumns(yasr, plugin);
 		
 		//fetch stored datatables length value
-		if (options.persistency && options.persistency.tableLength) {
-			var persistencyId = (typeof options.persistency.tableLength == "string" ? options.persistency.tableLength: options.persistency.tableLength(yasr));
-			var pLength = yutils.storage.get(persistencyId);
-			if (pLength) dataTableConfig.pageLength = pLength;
-		}
+		var pLength = yutils.storage.get(tableLengthPersistencyId);
+		if (pLength) dataTableConfig.pageLength = pLength;
 		
 		
 		
@@ -50543,9 +51505,7 @@ root.defaults = {
 	getCellContent: getCellContent,
 	
 	persistency: {
-		tableLength: function (yasr){
-			return "tableLength_" + $(yasr.container).closest('[id]').attr('id');
-		},
+		tableLength: "tableLength",
 	},
 	
 	getColumns: function(yasr, plugin) {
@@ -50658,7 +51618,7 @@ root.version = {
 	"jquery-datatables": $.fn.DataTable.version
 };
 
-},{"../lib/DataTables/media/js/jquery.dataTables.js":2,"../package.json":26,"./bindingsToCsv.js":27,"./imgs.js":31,"jquery":17,"yasgui-utils":23}],42:[function(require,module,exports){
+},{"../lib/DataTables/media/js/jquery.dataTables.js":2,"../package.json":27,"./bindingsToCsv.js":28,"./imgs.js":34,"jquery":18,"yasgui-utils":24}],45:[function(require,module,exports){
 'use strict';
 var $ = require('jquery');
 module.exports = {
@@ -50671,9 +51631,69 @@ module.exports = {
 				}
 			}
 		}
-	}
+		return uri;
+	},
+	getGoogleType: function(binding) {
+		if (binding.type != null && (binding.type === 'typed-literal' || binding.type === 'literal')) {
+			switch (binding.datatype) {
+			case 'http://www.w3.org/2001/XMLSchema#float':
+			case 'http://www.w3.org/2001/XMLSchema#decimal':
+			case 'http://www.w3.org/2001/XMLSchema#int':
+			case 'http://www.w3.org/2001/XMLSchema#integer':
+			case 'http://www.w3.org/2001/XMLSchema#long':
+			case 'http://www.w3.org/2001/XMLSchema#gYearMonth':
+			case 'http://www.w3.org/2001/XMLSchema#gYear':
+			case 'http://www.w3.org/2001/XMLSchema#gMonthDay':
+			case 'http://www.w3.org/2001/XMLSchema#gDay':
+			case 'http://www.w3.org/2001/XMLSchema#gMonth':
+				return "number";
+			case 'http://www.w3.org/2001/XMLSchema#date':
+				return "date";
+			case 'http://www.w3.org/2001/XMLSchema#dateTime':
+				return "datetime";
+			case 'http://www.w3.org/2001/XMLSchema#time':
+				return "timeofday";
+			default:
+				return "string";
+			}
+		} else {
+			return "string";
+		}
+	},
+	castGoogleType: function(binding, prefixes){
+		if (binding == null) {
+			return null;
+		}
+		if (binding.type != null && (binding.type === 'typed-literal' || binding.type === 'literal')) {
+			switch (binding.datatype) {
+			case 'http://www.w3.org/2001/XMLSchema#float':
+			case 'http://www.w3.org/2001/XMLSchema#decimal':
+			case 'http://www.w3.org/2001/XMLSchema#int':
+			case 'http://www.w3.org/2001/XMLSchema#integer':
+			case 'http://www.w3.org/2001/XMLSchema#long':
+			case 'http://www.w3.org/2001/XMLSchema#gYearMonth':
+			case 'http://www.w3.org/2001/XMLSchema#gYear':
+			case 'http://www.w3.org/2001/XMLSchema#gMonthDay':
+			case 'http://www.w3.org/2001/XMLSchema#gDay':
+			case 'http://www.w3.org/2001/XMLSchema#gMonth':
+				return Number(binding.value);
+			case 'http://www.w3.org/2001/XMLSchema#date':
+			case 'http://www.w3.org/2001/XMLSchema#dateTime':
+			case 'http://www.w3.org/2001/XMLSchema#time':
+				return new Date(binding.value);
+			default:
+				return binding.value;
+			}
+		} else {
+			if (binding.type = 'uri') {
+				return module.exports.uriToPrefixed(prefixes, binding.value);
+			} else {
+				return binding.value;
+			}
+		}
+	},
 };
-},{"jquery":17}]},{},[1])(1)
+},{"jquery":18}]},{},[1])(1)
 });
 
 

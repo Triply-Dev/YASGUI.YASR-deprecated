@@ -60,7 +60,9 @@
   /* See issue #2901 */
   /* Help users use markselection to safely style text background */ }
   .yasr .svgImg {
-    display: inline-block; }
+    display: inline-block;
+    bottom: -2px;
+    /**to properly align img**/ }
   .yasr button.btn_smallscreen {
     display: none; }
   .yasr button.btn_smallscreen div, .yasr button.btn_fullscreen div {
@@ -853,7 +855,8 @@
         fill: #fff; }
       .yasr .pivotTable li span.pvtAttr div {
         /**svg container**/
-        margin-left: 6px; }
+        margin-left: 6px;
+        vertical-align: middle; }
     .yasr .pivotTable .pvtCols {
       vertical-align: top; }
     .yasr .pivotTable table.pvtTable tr th {
@@ -878,6 +881,20 @@
       overflow: hidden;
       position: absolute;
       text-indent: 2px; }
+  .yasr .openPivotGchart {
+    float: right;
+    position: relative;
+    display: none;
+    top: -38px;
+    margin-bottom: -38px; }
+  .yasr .openGchartBtn {
+    float: right;
+    position: relative;
+    top: -33px;
+    margin-bottom: -33px; }
+  .yasr .gchartWrapper {
+    width: 100%;
+    height: 600px; }
 
 /**need to reset this: the modal-dialog class conflicts with bootstrap**/
 .modal-dialog.google-visualization-charteditor-dialog {
