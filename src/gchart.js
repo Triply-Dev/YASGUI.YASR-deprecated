@@ -65,6 +65,18 @@ var root = module.exports = function(yasr){
 			var results, variables;
 			return (results = yasr.results) != null && (variables = results.getVariables()) && variables.length > 0;
 		},
+		getDownloadInfo: function() {
+			if (!yasr.results) return null;
+			var svgEl = yasr.resultsContainer.find('svg');
+			if (svgEl.length == 0) return null;
+			
+			return {
+				getContent: function(){return svgEl[0].outerHTML;},
+				filename: "queryResults.svg",
+				contentType: "image/svg+xml",
+				buttonTitle: "Download SVG Image"
+			};
+		},
 		draw: function(){
 			var doDraw = function () {
 				//clear previous results (if any)
@@ -126,6 +138,7 @@ var root = module.exports = function(yasr){
 				wrapper.setOption("width", options.width);
 				wrapper.setOption("height", options.height);
 				wrapper.draw();
+				yasr.updateHeader();
 			}
 			
 			if (!require('google') || !require('google').visualization || !editor) {

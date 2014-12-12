@@ -56,7 +56,27 @@ var root = module.exports = function(parent, options, queryResults) {
 	}
 	
 	
-	
+	yasr.updateHeader = function() {
+		var downloadIcon = yasr.header.find(".yasr_downloadIcon")
+				.removeAttr("title");//and remove previous titles
+		
+		var outputPlugin = yasr.plugins[yasr.options.output];
+		if (outputPlugin) {
+			var info = (outputPlugin.getDownloadInfo? outputPlugin.getDownloadInfo(): null);
+			if (info) {
+				if (info.buttonTitle) downloadIcon.attr('title', info.buttonTitle);
+				downloadIcon.prop("disabled", false);
+				downloadIcon.find("path").each(function(){
+					this.style.fill = "black";
+				});
+			} else {
+				downloadIcon.prop("disabled", true).prop("title", "Download not supported for this result representation");
+				downloadIcon.find("path").each(function(){
+					this.style.fill = "gray";
+				});
+			}
+		}
+	};
 	yasr.draw = function(output) {
 		if (!yasr.results) return false;
 		if (!output) output = yasr.options.output;
@@ -167,31 +187,10 @@ var root = module.exports = function(parent, options, queryResults) {
 	if (queryResults) {
 		yasr.setResponse(queryResults);
 	} 
-	updateHeader(yasr);
+	yasr.updateHeader();
 	return yasr;
 };
-var updateHeader = function(yasr) {
-	var downloadIcon = yasr.header.find(".yasr_downloadIcon");
-		downloadIcon
-			.removeAttr("title");//and remove previous titles
-	
-	var outputPlugin = yasr.plugins[yasr.options.output];
-	if (outputPlugin) {
-		var info = (outputPlugin.getDownloadInfo? outputPlugin.getDownloadInfo(): null);
-		if (info) {
-			if (info.buttonTitle) downloadIcon.attr(info.buttonTitle);
-			downloadIcon.prop("disabled", false);
-			downloadIcon.find("path").each(function(){
-				this.style.fill = "black";
-			});
-		} else {
-			downloadIcon.prop("disabled", true).prop("title", "Download not supported for this result representation");
-			downloadIcon.find("path").each(function(){
-				this.style.fill = "gray";
-			});
-		}
-	}
-};
+
 
 var drawHeader = function(yasr) {
 	var drawOutputSelector = function() {
@@ -217,7 +216,7 @@ var drawHeader = function(yasr) {
 				
 				
 				yasr.draw();
-				updateHeader(yasr);
+				yasr.updateHeader();
 			})
 			.appendTo(btnGroup);
 			if (yasr.options.output == pluginName) button.addClass("selected");

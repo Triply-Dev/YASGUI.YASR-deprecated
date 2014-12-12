@@ -114,6 +114,7 @@ var root = module.exports = function(yasr) {
 				} else {
 					openGchartBtn.hide();
 				}
+				yasr.updateHeader();
 			};
 			
 			
@@ -148,6 +149,10 @@ var root = module.exports = function(yasr) {
 			$('.pvtRows').prepend($('<div>', {class: 'containerHeader'}).text("Rows"));
 			$('.pvtUnused').prepend($('<div>', {class: 'containerHeader'}).text("Available Variables"));
 			$('.pvtVals').prepend($('<div>', {class: 'containerHeader'}).text("Cells"));
+			
+			//hmmm, directly after the callback finishes (i.e., directly after this line), the svg is draw.
+			//just use a short timeout to update the header
+			setTimeout(yasr.updateHeader, 400);
 		}
 		
 		if (yasr.options.useGoogleCharts && options.useGoogleCharts && !$.pivotUtilities.gchart_renderers) {
@@ -177,9 +182,21 @@ var root = module.exports = function(yasr) {
 		return yasr.results && yasr.results.getVariables && yasr.results.getVariables() && yasr.results.getVariables().length > 0;
 	};
 	
-	
+	var getDownloadInfo =  function() {
+		if (!yasr.results) return null;
+		var svgEl = yasr.resultsContainer.find('.pvtRendererArea svg');
+		if (svgEl.length == 0) return null;
+		
+		return {
+			getContent: function(){return svgEl[0].outerHTML;},
+			filename: "queryResults.svg",
+			contentType: "image/svg+xml",
+			buttonTitle: "Download SVG Image"
+		};
+	};
 	
 	return {
+		getDownloadInfo: getDownloadInfo,
 		options: options,
 		draw: draw,
 		name: "Pivot Table",
