@@ -1,4 +1,7 @@
 .pivotTable {
+	& > table {
+		background-color: white;
+	}
 	margin-top: 5px;
 	td.pvtAxisContainer, td.pvtVals {
 		/**where vars are dragged to/from**/

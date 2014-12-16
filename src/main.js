@@ -20,6 +20,7 @@ var root = module.exports = function(parent, options, queryResults) {
 	
 	var yasr = {};
 	yasr.options = $.extend(true, {}, root.defaults, options);
+	
 	yasr.container = $("<div class='yasr'></div>").appendTo(parent);
 	yasr.header = $("<div class='yasr_header'></div>").appendTo(yasr.container);
 	yasr.resultsContainer = $("<div class='yasr_results'></div>").appendTo(yasr.container);
@@ -52,6 +53,7 @@ var root = module.exports = function(parent, options, queryResults) {
 	//first initialize plugins
 	yasr.plugins = {};
 	for (var pluginName in root.plugins) {
+		if (!yasr.options.useGoogleCharts && pluginName == "gchart") continue; 
 		yasr.plugins[pluginName] = new root.plugins[pluginName](yasr);
 	}
 	
@@ -300,4 +302,4 @@ try {root.registerOutput('rawResponse', require("./rawResponse.js"))} catch(e){}
 try {root.registerOutput('table', require("./table.js"))} catch(e){};
 try {root.registerOutput('error', require("./error.js"))} catch(e){};
 try {root.registerOutput('pivot', require("./pivot.js"))} catch(e){};
-if (root.defaults.useGoogleCharts) try {root.registerOutput('gchart', require("./gchart.js"))} catch(e){};
+try {root.registerOutput('gchart', require("./gchart.js"))} catch(e){};
