@@ -15,12 +15,6 @@ var gulp = require('gulp'),
 	notify = require('gulp-notify'),
 	sourcemaps = require('gulp-sourcemaps');
 
-
-var getExcludes = function() {
-	var excludes = [];
-	
-	return excludes;
-}
 gulp.task('browserify', function() {
 	
 	var bundler = browserify({entries: ["./src/entry.js"],standalone: "YASR", debug: true})
