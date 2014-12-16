@@ -3,6 +3,7 @@ var $ = require("jquery"),
 	yutils = require("yasgui-utils"),
 	imgs = require('./imgs.js');
 require("../lib/DataTables/media/js/jquery.dataTables.js");
+require("../lib/colResizable-1.4.js");
 
 
 
@@ -119,6 +120,9 @@ var root = module.exports = function(yasr) {
 			.css("margin-bottom", "-" + headerHeight + "px");
 		}
 		
+		//finally, make the columns dragable:
+		table.colResizable();
+		
 		
 	};
 	
@@ -129,10 +133,8 @@ var root = module.exports = function(yasr) {
 			"sorting_desc": "sortDesc"
 		};
 		table.find(".sortIcons").remove();
-		var width = 8;
-		var height = 13;
 		for (var sorting in sortings) {
-			var svgDiv = $("<div class='sortIcons'></div>").css("float", "right").css("margin-right", "-12px").width(width).height(height);
+			var svgDiv = $("<div class='sortIcons'></div>");
 			yutils.svg.draw(svgDiv, imgs[sortings[sorting]]);
 			table.find("th." + sorting).append(svgDiv);
 		}
@@ -206,7 +208,7 @@ var getCellContent = function(yasr, plugin, bindings, sparqlVar, context) {
 	} else {
 		value = "<span class='nonUri'>" + formatLiteral(yasr, plugin, binding) + "</span>";
 	}
-	return value;
+	return "<div>" + value + "</div>";
 };
 
 
@@ -278,7 +280,7 @@ root.defaults = {
 		var cols = [];
 		cols.push({"title": ""});//row numbers column
 		yasr.results.getVariables().forEach(function(variable) {
-			cols.push({"title": variable, "visible": includeVariable(variable)});
+			cols.push({"title": "<span>" + variable + "</span>", "visible": includeVariable(variable)});
 		});
 		return cols;
 	},
@@ -335,6 +337,7 @@ root.defaults = {
 	 * @type object
 	 */
 	datatable: {
+		"autoWidth": false,
 		"order": [],//disable initial sorting
 		"pageLength": 50,//default page length
     	"lengthMenu": [[10, 50, 100, 1000, -1], [10, 50, 100, 1000, "All"]],//possible page lengths
@@ -360,7 +363,7 @@ root.defaults = {
         	}
 		},
 		"columnDefs": [
-			{ "width": "12px", "orderable": false, "targets": 0  }//disable row sorting for first col
+			{ "width": "32px", "orderable": false, "targets": 0  }//disable row sorting for first col
 		],
 	},
 };
