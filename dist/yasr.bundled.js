@@ -3,7 +3,7 @@
 //the current browserify version does not support require-ing js files which are used as entry-point
 //this way, we can still require our main.js file
 module.exports = require('./main.js');
-},{"./main.js":35}],2:[function(require,module,exports){
+},{"./main.js":36}],2:[function(require,module,exports){
 /*! DataTables 1.10.2
  * ©2008-2014 SpryMedia Ltd - datatables.net/license
  */
@@ -14627,7 +14627,322 @@ module.exports = require('./main.js');
 }(window, document));
 
 
-},{"jquery":18}],3:[function(require,module,exports){
+},{"jquery":19}],3:[function(require,module,exports){
+/**
+               _ _____           _          _     _      
+              | |  __ \         (_)        | |   | |     
+      ___ ___ | | |__) |___  ___ _ ______ _| |__ | | ___ 
+     / __/ _ \| |  _  // _ \/ __| |_  / _` | '_ \| |/ _ \
+    | (_| (_) | | | \ \  __/\__ \ |/ / (_| | |_) | |  __/
+     \___\___/|_|_|  \_\___||___/_/___\__,_|_.__/|_|\___|
+	 
+	v 1.4 - a jQuery plugin by Alvaro Prieto Lauroba
+	
+	Licences: MIT & GPL
+	Feel free to use or modify this plugin as far as my full name is kept	
+	
+	If you are going to use this plugin in production environments it is 
+	strongly recomended to use its minified version: colResizable.min.js
+
+*/
+
+var $ = require('jquery');	
+	var d = $(document); 		//window object
+	var h = $("head");			//head object
+	var drag = null;			//reference to the current grip that is being dragged
+	var tables = [];			//array of the already processed tables (table.id as key)
+	var	count = 0;				//internal count to create unique IDs when needed.	
+	
+	//common strings for minification	(in the minified version there are plenty more)
+	var ID = "id";	
+	var PX = "px";
+	var SIGNATURE ="JColResizer";
+	
+	//shortcuts
+	var I = parseInt;
+	var M = Math;
+	var ie = navigator.userAgent.indexOf('Trident/4.0')>0;
+	var S;
+	try{S = sessionStorage;}catch(e){}	//Firefox crashes when executed as local file system
+	
+	//append required CSS rules  
+	h.append("<style type='text/css'>  .JColResizer{table-layout:fixed;} .JColResizer td, .JColResizer th{overflow:hidden;padding-left:0!important; padding-right:0!important;}  .JCLRgrips{ height:0px; position:relative;} .JCLRgrip{margin-left:-5px; position:absolute; z-index:5; } .JCLRgrip .JColResizer{position:absolute;background-color:red;filter:alpha(opacity=1);opacity:0;width:10px;height:100%;top:0px} .JCLRLastGrip{position:absolute; width:1px; } .JCLRgripDrag{ border-left:1px dotted black;	}</style>");
+
+	
+	/**
+	 * Function to allow column resizing for table objects. It is the starting point to apply the plugin.
+	 * @param {DOM node} tb - refrence to the DOM table object to be enhanced
+	 * @param {Object} options	- some customization values
+	 */
+	var init = function( tb, options){	
+		var t = $(tb);										//the table object is wrapped
+		if(options.disable) return destroy(t);				//the user is asking to destroy a previously colResized table
+		var	id = t.id = t.attr(ID) || SIGNATURE+count++;	//its id is obtained, if null new one is generated		
+		t.p = options.postbackSafe; 						//shortcut to detect postback safe 		
+		if(!t.is("table") || tables[id]) return; 			//if the object is not a table or if it was already processed then it is ignored.
+		t.addClass(SIGNATURE).attr(ID, id).before('<div class="JCLRgrips"/>');	//the grips container object is added. Signature class forces table rendering in fixed-layout mode to prevent column's min-width
+		t.opt = options; t.g = []; t.c = []; t.w = t.width(); t.gc = t.prev();	//t.c and t.g are arrays of columns and grips respectively				
+		if(options.marginLeft) t.gc.css("marginLeft", options.marginLeft);  	//if the table contains margins, it must be specified
+		if(options.marginRight) t.gc.css("marginRight", options.marginRight);  	//since there is no (direct) way to obtain margin values in its original units (%, em, ...)
+		t.cs = I(ie? tb.cellSpacing || tb.currentStyle.borderSpacing :t.css('border-spacing'))||2;	//table cellspacing (not even jQuery is fully cross-browser)
+		t.b  = I(ie? tb.border || tb.currentStyle.borderLeftWidth :t.css('border-left-width'))||1;	//outer border width (again cross-browser isues)
+		// if(!(tb.style.width || tb.width)) t.width(t.width()); //I am not an IE fan at all, but it is a pitty that only IE has the currentStyle attribute working as expected. For this reason I can not check easily if the table has an explicit width or if it is rendered as "auto"
+		tables[id] = t; 	//the table object is stored using its id as key	
+		createGrips(t);		//grips are created
+	
+	};
+
+
+	/**
+	 * This function allows to remove any enhancements performed by this plugin on a previously processed table.
+	 * @param {jQuery ref} t - table object
+	 */
+	var destroy = function(t){
+		var id=t.attr(ID), t=tables[id];		//its table object is found
+		if(!t||!t.is("table")) return;			//if none, then it wasnt processed	 
+		t.removeClass(SIGNATURE).gc.remove();	//class and grips are removed
+		delete tables[id];						//clean up data
+	};
+
+
+	/**
+	 * Function to create all the grips associated with the table given by parameters 
+	 * @param {jQuery ref} t - table object
+	 */
+	var createGrips = function(t){	
+	
+		var th = t.find(">thead>tr>th,>thead>tr>td");	//if table headers are specified in its semantically correct tag, are obtained
+		if(!th.length) th = t.find(">tbody>tr:first>th,>tr:first>th,>tbody>tr:first>td, >tr:first>td");	 //but headers can also be included in different ways
+		t.cg = t.find("col"); 						//a table can also contain a colgroup with col elements		
+		t.ln = th.length;							//table length is stored	
+		if(t.p && S && S[t.id])memento(t,th);		//if 'postbackSafe' is enabled and there is data for the current table, its coloumn layout is restored
+		th.each(function(i){						//iterate through the table column headers			
+			var c = $(this); 						//jquery wrap for the current column			
+			var g = $(t.gc.append('<div class="JCLRgrip"></div>')[0].lastChild); //add the visual node to be used as grip
+			g.t = t; g.i = i; g.c = c;	c.w =c.width();		//some values are stored in the grip's node data
+			t.g.push(g); t.c.push(c);						//the current grip and column are added to its table object
+			c.width(c.w).removeAttr("width");				//the width of the column is converted into pixel-based measurements
+			if (i < t.ln-1) {
+				g.bind('touchstart mousedown', onGripMouseDown).append(t.opt.gripInnerHtml).append('<div class="'+SIGNATURE+'" style="cursor:'+t.opt.hoverCursor+'"></div>'); //bind the mousedown event to start dragging 
+			} else g.addClass("JCLRLastGrip").removeClass("JCLRgrip");	//the last grip is used only to store data			
+			g.data(SIGNATURE, {i:i, t:t.attr(ID)});						//grip index and its table name are stored in the HTML 												
+		}); 	
+		t.cg.removeAttr("width");	//remove the width attribute from elements in the colgroup (in any)
+		syncGrips(t); 				//the grips are positioned according to the current table layout			
+		//there is a small problem, some cells in the table could contain dimension values interfering with the 
+		//width value set by this plugin. Those values are removed
+		t.find('td, th').not(th).not('table th, table td').each(function(){  
+			$(this).removeAttr('width');	//the width attribute is removed from all table cells which are not nested in other tables and dont belong to the header
+		});		
+
+		
+	};
+	
+
+	/**
+	 * Function to allow the persistence of columns dimensions after a browser postback. It is based in
+	 * the HTML5 sessionStorage object, which can be emulated for older browsers using sessionstorage.js
+	 * @param {jQuery ref} t - table object
+	 * @param {jQuery ref} th - reference to the first row elements (only set in deserialization)
+	 */
+	var memento = function(t, th){ 
+		var w,m=0,i=0,aux =[];
+		if(th){										//in deserialization mode (after a postback)
+			t.cg.removeAttr("width");
+			if(t.opt.flush){ S[t.id] =""; return;} 	//if flush is activated, stored data is removed
+			w = S[t.id].split(";");					//column widths is obtained
+			for(;i<t.ln;i++){						//for each column
+				aux.push(100*w[i]/w[t.ln]+"%"); 	//width is stored in an array since it will be required again a couple of lines ahead
+				th.eq(i).css("width", aux[i] ); 	//each column width in % is resotred
+			}			
+			for(i=0;i<t.ln;i++)
+				t.cg.eq(i).css("width", aux[i]);	//this code is required in order to create an inline CSS rule with higher precedence than an existing CSS class in the "col" elements
+		}else{							//in serialization mode (after resizing a column)
+			S[t.id] ="";				//clean up previous data
+			for(;i < t.c.length; i++){		//iterate through columns
+			
+				w = t.c[i].width();		//width is obtained
+				S[t.id] += w+";";		//width is appended to the sessionStorage object using ID as key
+				m+=w;					//carriage is updated to obtain the full size used by columns
+			}
+			S[t.id]+=m;					//the last item of the serialized string is the table's active area (width), 
+										//to be able to obtain % width value of each columns while deserializing
+		}	
+	};
+	
+	
+	/**
+	 * Function that places each grip in the correct position according to the current table layout	 * 
+	 * @param {jQuery ref} t - table object
+	 */
+	var syncGrips = function (t){	
+		t.gc.width(t.w);			//the grip's container width is updated				
+		for(var i=0; i<t.ln; i++){	//for each column
+			var c = t.c[i]; 			
+			t.g[i].css({			//height and position of the grip is updated according to the table layout
+				left: c.offset().left - t.offset().left + c.outerWidth(false) + t.cs / 2 + PX,
+				height: t.opt.headerOnly? t.c[0].outerHeight(false) : t.outerHeight(false)				
+			});			
+		} 	
+	};
+	
+	
+	
+	/**
+	* This function updates column's width according to the horizontal position increment of the grip being
+	* dragged. The function can be called while dragging if liveDragging is enabled and also from the onGripDragOver
+	* event handler to synchronize grip's position with their related columns.
+	* @param {jQuery ref} t - table object
+	* @param {nunmber} i - index of the grip being dragged
+	* @param {bool} isOver - to identify when the function is being called from the onGripDragOver event	
+	*/
+	var syncCols = function(t,i,isOver){
+		var inc = drag.x-drag.l, c = t.c[i], c2 = t.c[i+1]; 			
+		var w = c.w + inc;	var w2= c2.w- inc;	//their new width is obtained					
+		c.width( w + PX);	c2.width(w2 + PX);	//and set	
+		t.cg.eq(i).width( w + PX); t.cg.eq(i+1).width( w2 + PX);
+		if(isOver){c.w=w; c2.w=w2;}
+	};
+
+	
+	/**
+	 * Event handler used while dragging a grip. It checks if the next grip's position is valid and updates it. 
+	 * @param {event} e - mousemove event binded to the window object
+	 */
+	var onGripDrag = function(e){	
+		if(!drag) return; var t = drag.t;		//table object reference 
+		
+		if (e.originalEvent.touches) {
+			var x = e.originalEvent.touches[0].pageX - drag.ox + drag.l;		//next position according to horizontal mouse position increment
+		} else {
+			var x = e.pageX - drag.ox + drag.l;		//next position according to horizontal mouse position increment
+		}
+		
+		
+			
+		var mw = t.opt.minWidth, i = drag.i ;	//cell's min width
+		var l = t.cs*1.5 + mw + t.b;
+
+		var max = i == t.ln-1? t.w-l: t.g[i+1].position().left-t.cs-mw; //max position according to the contiguous cells
+		var min = i? t.g[i-1].position().left+t.cs+mw: l;				//min position according to the contiguous cells
+		
+		x = M.max(min, M.min(max, x));						//apply boundings		
+		drag.x = x;	 drag.css("left",  x + PX); 			//apply position increment		
+			
+		if(t.opt.liveDrag){ 								//if liveDrag is enabled
+			syncCols(t,i); syncGrips(t);					//columns and grips are synchronized
+			var cb = t.opt.onDrag;							//check if there is an onDrag callback
+			if (cb) { e.currentTarget = t[0]; cb(e); }		//if any, it is fired			
+		}
+		
+		return false; 	//prevent text selection				
+	};
+	
+
+	/**
+	 * Event handler fired when the dragging is over, updating table layout
+	 */
+	var onGripDragOver = function(e){	
+		
+		d.unbind('touchend.'+SIGNATURE+' mouseup.'+SIGNATURE).unbind('touchmove.'+SIGNATURE+' mousemove.'+SIGNATURE);
+		$("head :last-child").remove(); 				//remove the dragging cursor style	
+		if(!drag) return;
+		drag.removeClass(drag.t.opt.draggingClass);		//remove the grip's dragging css-class
+		var t = drag.t;
+		var cb = t.opt.onResize; 			//get some values	
+		if(drag.x){ 									//only if the column width has been changed
+			syncCols(t,drag.i, true);	syncGrips(t);	//the columns and grips are updated
+			if (cb) { e.currentTarget = t[0]; cb(e); }	//if there is a callback function, it is fired
+		}
+		if(t.p && S) memento(t); 						//if postbackSafe is enabled and there is sessionStorage support, the new layout is serialized and stored
+		drag = null;									//since the grip's dragging is over									
+	};	
+	
+
+	/**
+	 * Event handler fired when the grip's dragging is about to start. Its main goal is to set up events 
+	 * and store some values used while dragging.
+	 * @param {event} e - grip's mousedown event
+	 */
+	var onGripMouseDown = function(e){
+		var o = $(this).data(SIGNATURE);			//retrieve grip's data
+		var t = tables[o.t],  g = t.g[o.i];			//shortcuts for the table and grip objects
+		if (e.originalEvent.touches) {
+			g.ox = e.originalEvent.touches[0].pageX;
+		} else {
+			g.ox = e.pageX;	//the initial position is kept
+		}
+		g.l = g.position().left;
+		d.bind('touchmove.'+SIGNATURE+' mousemove.'+SIGNATURE, onGripDrag).bind('touchend.'+SIGNATURE+' mouseup.'+SIGNATURE,onGripDragOver);	//mousemove and mouseup events are bound
+		h.append("<style type='text/css'>*{cursor:"+ t.opt.dragCursor +"!important}</style>"); 	//change the mouse cursor
+		g.addClass(t.opt.draggingClass); 	//add the dragging class (to allow some visual feedback)				
+		drag = g;							//the current grip is stored as the current dragging object
+		if(t.c[o.i].l) for(var i=0,c; i<t.ln; i++){ c=t.c[i]; c.l = false; c.w= c.width(); } 	//if the colum is locked (after browser resize), then c.w must be updated		
+		return false; 	//prevent text selection
+	};
+	
+	/**
+	 * Event handler fired when the browser is resized. The main purpose of this function is to update
+	 * table layout according to the browser's size synchronizing related grips 
+	 */
+	var onResize = function(){
+		for(t in tables){		
+			var t = tables[t], i, mw=0;				
+			t.removeClass(SIGNATURE);						//firefox doesnt like layout-fixed in some cases
+			if (t.w != t.width()) {							//if the the table's width has changed
+				t.w = t.width();							//its new value is kept
+				for(i=0; i<t.ln; i++) mw+= t.c[i].w;		//the active cells area is obtained
+				//cell rendering is not as trivial as it might seem, and it is slightly different for
+				//each browser. In the begining i had a big switch for each browser, but since the code
+				//was extremelly ugly now I use a different approach with several reflows. This works 
+				//pretty well but it's a bit slower. For now, lets keep things simple...   
+				for(i=0; i<t.ln; i++) t.c[i].css("width", M.round(1000*t.c[i].w/mw)/10 + "%").l=true; 
+				//c.l locks the column, telling us that its c.w is outdated									
+			}
+			syncGrips(t.addClass(SIGNATURE));
+		}
+	};		
+
+
+	//bind resize event, to update grips position 
+	$(window).bind('resize.'+SIGNATURE, onResize); 
+
+
+	/**
+	 * The plugin is added to the jQuery library
+	 * @param {Object} options -  an object containg some basic customization values 
+	 */
+    $.fn.extend({  
+        colResizable: function(options) {           
+            var defaults = {
+			
+				//attributes:
+                draggingClass: 'JCLRgripDrag',	//css-class used when a grip is being dragged (for visual feedback purposes)
+				gripInnerHtml: '',				//if it is required to use a custom grip it can be done using some custom HTML				
+				liveDrag: false,				//enables table-layout updaing while dragging			
+				minWidth: 15, 					//minimum width value in pixels allowed for a column 
+				headerOnly: false,				//specifies that the size of the the column resizing anchors will be bounded to the size of the first row 
+				hoverCursor: "e-resize",  		//cursor to be used on grip hover
+				dragCursor: "e-resize",  		//cursor to be used while dragging
+				postbackSafe: false, 			//when it is enabled, table layout can persist after postback. It requires browsers with sessionStorage support (it can be emulated with sessionStorage.js). Some browsers ony 
+				flush: false, 					//when postbakSafe is enabled, and it is required to prevent layout restoration after postback, 'flush' will remove its associated layout data 
+				marginLeft: null,				//in case the table contains any margins, colResizable needs to know the values used, e.g. "10%", "15em", "5px" ...
+				marginRight: null, 				//in case the table contains any margins, colResizable needs to know the values used, e.g. "10%", "15em", "5px" ...
+				disable: false,					//disables all the enhancements performed in a previously colResized table	
+				
+				//events:
+				onDrag: null, 					//callback function to be fired during the column resizing process if liveDrag is enabled
+				onResize: null					//callback function fired when the dragging process is over
+            }			
+			var options =  $.extend(defaults, options);			
+            return this.each(function() {				
+             	init( this, options);             
+            });
+        }
+    });
+
+
+},{"jquery":19}],4:[function(require,module,exports){
 /**
  * jQuery-csv (jQuery Plugin)
  * version: 0.71 (2012-11-19)
@@ -15477,7 +15792,7 @@ RegExp.escape= function(s) {
 
 })( jQuery );
 
-},{}],4:[function(require,module,exports){
+},{}],5:[function(require,module,exports){
 // Copyright Joyent, Inc. and other Node contributors.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
@@ -15780,7 +16095,7 @@ function isUndefined(arg) {
   return arg === void 0;
 }
 
-},{}],5:[function(require,module,exports){
+},{}],6:[function(require,module,exports){
 // CodeMirror, copyright (c) by Marijn Haverbeke and others
 // Distributed under an MIT license: http://codemirror.net/LICENSE
 
@@ -15902,7 +16217,7 @@ function isUndefined(arg) {
   });
 });
 
-},{"../../lib/codemirror":10}],6:[function(require,module,exports){
+},{"../../lib/codemirror":11}],7:[function(require,module,exports){
 // CodeMirror, copyright (c) by Marijn Haverbeke and others
 // Distributed under an MIT license: http://codemirror.net/LICENSE
 
@@ -16009,7 +16324,7 @@ CodeMirror.registerHelper("fold", "include", function(cm, start) {
 
 });
 
-},{"../../lib/codemirror":10}],7:[function(require,module,exports){
+},{"../../lib/codemirror":11}],8:[function(require,module,exports){
 // CodeMirror, copyright (c) by Marijn Haverbeke and others
 // Distributed under an MIT license: http://codemirror.net/LICENSE
 
@@ -16156,7 +16471,7 @@ CodeMirror.registerHelper("fold", "include", function(cm, start) {
   }
 });
 
-},{"../../lib/codemirror":10}],8:[function(require,module,exports){
+},{"../../lib/codemirror":11}],9:[function(require,module,exports){
 // CodeMirror, copyright (c) by Marijn Haverbeke and others
 // Distributed under an MIT license: http://codemirror.net/LICENSE
 
@@ -16292,7 +16607,7 @@ CodeMirror.registerHelper("fold", "include", function(cm, start) {
   }
 });
 
-},{"../../lib/codemirror":10,"./foldcode":7}],9:[function(require,module,exports){
+},{"../../lib/codemirror":11,"./foldcode":8}],10:[function(require,module,exports){
 // CodeMirror, copyright (c) by Marijn Haverbeke and others
 // Distributed under an MIT license: http://codemirror.net/LICENSE
 
@@ -16476,7 +16791,7 @@ CodeMirror.registerHelper("fold", "include", function(cm, start) {
   };
 });
 
-},{"../../lib/codemirror":10}],10:[function(require,module,exports){
+},{"../../lib/codemirror":11}],11:[function(require,module,exports){
 // CodeMirror, copyright (c) by Marijn Haverbeke and others
 // Distributed under an MIT license: http://codemirror.net/LICENSE
 
@@ -24400,7 +24715,7 @@ CodeMirror.registerHelper("fold", "include", function(cm, start) {
   return CodeMirror;
 });
 
-},{}],11:[function(require,module,exports){
+},{}],12:[function(require,module,exports){
 // CodeMirror, copyright (c) by Marijn Haverbeke and others
 // Distributed under an MIT license: http://codemirror.net/LICENSE
 
@@ -25086,7 +25401,7 @@ CodeMirror.defineMIME("application/typescript", { name: "javascript", typescript
 
 });
 
-},{"../../lib/codemirror":10}],12:[function(require,module,exports){
+},{"../../lib/codemirror":11}],13:[function(require,module,exports){
 // CodeMirror, copyright (c) by Marijn Haverbeke and others
 // Distributed under an MIT license: http://codemirror.net/LICENSE
 
@@ -25472,7 +25787,7 @@ if (!CodeMirror.mimeModes.hasOwnProperty("text/html"))
 
 });
 
-},{"../../lib/codemirror":10}],13:[function(require,module,exports){
+},{"../../lib/codemirror":11}],14:[function(require,module,exports){
 !function() {
   var d3 = {
     version: "3.5.2"
@@ -34943,7 +35258,7 @@ if (!CodeMirror.mimeModes.hasOwnProperty("text/html"))
   if (typeof define === "function" && define.amd) define(d3); else if (typeof module === "object" && module.exports) module.exports = d3;
   this.d3 = d3;
 }();
-},{}],14:[function(require,module,exports){
+},{}],15:[function(require,module,exports){
 var jQuery = require('jquery');
 
 /*!
@@ -35267,7 +35582,7 @@ $.extend( $.ui, {
 
 })( jQuery );
 
-},{"jquery":18}],15:[function(require,module,exports){
+},{"jquery":19}],16:[function(require,module,exports){
 var jQuery = require('jquery');
 require('./widget');
 
@@ -35441,7 +35756,7 @@ $.widget("ui.mouse", {
 
 })(jQuery);
 
-},{"./widget":17,"jquery":18}],16:[function(require,module,exports){
+},{"./widget":18,"jquery":19}],17:[function(require,module,exports){
 var jQuery = require('jquery');
 require('./core');
 require('./mouse');
@@ -36737,7 +37052,7 @@ $.widget("ui.sortable", $.ui.mouse, {
 
 })(jQuery);
 
-},{"./core":14,"./mouse":15,"./widget":17,"jquery":18}],17:[function(require,module,exports){
+},{"./core":15,"./mouse":16,"./widget":18,"jquery":19}],18:[function(require,module,exports){
 var jQuery = require('jquery');
 
 /*!
@@ -37262,7 +37577,7 @@ $.each( { show: "fadeIn", hide: "fadeOut" }, function( method, defaultEffect ) {
 
 })( jQuery );
 
-},{"jquery":18}],18:[function(require,module,exports){
+},{"jquery":19}],19:[function(require,module,exports){
 /*!
  * jQuery JavaScript Library v1.11.1
  * http://jquery.com/
@@ -47572,7 +47887,7 @@ return jQuery;
 
 }));
 
-},{}],19:[function(require,module,exports){
+},{}],20:[function(require,module,exports){
 // Generated by CoffeeScript 1.4.0
 (function() {
 
@@ -47667,7 +47982,7 @@ return jQuery;
 
 }).call(this);
 
-},{"jquery":18}],20:[function(require,module,exports){
+},{"jquery":19}],21:[function(require,module,exports){
 // Generated by CoffeeScript 1.4.0
 (function() {
 
@@ -47790,7 +48105,7 @@ return jQuery;
 
 }).call(this);
 
-},{"jquery":18}],21:[function(require,module,exports){
+},{"jquery":19}],22:[function(require,module,exports){
 // Generated by CoffeeScript 1.4.0
 (function() {
   var __indexOf = [].indexOf || function(item) { for (var i = 0, l = this.length; i < l; i++) { if (i in this && this[i] === item) return i; } return -1; },
@@ -49143,7 +49458,7 @@ return jQuery;
 
 }).call(this);
 
-},{"jquery":18}],22:[function(require,module,exports){
+},{"jquery":19}],23:[function(require,module,exports){
 ;(function(win){
 	var store = {},
 		doc = win.document,
@@ -49320,7 +49635,7 @@ return jQuery;
 
 })(Function('return this')());
 
-},{}],23:[function(require,module,exports){
+},{}],24:[function(require,module,exports){
 module.exports={
   "name": "yasgui-utils",
   "version": "1.5.0",
@@ -49353,7 +49668,7 @@ module.exports={
   }
 }
 
-},{}],24:[function(require,module,exports){
+},{}],25:[function(require,module,exports){
 window.console = window.console || {"log":function(){}};//make sure any console statements don't break IE
 module.exports = {
 	storage: require("./storage.js"),
@@ -49363,7 +49678,7 @@ module.exports = {
 	}
 };
 
-},{"../package.json":23,"./storage.js":25,"./svg.js":26}],25:[function(require,module,exports){
+},{"../package.json":24,"./storage.js":26,"./svg.js":27}],26:[function(require,module,exports){
 var store = require("store");
 var times = {
 	day: function() {
@@ -49412,7 +49727,7 @@ var root = module.exports = {
 
 };
 
-},{"store":22}],26:[function(require,module,exports){
+},{"store":23}],27:[function(require,module,exports){
 module.exports = {
 	draw: function(parent, svgString) {
 		if (!parent) return;
@@ -49441,11 +49756,11 @@ module.exports = {
 		return false;
 	}
 };
-},{}],27:[function(require,module,exports){
+},{}],28:[function(require,module,exports){
 module.exports={
   "name": "yasgui-yasr",
   "description": "Yet Another SPARQL Resultset GUI",
-  "version": "2.4.0",
+  "version": "2.4.1",
   "main": "src/main.js",
   "licenses": [
     {
@@ -49558,7 +49873,7 @@ module.exports={
   }
 }
 
-},{}],28:[function(require,module,exports){
+},{}],29:[function(require,module,exports){
 'use strict';
 module.exports = function(result) {
 	var quote = "\"";
@@ -49618,7 +49933,7 @@ module.exports = function(result) {
 	createBody();
 	return csvString;
 };
-},{}],29:[function(require,module,exports){
+},{}],30:[function(require,module,exports){
 'use strict';
 var $ = require("jquery");
 
@@ -49678,7 +49993,7 @@ root.version = {
 };
 
 
-},{"../package.json":27,"./imgs.js":34,"jquery":18,"yasgui-utils":24}],30:[function(require,module,exports){
+},{"../package.json":28,"./imgs.js":35,"jquery":19,"yasgui-utils":25}],31:[function(require,module,exports){
 'use strict';
 var $ = require('jquery');
 module.exports = {
@@ -49774,7 +50089,7 @@ module.exports = {
 	
 	
 };
-},{"jquery":18}],31:[function(require,module,exports){
+},{"jquery":19}],32:[function(require,module,exports){
 'use strict';
 var $ = require("jquery");
 
@@ -49840,7 +50155,7 @@ var root = module.exports = function(yasr) {
 root.defaults = {
 	
 };
-},{"jquery":18}],32:[function(require,module,exports){
+},{"jquery":19}],33:[function(require,module,exports){
 (function (global){
 var EventEmitter = require('events').EventEmitter,
 	$ = require('jquery');
@@ -49950,7 +50265,7 @@ module.exports = new loader();
 
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"events":4,"jquery":18}],33:[function(require,module,exports){
+},{"events":5,"jquery":19}],34:[function(require,module,exports){
 (function (global){
 'use strict';
 /**
@@ -50204,7 +50519,7 @@ function deepEq$(x, y, type){
   }
 }
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"./gChartLoader.js":32,"./utils.js":45,"jquery":18,"yasgui-utils":24}],34:[function(require,module,exports){
+},{"./gChartLoader.js":33,"./utils.js":46,"jquery":19,"yasgui-utils":25}],35:[function(require,module,exports){
 'use strict';
 module.exports = {
 	cross: '<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" x="0px" y="0px" width="30px" height="30px" viewBox="0 0 100 100" enable-background="new 0 0 100 100" xml:space="preserve"><g>	<path d="M83.288,88.13c-2.114,2.112-5.575,2.112-7.689,0L53.659,66.188c-2.114-2.112-5.573-2.112-7.687,0L24.251,87.907   c-2.113,2.114-5.571,2.114-7.686,0l-4.693-4.691c-2.114-2.114-2.114-5.573,0-7.688l21.719-21.721c2.113-2.114,2.113-5.573,0-7.686   L11.872,24.4c-2.114-2.113-2.114-5.571,0-7.686l4.842-4.842c2.113-2.114,5.571-2.114,7.686,0L46.12,33.591   c2.114,2.114,5.572,2.114,7.688,0l21.721-21.719c2.114-2.114,5.573-2.114,7.687,0l4.695,4.695c2.111,2.113,2.111,5.571-0.003,7.686   L66.188,45.973c-2.112,2.114-2.112,5.573,0,7.686L88.13,75.602c2.112,2.111,2.112,5.572,0,7.687L83.288,88.13z"/></g></svg>',
@@ -50217,7 +50532,7 @@ module.exports = {
 	fullscreen: '<svg   xmlns:dc="http://purl.org/dc/elements/1.1/"   xmlns:cc="http://creativecommons.org/ns#"   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"   xmlns:svg="http://www.w3.org/2000/svg"   xmlns="http://www.w3.org/2000/svg"   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"   version="1.1"      x="0px"   y="0px"   width="100%"   height="100%"   viewBox="5 -10 74.074074 100"   enable-background="new 0 0 100 100"   xml:space="preserve"   inkscape:version="0.48.4 r9939"   sodipodi:docname="noun_2186_cc.svg"><metadata     ><rdf:RDF><cc:Work         rdf:about=""><dc:format>image/svg+xml</dc:format><dc:type           rdf:resource="http://purl.org/dc/dcmitype/StillImage" /></cc:Work></rdf:RDF></metadata><defs      /><sodipodi:namedview     pagecolor="#ffffff"     bordercolor="#666666"     borderopacity="1"     objecttolerance="10"     gridtolerance="10"     guidetolerance="10"     inkscape:pageopacity="0"     inkscape:pageshadow="2"     inkscape:window-width="640"     inkscape:window-height="480"          showgrid="false"     fit-margin-top="0"     fit-margin-left="0"     fit-margin-right="0"     fit-margin-bottom="0"     inkscape:zoom="2.36"     inkscape:cx="44.101509"     inkscape:cy="31.481481"     inkscape:window-x="65"     inkscape:window-y="24"     inkscape:window-maximized="0"     inkscape:current-layer="Layer_1" /><path     d="m -7.962963,-10 v 38.889 l 16.667,-16.667 16.667,16.667 5.555,-5.555 -16.667,-16.667 16.667,-16.667 h -38.889 z"          inkscape:connector-curvature="0"     style="fill:#010101" /><path     d="m 92.037037,-10 v 38.889 l -16.667,-16.667 -16.666,16.667 -5.556,-5.555 16.666,-16.667 -16.666,-16.667 h 38.889 z"          inkscape:connector-curvature="0"     style="fill:#010101" /><path     d="M -7.962963,90 V 51.111 l 16.667,16.666 16.667,-16.666 5.555,5.556 -16.667,16.666 16.667,16.667 h -38.889 z"          inkscape:connector-curvature="0"     style="fill:#010101" /><path     d="M 92.037037,90 V 51.111 l -16.667,16.666 -16.666,-16.666 -5.556,5.556 16.666,16.666 -16.666,16.667 h 38.889 z"          inkscape:connector-curvature="0"     style="fill:#010101" /></svg>',
 	smallscreen: '<svg   xmlns:dc="http://purl.org/dc/elements/1.1/"   xmlns:cc="http://creativecommons.org/ns#"   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"   xmlns:svg="http://www.w3.org/2000/svg"   xmlns="http://www.w3.org/2000/svg"   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"   version="1.1"      x="0px"   y="0px"   width="100%"   height="100%"   viewBox="5 -10 74.074074 100"   enable-background="new 0 0 100 100"   xml:space="preserve"   inkscape:version="0.48.4 r9939"   sodipodi:docname="noun_2186_cc.svg"><metadata     ><rdf:RDF><cc:Work         rdf:about=""><dc:format>image/svg+xml</dc:format><dc:type           rdf:resource="http://purl.org/dc/dcmitype/StillImage" /></cc:Work></rdf:RDF></metadata><defs      /><sodipodi:namedview     pagecolor="#ffffff"     bordercolor="#666666"     borderopacity="1"     objecttolerance="10"     gridtolerance="10"     guidetolerance="10"     inkscape:pageopacity="0"     inkscape:pageshadow="2"     inkscape:window-width="1855"     inkscape:window-height="1056"          showgrid="false"     fit-margin-top="0"     fit-margin-left="0"     fit-margin-right="0"     fit-margin-bottom="0"     inkscape:zoom="2.36"     inkscape:cx="44.101509"     inkscape:cy="31.481481"     inkscape:window-x="65"     inkscape:window-y="24"     inkscape:window-maximized="1"     inkscape:current-layer="Layer_1" /><path     d="m 30.926037,28.889 0,-38.889 -16.667,16.667 -16.667,-16.667 -5.555,5.555 16.667,16.667 -16.667,16.667 38.889,0 z"          inkscape:connector-curvature="0"     style="fill:#010101" /><path     d="m 53.148037,28.889 0,-38.889 16.667,16.667 16.666,-16.667 5.556,5.555 -16.666,16.667 16.666,16.667 -38.889,0 z"          inkscape:connector-curvature="0"     style="fill:#010101" /><path     d="m 30.926037,51.111 0,38.889 -16.667,-16.666 -16.667,16.666 -5.555,-5.556 16.667,-16.666 -16.667,-16.667 38.889,0 z"          inkscape:connector-curvature="0"     style="fill:#010101" /><path     d="m 53.148037,51.111 0,38.889 16.667,-16.666 16.666,16.666 5.556,-5.556 -16.666,-16.666 16.666,-16.667 -38.889,0 z"          inkscape:connector-curvature="0"     style="fill:#010101" /></svg>',
 };
-},{}],35:[function(require,module,exports){
+},{}],36:[function(require,module,exports){
 'use strict';
 var $ = require("jquery");
 var utils = require("yasgui-utils");
@@ -50240,6 +50555,7 @@ var root = module.exports = function(parent, options, queryResults) {
 	
 	var yasr = {};
 	yasr.options = $.extend(true, {}, root.defaults, options);
+	
 	yasr.container = $("<div class='yasr'></div>").appendTo(parent);
 	yasr.header = $("<div class='yasr_header'></div>").appendTo(yasr.container);
 	yasr.resultsContainer = $("<div class='yasr_results'></div>").appendTo(yasr.container);
@@ -50272,6 +50588,7 @@ var root = module.exports = function(parent, options, queryResults) {
 	//first initialize plugins
 	yasr.plugins = {};
 	for (var pluginName in root.plugins) {
+		if (!yasr.options.useGoogleCharts && pluginName == "gchart") continue; 
 		yasr.plugins[pluginName] = new root.plugins[pluginName](yasr);
 	}
 	
@@ -50520,14 +50837,14 @@ try {root.registerOutput('rawResponse', require("./rawResponse.js"))} catch(e){}
 try {root.registerOutput('table', require("./table.js"))} catch(e){};
 try {root.registerOutput('error', require("./error.js"))} catch(e){};
 try {root.registerOutput('pivot', require("./pivot.js"))} catch(e){};
-if (root.defaults.useGoogleCharts) try {root.registerOutput('gchart', require("./gchart.js"))} catch(e){};
-},{"../package.json":27,"./boolean.js":29,"./defaults.js":30,"./error.js":31,"./gChartLoader.js":32,"./gchart.js":33,"./imgs.js":34,"./parsers/wrapper.js":40,"./pivot.js":42,"./rawResponse.js":43,"./table.js":44,"jquery":18,"yasgui-utils":24}],36:[function(require,module,exports){
+try {root.registerOutput('gchart', require("./gchart.js"))} catch(e){};
+},{"../package.json":28,"./boolean.js":30,"./defaults.js":31,"./error.js":32,"./gChartLoader.js":33,"./gchart.js":34,"./imgs.js":35,"./parsers/wrapper.js":41,"./pivot.js":43,"./rawResponse.js":44,"./table.js":45,"jquery":19,"yasgui-utils":25}],37:[function(require,module,exports){
 'use strict';
 var $ = require("jquery");
 var root = module.exports = function(queryResponse) {
 	return require("./dlv.js")(queryResponse, ",");
 };
-},{"./dlv.js":37,"jquery":18}],37:[function(require,module,exports){
+},{"./dlv.js":38,"jquery":19}],38:[function(require,module,exports){
 'use strict';
 var $ = jQuery = require('jquery');
 require("../../lib/jquery.csv-0.71.js");
@@ -50589,7 +50906,7 @@ var root = module.exports = function(queryResponse, separator) {
 	
 	return json;
 };
-},{"../../lib/jquery.csv-0.71.js":3,"jquery":18}],38:[function(require,module,exports){
+},{"../../lib/jquery.csv-0.71.js":4,"jquery":19}],39:[function(require,module,exports){
 'use strict';
 var $ = require("jquery");
 var root = module.exports = function(queryResponse) {
@@ -50607,13 +50924,13 @@ var root = module.exports = function(queryResponse) {
 	return false;
 	
 };
-},{"jquery":18}],39:[function(require,module,exports){
+},{"jquery":19}],40:[function(require,module,exports){
 'use strict';
 var $ = require("jquery");
 var root = module.exports = function(queryResponse) {
 	return require("./dlv.js")(queryResponse, "\t");
 };
-},{"./dlv.js":37,"jquery":18}],40:[function(require,module,exports){
+},{"./dlv.js":38,"jquery":19}],41:[function(require,module,exports){
 'use strict';
 var $ = require("jquery");
 
@@ -50847,7 +51164,7 @@ var root = module.exports = function(dataOrJqXhr, textStatus, jqXhrOrErrorString
 
 
 
-},{"./csv.js":36,"./json.js":38,"./tsv.js":39,"./xml.js":41,"jquery":18}],41:[function(require,module,exports){
+},{"./csv.js":37,"./json.js":39,"./tsv.js":40,"./xml.js":42,"jquery":19}],42:[function(require,module,exports){
 'use strict';
 var $ = require("jquery");
 var root = module.exports = function(xml) {
@@ -50933,7 +51250,7 @@ var root = module.exports = function(xml) {
 	return json;
 };
 
-},{"jquery":18}],42:[function(require,module,exports){
+},{"jquery":19}],43:[function(require,module,exports){
 'use strict';
 var $ = require("jquery"),
 	utils = require('./utils.js'),
@@ -51155,7 +51472,7 @@ root.version = {
 	"YASR-rawResponse" : require("../package.json").version,
 	"jquery": $.fn.jquery,
 };
-},{"../node_modules/pivottable/dist/d3_renderers.js":19,"../node_modules/pivottable/dist/gchart_renderers.js":20,"../package.json":27,"./gChartLoader.js":32,"./imgs.js":34,"./utils.js":45,"d3":13,"jquery":18,"jquery-ui/sortable":16,"pivottable":21,"yasgui-utils":24}],43:[function(require,module,exports){
+},{"../node_modules/pivottable/dist/d3_renderers.js":20,"../node_modules/pivottable/dist/gchart_renderers.js":21,"../package.json":28,"./gChartLoader.js":33,"./imgs.js":35,"./utils.js":46,"d3":14,"jquery":19,"jquery-ui/sortable":17,"pivottable":22,"yasgui-utils":25}],44:[function(require,module,exports){
 'use strict';
 var $ = require("jquery"),
 	CodeMirror = require("codemirror");
@@ -51244,12 +51561,13 @@ root.version = {
 	"jquery": $.fn.jquery,
 	"CodeMirror" : CodeMirror.version
 };
-},{"../package.json":27,"codemirror":10,"codemirror/addon/edit/matchbrackets.js":5,"codemirror/addon/fold/brace-fold.js":6,"codemirror/addon/fold/foldcode.js":7,"codemirror/addon/fold/foldgutter.js":8,"codemirror/addon/fold/xml-fold.js":9,"codemirror/mode/javascript/javascript.js":11,"codemirror/mode/xml/xml.js":12,"jquery":18}],44:[function(require,module,exports){
+},{"../package.json":28,"codemirror":11,"codemirror/addon/edit/matchbrackets.js":6,"codemirror/addon/fold/brace-fold.js":7,"codemirror/addon/fold/foldcode.js":8,"codemirror/addon/fold/foldgutter.js":9,"codemirror/addon/fold/xml-fold.js":10,"codemirror/mode/javascript/javascript.js":12,"codemirror/mode/xml/xml.js":13,"jquery":19}],45:[function(require,module,exports){
 'use strict';
 var $ = require("jquery"),
 	yutils = require("yasgui-utils"),
 	imgs = require('./imgs.js');
 require("../lib/DataTables/media/js/jquery.dataTables.js");
+require("../lib/colResizable-1.4.js");
 
 
 
@@ -51366,6 +51684,9 @@ var root = module.exports = function(yasr) {
 			.css("margin-bottom", "-" + headerHeight + "px");
 		}
 		
+		//finally, make the columns dragable:
+		table.colResizable();
+		
 		
 	};
 	
@@ -51376,10 +51697,8 @@ var root = module.exports = function(yasr) {
 			"sorting_desc": "sortDesc"
 		};
 		table.find(".sortIcons").remove();
-		var width = 8;
-		var height = 13;
 		for (var sorting in sortings) {
-			var svgDiv = $("<div class='sortIcons'></div>").css("float", "right").css("margin-right", "-12px").width(width).height(height);
+			var svgDiv = $("<div class='sortIcons'></div>");
 			yutils.svg.draw(svgDiv, imgs[sortings[sorting]]);
 			table.find("th." + sorting).append(svgDiv);
 		}
@@ -51453,7 +51772,7 @@ var getCellContent = function(yasr, plugin, bindings, sparqlVar, context) {
 	} else {
 		value = "<span class='nonUri'>" + formatLiteral(yasr, plugin, binding) + "</span>";
 	}
-	return value;
+	return "<div>" + value + "</div>";
 };
 
 
@@ -51525,7 +51844,7 @@ root.defaults = {
 		var cols = [];
 		cols.push({"title": ""});//row numbers column
 		yasr.results.getVariables().forEach(function(variable) {
-			cols.push({"title": variable, "visible": includeVariable(variable)});
+			cols.push({"title": "<span>" + variable + "</span>", "visible": includeVariable(variable)});
 		});
 		return cols;
 	},
@@ -51582,6 +51901,7 @@ root.defaults = {
 	 * @type object
 	 */
 	datatable: {
+		"autoWidth": false,
 		"order": [],//disable initial sorting
 		"pageLength": 50,//default page length
     	"lengthMenu": [[10, 50, 100, 1000, -1], [10, 50, 100, 1000, "All"]],//possible page lengths
@@ -51607,7 +51927,7 @@ root.defaults = {
         	}
 		},
 		"columnDefs": [
-			{ "width": "12px", "orderable": false, "targets": 0  }//disable row sorting for first col
+			{ "width": "32px", "orderable": false, "targets": 0  }//disable row sorting for first col
 		],
 	},
 };
@@ -51618,7 +51938,7 @@ root.version = {
 	"jquery-datatables": $.fn.DataTable.version
 };
 
-},{"../lib/DataTables/media/js/jquery.dataTables.js":2,"../package.json":27,"./bindingsToCsv.js":28,"./imgs.js":34,"jquery":18,"yasgui-utils":24}],45:[function(require,module,exports){
+},{"../lib/DataTables/media/js/jquery.dataTables.js":2,"../lib/colResizable-1.4.js":3,"../package.json":28,"./bindingsToCsv.js":29,"./imgs.js":35,"jquery":19,"yasgui-utils":25}],46:[function(require,module,exports){
 'use strict';
 var $ = require('jquery');
 module.exports = {
@@ -51693,7 +52013,7 @@ module.exports = {
 		}
 	},
 };
-},{"jquery":18}]},{},[1])(1)
+},{"jquery":19}]},{},[1])(1)
 });
 
 
