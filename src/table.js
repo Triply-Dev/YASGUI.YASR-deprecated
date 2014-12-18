@@ -111,17 +111,23 @@ var root = module.exports = function(yasr) {
 		
 		addEvents();
 		
+		//finally, make the columns dragable:
+		table.colResizable();
+		//and: make sure the height of the resize handlers matches the height of the table header
+		var thHeight = table.find('thead').outerHeight();
+		$(yasr.resultsContainer).find('.JCLRgrip').height(table.find('thead').outerHeight());
+		
 		//move the table upward, so the table options nicely aligns with the yasr header
 		var headerHeight = yasr.header.outerHeight() - 5; //add some space of 5 px between table and yasr header
 		if (headerHeight > 0) {
 			yasr.resultsContainer.find(".dataTables_wrapper")
-			.css("position", "relative")
-			.css("top", "-" + headerHeight + "px")
-			.css("margin-bottom", "-" + headerHeight + "px");
+				.css("position", "relative")
+				.css("top", "-" + headerHeight + "px")
+				.css("margin-bottom", "-" + headerHeight + "px");
+			
+			//and: make sure the height of the resize handlers matches the height of the table header
+			$(yasr.resultsContainer).find('.JCLRgrip').css('marginTop', headerHeight + 'px');
 		}
-		
-		//finally, make the columns dragable:
-		table.colResizable();
 		
 		
 	};
