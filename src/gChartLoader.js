@@ -42,7 +42,8 @@ var loader = function() {
 			checkAndWait();
 		} else {
 			if (require('google')) {
-				mod.emit('initError');
+				//already loaded! everything is fine
+				mod.emit('initDone');
 			} else if (loadingFailed) {
 				mod.emit('initError')
 			} else {
