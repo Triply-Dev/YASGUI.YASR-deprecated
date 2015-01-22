@@ -140,7 +140,7 @@ var root = module.exports = function(yasr) {
 			/**
 			 * post process
 			 */
-			//use 'move' handler for variables
+			//use 'move' handler for variables. This removes the 'filter' button though. Might want to re-enable this in the future
 			var icon = $(yUtils.svg.getElement(imgs.move));
 			$pivotWrapper.find('.pvtTriangle').replaceWith(icon);
 			
