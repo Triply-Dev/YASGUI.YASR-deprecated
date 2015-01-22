@@ -71,4 +71,19 @@ module.exports = {
 			}
 		}
 	},
+	fireClick : function($els) {
+		if (!$els)
+			return;
+		$els.each(function(i, el) {
+			var $el = $(el);
+			if (document.dispatchEvent) { // W3C
+				var oEvent = document.createEvent("MouseEvents");
+				oEvent.initMouseEvent("click", true, true, window, 1, 1, 1, 1, 1,
+						false, false, false, false, 0, $el[0]);
+				$el[0].dispatchEvent(oEvent);
+			} else if (document.fireEvent) { // IE
+				$el[0].click();
+			}
+		});
+	}
 };

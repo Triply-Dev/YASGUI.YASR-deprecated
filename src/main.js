@@ -243,10 +243,13 @@ var drawHeader = function(yasr) {
 				if (currentPlugin && currentPlugin.getDownloadInfo) {
 					var downloadInfo = currentPlugin.getDownloadInfo();
 					var downloadUrl = stringToUrl(downloadInfo.getContent(), (downloadInfo.contentType? downloadInfo.contentType: "text/plain"));
-					var downloadMockLink = $("<a></a>");
-					downloadMockLink.attr("href", downloadUrl);
-					downloadMockLink.attr("download", downloadInfo.filename);
-					downloadMockLink.get(0).click();
+					var downloadMockLink = $("<a></a>",
+							{
+						href: downloadUrl,
+						download: downloadInfo.filename
+					});
+					require('./utils.js').fireClick(downloadMockLink);
+//					downloadMockLink[0].click();
 				}
 			});
 		yasr.header.append(button);
