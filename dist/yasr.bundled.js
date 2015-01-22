@@ -16871,6 +16871,7 @@ CodeMirror.registerHelper("fold", "include", function(cm, start) {
     if (options.lineWrapping)
       this.display.wrapper.className += " CodeMirror-wrap";
     if (options.autofocus && !mobile) focusInput(this);
+    initScrollbars(this);
 
     this.state = {
       keyMaps: [],  // stores maps added by addKeyMap
@@ -16931,14 +16932,13 @@ CodeMirror.registerHelper("fold", "include", function(cm, start) {
 
     // Wraps and hides input textarea
     d.inputDiv = elt("div", [input], null, "overflow: hidden; position: relative; width: 3px; height: 0px;");
-    // The fake scrollbar elements.
-    d.scrollbarH = elt("div", [elt("div", null, null, "height: 100%; min-height: 1px")], "CodeMirror-hscrollbar");
-    d.scrollbarV = elt("div", [elt("div", null, null, "min-width: 1px")], "CodeMirror-vscrollbar");
     // Covers bottom-right square when both scrollbars are present.
     d.scrollbarFiller = elt("div", null, "CodeMirror-scrollbar-filler");
+    d.scrollbarFiller.setAttribute("not-content", "true");
     // Covers bottom of gutter when coverGutterNextToScrollbar is on
     // and h scrollbar is present.
     d.gutterFiller = elt("div", null, "CodeMirror-gutter-filler");
+    d.gutterFiller.setAttribute("not-content", "true");
     // Will contain the actual code, positioned to cover the viewport.
     d.lineDiv = elt("div", null, "CodeMirror-code");
     // Elements are added to these to represent selection and cursors.
@@ -16955,10 +16955,11 @@ CodeMirror.registerHelper("fold", "include", function(cm, start) {
     d.mover = elt("div", [elt("div", [d.lineSpace], "CodeMirror-lines")], null, "position: relative");
     // Set to the height of the document, allowing scrolling.
     d.sizer = elt("div", [d.mover], "CodeMirror-sizer");
+    d.sizerWidth = null;
     // Behavior of elts with overflow: auto and padding is
     // inconsistent across browsers. This is used to ensure the
     // scrollable area is big enough.
-    d.heightForcer = elt("div", null, null, "position: absolute; height: " + scrollerCutOff + "px; width: 1px;");
+    d.heightForcer = elt("div", null, null, "position: absolute; height: " + scrollerGap + "px; width: 1px;");
     // Will contain the gutters, if any.
     d.gutters = elt("div", null, "CodeMirror-gutters");
     d.lineGutter = null;
@@ -16966,8 +16967,7 @@ CodeMirror.registerHelper("fold", "include", function(cm, start) {
     d.scroller = elt("div", [d.sizer, d.heightForcer, d.gutters], "CodeMirror-scroll");
     d.scroller.setAttribute("tabIndex", "-1");
     // The element in which the editor lives.
-    d.wrapper = elt("div", [d.inputDiv, d.scrollbarH, d.scrollbarV,
-                            d.scrollbarFiller, d.gutterFiller, d.scroller], "CodeMirror");
+    d.wrapper = elt("div", [d.inputDiv, d.scrollbarFiller, d.gutterFiller, d.scroller], "CodeMirror");
 
     // Work around IE7 z-index bug (not perfect, hence IE7 not really being supported)
     if (ie && ie_version < 8) { d.gutters.style.zIndex = -1; d.scroller.style.paddingRight = 0; }
@@ -16976,8 +16976,6 @@ CodeMirror.registerHelper("fold", "include", function(cm, start) {
     if (!webkit) d.scroller.draggable = true;
     // Needed to handle Tab key in KHTML
     if (khtml) { d.inputDiv.style.height = "1px"; d.inputDiv.style.position = "absolute"; }
-    // Need to set a minimum width to see the scrollbar on IE7 (but must not set it on IE8).
-    if (ie && ie_version < 8) d.scrollbarH.style.minHeight = d.scrollbarV.style.minWidth = "18px";
 
     if (place) {
       if (place.appendChild) place.appendChild(d.wrapper);
@@ -16986,8 +16984,10 @@ CodeMirror.registerHelper("fold", "include", function(cm, start) {
 
     // Current rendered range (may be bigger than the view window).
     d.viewFrom = d.viewTo = doc.first;
+    d.reportedViewFrom = d.reportedViewTo = doc.first;
     // Information about the rendered lines.
     d.view = [];
+    d.renderedView = null;
     // Holds info about a single rendered line when it was rendered
     // for measurement, while not in view.
     d.externalMeasured = null;
@@ -16995,6 +16995,9 @@ CodeMirror.registerHelper("fold", "include", function(cm, start) {
     d.viewOffset = 0;
     d.lastWrapHeight = d.lastWrapWidth = 0;
     d.updateLineNumbers = null;
+
+    d.nativeBarWidth = d.barHeight = d.barWidth = 0;
+    d.scrollbarsClipped = false;
 
     // Used to only resize the line number gutter when necessary (when
     // the amount of lines crosses a boundary that makes its width change)
@@ -17059,6 +17062,7 @@ CodeMirror.registerHelper("fold", "include", function(cm, start) {
     if (cm.options.lineWrapping) {
       addClass(cm.display.wrapper, "CodeMirror-wrap");
       cm.display.sizer.style.minWidth = "";
+      cm.display.sizerWidth = null;
     } else {
       rmClass(cm.display.wrapper, "CodeMirror-wrap");
       findMaxLine(cm);
@@ -17130,7 +17134,6 @@ CodeMirror.registerHelper("fold", "include", function(cm, start) {
   function updateGutterSpace(cm) {
     var width = cm.display.gutters.offsetWidth;
     cm.display.sizer.style.marginLeft = width + "px";
-    cm.display.scrollbarH.style.left = cm.options.fixedGutter ? width + "px" : 0;
   }
 
   // Compute the character length of a line, taking into account
@@ -17183,78 +17186,166 @@ CodeMirror.registerHelper("fold", "include", function(cm, start) {
 
   // SCROLLBARS
 
-  function hScrollbarTakesSpace(cm) {
-    return cm.display.scroller.clientHeight - cm.display.wrapper.clientHeight < scrollerCutOff - 3;
-  }
-
   // Prepare DOM reads needed to update the scrollbars. Done in one
   // shot to minimize update/measure roundtrips.
   function measureForScrollbars(cm) {
-    var scroll = cm.display.scroller;
+    var d = cm.display, gutterW = d.gutters.offsetWidth;
+    var docH = Math.round(cm.doc.height + paddingVert(cm.display));
     return {
-      clientHeight: scroll.clientHeight,
-      barHeight: cm.display.scrollbarV.clientHeight,
-      scrollWidth: scroll.scrollWidth, clientWidth: scroll.clientWidth,
-      hScrollbarTakesSpace: hScrollbarTakesSpace(cm),
-      barWidth: cm.display.scrollbarH.clientWidth,
-      docHeight: Math.round(cm.doc.height + paddingVert(cm.display))
+      clientHeight: d.scroller.clientHeight,
+      viewHeight: d.wrapper.clientHeight,
+      scrollWidth: d.scroller.scrollWidth, clientWidth: d.scroller.clientWidth,
+      viewWidth: d.wrapper.clientWidth,
+      barLeft: cm.options.fixedGutter ? gutterW : 0,
+      docHeight: docH,
+      scrollHeight: docH + scrollGap(cm) + d.barHeight,
+      nativeBarWidth: d.nativeBarWidth,
+      gutterWidth: gutterW
     };
+  }
+
+  function NativeScrollbars(place, scroll, cm) {
+    this.cm = cm;
+    var vert = this.vert = elt("div", [elt("div", null, null, "min-width: 1px")], "CodeMirror-vscrollbar");
+    var horiz = this.horiz = elt("div", [elt("div", null, null, "height: 100%; min-height: 1px")], "CodeMirror-hscrollbar");
+    place(vert); place(horiz);
+
+    on(vert, "scroll", function() {
+      if (vert.clientHeight) scroll(vert.scrollTop, "vertical");
+    });
+    on(horiz, "scroll", function() {
+      if (horiz.clientWidth) scroll(horiz.scrollLeft, "horizontal");
+    });
+
+    this.checkedOverlay = false;
+    // Need to set a minimum width to see the scrollbar on IE7 (but must not set it on IE8).
+    if (ie && ie_version < 8) this.horiz.style.minHeight = this.vert.style.minWidth = "18px";
+  }
+
+  NativeScrollbars.prototype = copyObj({
+    update: function(measure) {
+      var needsH = measure.scrollWidth > measure.clientWidth + 1;
+      var needsV = measure.scrollHeight > measure.clientHeight + 1;
+      var sWidth = measure.nativeBarWidth;
+
+      if (needsV) {
+        this.vert.style.display = "block";
+        this.vert.style.bottom = needsH ? sWidth + "px" : "0";
+        var totalHeight = measure.viewHeight - (needsH ? sWidth : 0);
+        // A bug in IE8 can cause this value to be negative, so guard it.
+        this.vert.firstChild.style.height =
+          Math.max(0, measure.scrollHeight - measure.clientHeight + totalHeight) + "px";
+      } else {
+        this.vert.style.display = "";
+        this.vert.firstChild.style.height = "0";
+      }
+
+      if (needsH) {
+        this.horiz.style.display = "block";
+        this.horiz.style.right = needsV ? sWidth + "px" : "0";
+        this.horiz.style.left = measure.barLeft + "px";
+        var totalWidth = measure.viewWidth - measure.barLeft - (needsV ? sWidth : 0);
+        this.horiz.firstChild.style.width =
+          (measure.scrollWidth - measure.clientWidth + totalWidth) + "px";
+      } else {
+        this.horiz.style.display = "";
+        this.horiz.firstChild.style.width = "0";
+      }
+
+      if (!this.checkedOverlay && measure.clientHeight > 0) {
+        if (sWidth == 0) this.overlayHack();
+        this.checkedOverlay = true;
+      }
+
+      return {right: needsV ? sWidth : 0, bottom: needsH ? sWidth : 0};
+    },
+    setScrollLeft: function(pos) {
+      if (this.horiz.scrollLeft != pos) this.horiz.scrollLeft = pos;
+    },
+    setScrollTop: function(pos) {
+      if (this.vert.scrollTop != pos) this.vert.scrollTop = pos;
+    },
+    overlayHack: function() {
+      var w = mac && !mac_geMountainLion ? "12px" : "18px";
+      this.horiz.style.minHeight = this.vert.style.minWidth = w;
+      var self = this;
+      var barMouseDown = function(e) {
+        if (e_target(e) != self.vert && e_target(e) != self.horiz)
+          operation(self.cm, onMouseDown)(e);
+      };
+      on(this.vert, "mousedown", barMouseDown);
+      on(this.horiz, "mousedown", barMouseDown);
+    },
+    clear: function() {
+      var parent = this.horiz.parentNode;
+      parent.removeChild(this.horiz);
+      parent.removeChild(this.vert);
+    }
+  }, NativeScrollbars.prototype);
+
+  function NullScrollbars() {}
+
+  NullScrollbars.prototype = copyObj({
+    update: function() { return {bottom: 0, right: 0}; },
+    setScrollLeft: function() {},
+    setScrollTop: function() {},
+    clear: function() {}
+  }, NullScrollbars.prototype);
+
+  CodeMirror.scrollbarModel = {"native": NativeScrollbars, "null": NullScrollbars};
+
+  function initScrollbars(cm) {
+    if (cm.display.scrollbars) {
+      cm.display.scrollbars.clear();
+      if (cm.display.scrollbars.addClass)
+        rmClass(cm.display.wrapper, cm.display.scrollbars.addClass);
+    }
+
+    cm.display.scrollbars = new CodeMirror.scrollbarModel[cm.options.scrollbarStyle](function(node) {
+      cm.display.wrapper.insertBefore(node, cm.display.scrollbarFiller);
+      on(node, "mousedown", function() {
+        if (cm.state.focused) setTimeout(bind(focusInput, cm), 0);
+      });
+      node.setAttribute("not-content", "true");
+    }, function(pos, axis) {
+      if (axis == "horizontal") setScrollLeft(cm, pos);
+      else setScrollTop(cm, pos);
+    }, cm);
+    if (cm.display.scrollbars.addClass)
+      addClass(cm.display.wrapper, cm.display.scrollbars.addClass);
+  }
+
+  function updateScrollbars(cm, measure) {
+    if (!measure) measure = measureForScrollbars(cm);
+    var startWidth = cm.display.barWidth, startHeight = cm.display.barHeight;
+    updateScrollbarsInner(cm, measure);
+    for (var i = 0; i < 4 && startWidth != cm.display.barWidth || startHeight != cm.display.barHeight; i++) {
+      if (startWidth != cm.display.barWidth && cm.options.lineWrapping)
+        updateHeightsInViewport(cm);
+      updateScrollbarsInner(cm, measureForScrollbars(cm));
+      startWidth = cm.display.barWidth; startHeight = cm.display.barHeight;
+    }
   }
 
   // Re-synchronize the fake scrollbars with the actual size of the
   // content.
-  function updateScrollbars(cm, measure) {
-    if (!measure) measure = measureForScrollbars(cm);
-    var d = cm.display, sWidth = scrollbarWidth(d.measure);
-    var scrollHeight = measure.docHeight + scrollerCutOff;
-    var needsH = measure.scrollWidth > measure.clientWidth;
-    if (needsH && measure.scrollWidth <= measure.clientWidth + 1 &&
-        sWidth > 0 && !measure.hScrollbarTakesSpace)
-      needsH = false; // (Issue #2562)
-    var needsV = scrollHeight > measure.clientHeight;
+  function updateScrollbarsInner(cm, measure) {
+    var d = cm.display;
+    var sizes = d.scrollbars.update(measure);
 
-    if (needsV) {
-      d.scrollbarV.style.display = "block";
-      d.scrollbarV.style.bottom = needsH ? sWidth + "px" : "0";
-      // A bug in IE8 can cause this value to be negative, so guard it.
-      d.scrollbarV.firstChild.style.height =
-        Math.max(0, scrollHeight - measure.clientHeight + (measure.barHeight || d.scrollbarV.clientHeight)) + "px";
-    } else {
-      d.scrollbarV.style.display = "";
-      d.scrollbarV.firstChild.style.height = "0";
-    }
-    if (needsH) {
-      d.scrollbarH.style.display = "block";
-      d.scrollbarH.style.right = needsV ? sWidth + "px" : "0";
-      d.scrollbarH.firstChild.style.width =
-        (measure.scrollWidth - measure.clientWidth + (measure.barWidth || d.scrollbarH.clientWidth)) + "px";
-    } else {
-      d.scrollbarH.style.display = "";
-      d.scrollbarH.firstChild.style.width = "0";
-    }
-    if (needsH && needsV) {
+    d.sizer.style.paddingRight = (d.barWidth = sizes.right) + "px";
+    d.sizer.style.paddingBottom = (d.barHeight = sizes.bottom) + "px";
+
+    if (sizes.right && sizes.bottom) {
       d.scrollbarFiller.style.display = "block";
-      d.scrollbarFiller.style.height = d.scrollbarFiller.style.width = sWidth + "px";
+      d.scrollbarFiller.style.height = sizes.bottom + "px";
+      d.scrollbarFiller.style.width = sizes.right + "px";
     } else d.scrollbarFiller.style.display = "";
-    if (needsH && cm.options.coverGutterNextToScrollbar && cm.options.fixedGutter) {
+    if (sizes.bottom && cm.options.coverGutterNextToScrollbar && cm.options.fixedGutter) {
       d.gutterFiller.style.display = "block";
-      d.gutterFiller.style.height = sWidth + "px";
-      d.gutterFiller.style.width = d.gutters.offsetWidth + "px";
+      d.gutterFiller.style.height = sizes.bottom + "px";
+      d.gutterFiller.style.width = measure.gutterWidth + "px";
     } else d.gutterFiller.style.display = "";
-
-    if (!cm.state.checkedOverlayScrollbar && measure.clientHeight > 0) {
-      if (sWidth === 0) {
-        var w = mac && !mac_geMountainLion ? "12px" : "18px";
-        d.scrollbarV.style.minWidth = d.scrollbarH.style.minHeight = w;
-        var barMouseDown = function(e) {
-          if (e_target(e) != d.scrollbarV && e_target(e) != d.scrollbarH)
-            operation(cm, onMouseDown)(e);
-        };
-        on(d.scrollbarV, "mousedown", barMouseDown);
-        on(d.scrollbarH, "mousedown", barMouseDown);
-      }
-      cm.state.checkedOverlayScrollbar = true;
-    }
   }
 
   // Compute the lines that are visible in a given viewport (defaults
@@ -17270,12 +17361,13 @@ CodeMirror.registerHelper("fold", "include", function(cm, start) {
     // forces those lines into the viewport (if possible).
     if (viewport && viewport.ensure) {
       var ensureFrom = viewport.ensure.from.line, ensureTo = viewport.ensure.to.line;
-      if (ensureFrom < from)
-        return {from: ensureFrom,
-                to: lineAtHeight(doc, heightAtLine(getLine(doc, ensureFrom)) + display.wrapper.clientHeight)};
-      if (Math.min(ensureTo, doc.lastLine()) >= to)
-        return {from: lineAtHeight(doc, heightAtLine(getLine(doc, ensureTo)) - display.wrapper.clientHeight),
-                to: ensureTo};
+      if (ensureFrom < from) {
+        from = ensureFrom;
+        to = lineAtHeight(doc, heightAtLine(getLine(doc, ensureFrom)) + display.wrapper.clientHeight);
+      } else if (Math.min(ensureTo, doc.lastLine()) >= to) {
+        from = lineAtHeight(doc, heightAtLine(getLine(doc, ensureTo)) - display.wrapper.clientHeight);
+        to = ensureTo;
+      }
     }
     return {from: from, to: Math.max(to, from + 1)};
   }
@@ -17343,10 +17435,20 @@ CodeMirror.registerHelper("fold", "include", function(cm, start) {
     this.editorIsHidden = !display.wrapper.offsetWidth;
     this.wrapperHeight = display.wrapper.clientHeight;
     this.wrapperWidth = display.wrapper.clientWidth;
-    this.oldViewFrom = display.viewFrom; this.oldViewTo = display.viewTo;
-    this.oldScrollerWidth = display.scroller.clientWidth;
+    this.oldDisplayWidth = displayWidth(cm);
     this.force = force;
     this.dims = getDimensions(cm);
+  }
+
+  function maybeClipScrollbars(cm) {
+    var display = cm.display;
+    if (!display.scrollbarsClipped && display.scroller.offsetWidth) {
+      display.nativeBarWidth = display.scroller.offsetWidth - display.scroller.clientWidth;
+      display.heightForcer.style.height = scrollGap(cm) + "px";
+      display.sizer.style.marginBottom = -display.nativeBarWidth + "px";
+      display.sizer.style.borderRightWidth = scrollGap(cm) + "px";
+      display.scrollbarsClipped = true;
+    }
   }
 
   // Does the actual updating of the line display. Bails out
@@ -17354,6 +17456,7 @@ CodeMirror.registerHelper("fold", "include", function(cm, start) {
   // false.
   function updateDisplayIfNeeded(cm, update) {
     var display = cm.display, doc = cm.doc;
+
     if (update.editorIsHidden) {
       resetView(cm);
       return false;
@@ -17363,7 +17466,7 @@ CodeMirror.registerHelper("fold", "include", function(cm, start) {
     if (!update.force &&
         update.visible.from >= display.viewFrom && update.visible.to <= display.viewTo &&
         (display.updateLineNumbers == null || display.updateLineNumbers >= display.viewTo) &&
-        countDirtyView(cm) == 0)
+        display.renderedView == display.view && countDirtyView(cm) == 0)
       return false;
 
     if (maybeUpdateLineNumberWidth(cm)) {
@@ -17391,7 +17494,7 @@ CodeMirror.registerHelper("fold", "include", function(cm, start) {
     cm.display.mover.style.top = display.viewOffset + "px";
 
     var toUpdate = countDirtyView(cm);
-    if (!different && toUpdate == 0 && !update.force &&
+    if (!different && toUpdate == 0 && !update.force && display.renderedView == display.view &&
         (display.updateLineNumbers == null || display.updateLineNumbers >= display.viewTo))
       return false;
 
@@ -17401,14 +17504,16 @@ CodeMirror.registerHelper("fold", "include", function(cm, start) {
     if (toUpdate > 4) display.lineDiv.style.display = "none";
     patchDisplay(cm, display.updateLineNumbers, update.dims);
     if (toUpdate > 4) display.lineDiv.style.display = "";
+    display.renderedView = display.view;
     // There might have been a widget with a focused element that got
     // hidden or updated, if so re-focus it.
     if (focused && activeElt() != focused && focused.offsetHeight) focused.focus();
 
     // Prevent selection and cursors from interfering with the scroll
-    // width.
+    // width and height.
     removeChildren(display.cursorDiv);
     removeChildren(display.selectionDiv);
+    display.gutters.style.height = 0;
 
     if (different) {
       display.lastWrapHeight = update.wrapperHeight;
@@ -17424,14 +17529,13 @@ CodeMirror.registerHelper("fold", "include", function(cm, start) {
   function postUpdateDisplay(cm, update) {
     var force = update.force, viewport = update.viewport;
     for (var first = true;; first = false) {
-      if (first && cm.options.lineWrapping && update.oldScrollerWidth != cm.display.scroller.clientWidth) {
+      if (first && cm.options.lineWrapping && update.oldDisplayWidth != displayWidth(cm)) {
         force = true;
       } else {
         force = false;
         // Clip forced viewport to actual scrollable area.
         if (viewport && viewport.top != null)
-          viewport = {top: Math.min(cm.doc.height + paddingVert(cm.display) - scrollerCutOff -
-                                    cm.display.scroller.clientHeight, viewport.top)};
+          viewport = {top: Math.min(cm.doc.height + paddingVert(cm.display) - displayHeight(cm), viewport.top)};
         // Updated line heights might result in the drawn area not
         // actually covering the viewport. Keep looping until it does.
         update.visible = visibleLines(cm.display, cm.doc, viewport);
@@ -17447,8 +17551,10 @@ CodeMirror.registerHelper("fold", "include", function(cm, start) {
     }
 
     signalLater(cm, "update", cm);
-    if (cm.display.viewFrom != update.oldViewFrom || cm.display.viewTo != update.oldViewTo)
+    if (cm.display.viewFrom != cm.display.reportedViewFrom || cm.display.viewTo != cm.display.reportedViewTo) {
       signalLater(cm, "viewportChange", cm, cm.display.viewFrom, cm.display.viewTo);
+      cm.display.reportedViewFrom = cm.display.viewFrom; cm.display.reportedViewTo = cm.display.viewTo;
+    }
   }
 
   function updateDisplaySimple(cm, viewport) {
@@ -17464,17 +17570,10 @@ CodeMirror.registerHelper("fold", "include", function(cm, start) {
   }
 
   function setDocumentHeight(cm, measure) {
-    cm.display.sizer.style.minHeight = cm.display.heightForcer.style.top = measure.docHeight + "px";
-    cm.display.gutters.style.height = Math.max(measure.docHeight, measure.clientHeight - scrollerCutOff) + "px";
-  }
-
-  function checkForWebkitWidthBug(cm, measure) {
-    // Work around Webkit bug where it sometimes reserves space for a
-    // non-existing phantom scrollbar in the scroller (Issue #2420)
-    if (cm.display.sizer.offsetWidth + cm.display.gutters.offsetWidth < cm.display.scroller.clientWidth - 1) {
-      cm.display.sizer.style.minHeight = cm.display.heightForcer.style.top = "0px";
-      cm.display.gutters.style.height = measure.docHeight + "px";
-    }
+    cm.display.sizer.style.minHeight = measure.docHeight + "px";
+    var total = measure.docHeight + cm.display.barHeight;
+    cm.display.heightForcer.style.top = total + "px";
+    cm.display.gutters.style.height = Math.max(total + scrollGap(cm), measure.clientHeight) + "px";
   }
 
   // Read the actual heights of the rendered lines, and update their
@@ -17718,7 +17817,7 @@ CodeMirror.registerHelper("fold", "include", function(cm, start) {
     var wrap = ensureLineWrapped(lineView);
     for (var i = 0, ws = line.widgets; i < ws.length; ++i) {
       var widget = ws[i], node = elt("div", [widget.node], "CodeMirror-linewidget");
-      if (!widget.handleMouseEvents) node.ignoreEvents = true;
+      if (!widget.handleMouseEvents) node.setAttribute("cm-ignore-events", "true");
       positionLineWidget(widget, node, lineView, dims);
       if (allowAbove && widget.above)
         wrap.insertBefore(node, lineView.gutter || lineView.text);
@@ -18113,7 +18212,8 @@ CodeMirror.registerHelper("fold", "include", function(cm, start) {
   function drawSelectionRange(cm, range, output) {
     var display = cm.display, doc = cm.doc;
     var fragment = document.createDocumentFragment();
-    var padding = paddingH(cm.display), leftSide = padding.left, rightSide = display.lineSpace.offsetWidth - padding.right;
+    var padding = paddingH(cm.display), leftSide = padding.left;
+    var rightSide = Math.max(display.sizerWidth, displayWidth(cm) - display.sizer.offsetLeft) - padding.right;
 
     function add(left, top, width, bottom) {
       if (top < 0) top = 0;
@@ -18292,13 +18392,21 @@ CodeMirror.registerHelper("fold", "include", function(cm, start) {
     return data;
   }
 
+  function scrollGap(cm) { return scrollerGap - cm.display.nativeBarWidth; }
+  function displayWidth(cm) {
+    return cm.display.scroller.clientWidth - scrollGap(cm) - cm.display.barWidth;
+  }
+  function displayHeight(cm) {
+    return cm.display.scroller.clientHeight - scrollGap(cm) - cm.display.barHeight;
+  }
+
   // Ensure the lineView.wrapping.heights array is populated. This is
   // an array of bottom offsets for the lines that make up a drawn
   // line. When lineWrapping is on, there might be more than one
   // height.
   function ensureLineHeights(cm, lineView, rect) {
     var wrapping = cm.options.lineWrapping;
-    var curWidth = wrapping && cm.display.scroller.clientWidth;
+    var curWidth = wrapping && displayWidth(cm);
     if (!lineView.measure.heights || wrapping && lineView.measure.width != curWidth) {
       var heights = lineView.measure.heights = [];
       if (wrapping) {
@@ -18816,6 +18924,7 @@ CodeMirror.registerHelper("fold", "include", function(cm, start) {
 
   function endOperation_R1(op) {
     var cm = op.cm, display = cm.display;
+    maybeClipScrollbars(cm);
     if (op.updateMaxLine) findMaxLine(cm);
 
     op.mustUpdate = op.viewChanged || op.forceUpdate || op.scrollTop != null ||
@@ -18841,8 +18950,10 @@ CodeMirror.registerHelper("fold", "include", function(cm, start) {
     // updateDisplay_W2 will use these properties to do the actual resizing
     if (display.maxLineChanged && !cm.options.lineWrapping) {
       op.adjustWidthTo = measureChar(cm, display.maxLine, display.maxLine.text.length).left + 3;
-      op.maxScrollLeft = Math.max(0, display.sizer.offsetLeft + op.adjustWidthTo +
-                                  scrollerCutOff - display.scroller.clientWidth);
+      cm.display.sizerWidth = op.adjustWidthTo;
+      op.barMeasure.scrollWidth =
+        Math.max(display.scroller.clientWidth, display.sizer.offsetLeft + op.adjustWidthTo + scrollGap(cm) + cm.display.barWidth);
+      op.maxScrollLeft = Math.max(0, display.sizer.offsetLeft + op.adjustWidthTo - displayWidth(cm));
     }
 
     if (op.updatedDisplay || op.selectionChanged)
@@ -18875,9 +18986,6 @@ CodeMirror.registerHelper("fold", "include", function(cm, start) {
   function endOperation_finish(op) {
     var cm = op.cm, display = cm.display, doc = cm.doc;
 
-    if (op.adjustWidthTo != null && Math.abs(op.barMeasure.scrollWidth - cm.display.scroller.scrollWidth) > 1)
-      updateScrollbars(cm);
-
     if (op.updatedDisplay) postUpdateDisplay(cm, op.update);
 
     // Abort mouse wheel delta measurement, when scrolling explicitly
@@ -18886,12 +18994,14 @@ CodeMirror.registerHelper("fold", "include", function(cm, start) {
 
     // Propagate the scroll position to the actual DOM scroller
     if (op.scrollTop != null && (display.scroller.scrollTop != op.scrollTop || op.forceScroll)) {
-      var top = Math.max(0, Math.min(display.scroller.scrollHeight - display.scroller.clientHeight, op.scrollTop));
-      display.scroller.scrollTop = display.scrollbarV.scrollTop = doc.scrollTop = top;
+      doc.scrollTop = Math.max(0, Math.min(display.scroller.scrollHeight - display.scroller.clientHeight, op.scrollTop));
+      display.scrollbars.setScrollTop(doc.scrollTop);
+      display.scroller.scrollTop = doc.scrollTop;
     }
     if (op.scrollLeft != null && (display.scroller.scrollLeft != op.scrollLeft || op.forceScroll)) {
-      var left = Math.max(0, Math.min(display.scroller.scrollWidth - display.scroller.clientWidth, op.scrollLeft));
-      display.scroller.scrollLeft = display.scrollbarH.scrollLeft = doc.scrollLeft = left;
+      doc.scrollLeft = Math.max(0, Math.min(display.scroller.scrollWidth - displayWidth(cm), op.scrollLeft));
+      display.scrollbars.setScrollLeft(doc.scrollLeft);
+      display.scroller.scrollLeft = doc.scrollLeft;
       alignHorizontally(cm);
     }
     // If we need to scroll a specific position into view, do so.
@@ -18911,16 +19021,6 @@ CodeMirror.registerHelper("fold", "include", function(cm, start) {
 
     if (display.wrapper.offsetHeight)
       doc.scrollTop = cm.display.scroller.scrollTop;
-
-    // Apply workaround for two webkit bugs
-    if (op.updatedDisplay && webkit) {
-      if (cm.options.lineWrapping)
-        checkForWebkitWidthBug(cm, op.barMeasure); // (Issue #2420)
-      if (op.barMeasure.scrollWidth > op.barMeasure.clientWidth &&
-          op.barMeasure.scrollWidth < op.barMeasure.clientWidth + 1 &&
-          !hScrollbarTakesSpace(cm))
-        updateScrollbars(cm); // (Issue #2562)
-    }
 
     // Fire change events, and delayed event handlers
     if (op.changeObjs)
@@ -19280,6 +19380,7 @@ CodeMirror.registerHelper("fold", "include", function(cm, start) {
   // Reset the input to correspond to the selection (or to be empty,
   // when not typing and nothing is selected)
   function resetInput(cm, typing) {
+    if (cm.display.contextMenuPending) return;
     var minimal, selected, doc = cm.doc;
     if (cm.somethingSelected()) {
       cm.display.prevInput = "";
@@ -19346,28 +19447,18 @@ CodeMirror.registerHelper("fold", "include", function(cm, start) {
         signal(cm, "scroll", cm);
       }
     });
-    on(d.scrollbarV, "scroll", function() {
-      if (d.scroller.clientHeight) setScrollTop(cm, d.scrollbarV.scrollTop);
-    });
-    on(d.scrollbarH, "scroll", function() {
-      if (d.scroller.clientHeight) setScrollLeft(cm, d.scrollbarH.scrollLeft);
-    });
 
     // Listen to wheel events in order to try and update the viewport on time.
     on(d.scroller, "mousewheel", function(e){onScrollWheel(cm, e);});
     on(d.scroller, "DOMMouseScroll", function(e){onScrollWheel(cm, e);});
 
-    // Prevent clicks in the scrollbars from killing focus
-    function reFocus() { if (cm.state.focused) setTimeout(bind(focusInput, cm), 0); }
-    on(d.scrollbarH, "mousedown", reFocus);
-    on(d.scrollbarV, "mousedown", reFocus);
     // Prevent wrapper from ever scrolling
     on(d.wrapper, "scroll", function() { d.wrapper.scrollTop = d.wrapper.scrollLeft = 0; });
 
     on(d.input, "keyup", function(e) { onKeyUp.call(cm, e); });
     on(d.input, "input", function() {
       if (ie && ie_version >= 9 && cm.display.inputHasSelection) cm.display.inputHasSelection = null;
-      fastPoll(cm);
+      readInput(cm);
     });
     on(d.input, "keydown", operation(cm, onKeyDown));
     on(d.input, "keypress", operation(cm, onKeyPress));
@@ -19453,6 +19544,7 @@ CodeMirror.registerHelper("fold", "include", function(cm, start) {
       return;
     // Might be a text scaling operation, clear size caches.
     d.cachedCharWidth = d.cachedTextHeight = d.cachedPaddingH = null;
+    d.scrollbarsClipped = false;
     cm.setSize();
   }
 
@@ -19461,7 +19553,7 @@ CodeMirror.registerHelper("fold", "include", function(cm, start) {
   // Return true when the given mouse event happened in a widget
   function eventInWidget(display, e) {
     for (var n = e_target(e); n != display.wrapper; n = n.parentNode) {
-      if (!n || n.ignoreEvents || n.parentNode == display.sizer && n != display.mover) return true;
+      if (!n || n.getAttribute("cm-ignore-events") == "true" || n.parentNode == display.sizer && n != display.mover) return true;
     }
   }
 
@@ -19472,11 +19564,8 @@ CodeMirror.registerHelper("fold", "include", function(cm, start) {
   // coordinates beyond the right of the text.
   function posFromMouse(cm, e, liberal, forRect) {
     var display = cm.display;
-    if (!liberal) {
-      var target = e_target(e);
-      if (target == display.scrollbarH || target == display.scrollbarV ||
-          target == display.scrollbarFiller || target == display.gutterFiller) return null;
-    }
+    if (!liberal && e_target(e).getAttribute("not-content") == "true") return null;
+
     var x, y, space = display.lineSpace.getBoundingClientRect();
     // Fails unpredictably on IE[67] when mouse is dragged around quickly.
     try { x = e.clientX - space.left; y = e.clientY - space.top; }
@@ -19546,9 +19635,10 @@ CodeMirror.registerHelper("fold", "include", function(cm, start) {
       lastClick = {time: now, pos: start};
     }
 
-    var sel = cm.doc.sel, modifier = mac ? e.metaKey : e.ctrlKey;
+    var sel = cm.doc.sel, modifier = mac ? e.metaKey : e.ctrlKey, contained;
     if (cm.options.dragDrop && dragAndDrop && !isReadOnly(cm) &&
-        type == "single" && sel.contains(start) > -1 && sel.somethingSelected())
+        type == "single" && (contained = sel.contains(start)) > -1 &&
+        !sel.ranges[contained].empty())
       leftButtonStartDrag(cm, e, start, modifier);
     else
       leftButtonSelect(cm, e, start, type, modifier);
@@ -19587,11 +19677,11 @@ CodeMirror.registerHelper("fold", "include", function(cm, start) {
     var display = cm.display, doc = cm.doc;
     e_preventDefault(e);
 
-    var ourRange, ourIndex, startSel = doc.sel;
+    var ourRange, ourIndex, startSel = doc.sel, ranges = startSel.ranges;
     if (addNew && !e.shiftKey) {
       ourIndex = doc.sel.contains(start);
       if (ourIndex > -1)
-        ourRange = doc.sel.ranges[ourIndex];
+        ourRange = ranges[ourIndex];
       else
         ourRange = new Range(start, start);
     } else {
@@ -19623,12 +19713,15 @@ CodeMirror.registerHelper("fold", "include", function(cm, start) {
       ourIndex = 0;
       setSelection(doc, new Selection([ourRange], 0), sel_mouse);
       startSel = doc.sel;
-    } else if (ourIndex > -1) {
-      replaceOneSelection(doc, ourIndex, ourRange, sel_mouse);
-    } else {
-      ourIndex = doc.sel.ranges.length;
-      setSelection(doc, normalizeSelection(doc.sel.ranges.concat([ourRange]), ourIndex),
+    } else if (ourIndex == -1) {
+      ourIndex = ranges.length;
+      setSelection(doc, normalizeSelection(ranges.concat([ourRange]), ourIndex),
                    {scroll: false, origin: "*mouse"});
+    } else if (ranges.length > 1 && ranges[ourIndex].empty() && type == "single") {
+      setSelection(doc, normalizeSelection(ranges.slice(0, ourIndex).concat(ranges.slice(ourIndex + 1)), 0));
+      startSel = doc.sel;
+    } else {
+      replaceOneSelection(doc, ourIndex, ourRange, sel_mouse);
     }
 
     var lastPos = start;
@@ -19834,7 +19927,7 @@ CodeMirror.registerHelper("fold", "include", function(cm, start) {
     cm.doc.scrollTop = val;
     if (!gecko) updateDisplaySimple(cm, {top: val});
     if (cm.display.scroller.scrollTop != val) cm.display.scroller.scrollTop = val;
-    if (cm.display.scrollbarV.scrollTop != val) cm.display.scrollbarV.scrollTop = val;
+    cm.display.scrollbars.setScrollTop(val);
     if (gecko) updateDisplaySimple(cm);
     startWorker(cm, 100);
   }
@@ -19846,7 +19939,7 @@ CodeMirror.registerHelper("fold", "include", function(cm, start) {
     cm.doc.scrollLeft = val;
     alignHorizontally(cm);
     if (cm.display.scroller.scrollLeft != val) cm.display.scroller.scrollLeft = val;
-    if (cm.display.scrollbarH.scrollLeft != val) cm.display.scrollbarH.scrollLeft = val;
+    cm.display.scrollbars.setScrollLeft(val);
   }
 
   // Since the delta values reported on mouse wheel events are
@@ -19870,11 +19963,22 @@ CodeMirror.registerHelper("fold", "include", function(cm, start) {
   else if (chrome) wheelPixelsPerUnit = -.7;
   else if (safari) wheelPixelsPerUnit = -1/3;
 
-  function onScrollWheel(cm, e) {
+  var wheelEventDelta = function(e) {
     var dx = e.wheelDeltaX, dy = e.wheelDeltaY;
     if (dx == null && e.detail && e.axis == e.HORIZONTAL_AXIS) dx = e.detail;
     if (dy == null && e.detail && e.axis == e.VERTICAL_AXIS) dy = e.detail;
     else if (dy == null) dy = e.wheelDelta;
+    return {x: dx, y: dy};
+  };
+  CodeMirror.wheelEventPixels = function(e) {
+    var delta = wheelEventDelta(e);
+    delta.x *= wheelPixelsPerUnit;
+    delta.y *= wheelPixelsPerUnit;
+    return delta;
+  };
+
+  function onScrollWheel(cm, e) {
+    var delta = wheelEventDelta(e), dx = delta.x, dy = delta.y;
 
     var display = cm.display, scroll = display.scroller;
     // Quit if there's nothing to scroll here
@@ -19967,11 +20071,11 @@ CodeMirror.registerHelper("fold", "include", function(cm, start) {
 
   function lookupKeyForEditor(cm, name, handle) {
     for (var i = 0; i < cm.state.keyMaps.length; i++) {
-      var result = lookupKey(name, cm.state.keyMaps[i], handle);
+      var result = lookupKey(name, cm.state.keyMaps[i], handle, cm);
       if (result) return result;
     }
-    return (cm.options.extraKeys && lookupKey(name, cm.options.extraKeys, handle))
-      || lookupKey(name, cm.options.keyMap, handle);
+    return (cm.options.extraKeys && lookupKey(name, cm.options.extraKeys, handle, cm))
+      || lookupKey(name, cm.options.keyMap, handle, cm);
   }
 
   var stopSeq = new Delayed;
@@ -20145,6 +20249,7 @@ CodeMirror.registerHelper("fold", "include", function(cm, start) {
     resetInput(cm);
     // Adds "Select all" to context menu in FF
     if (!cm.somethingSelected()) display.input.value = display.prevInput = " ";
+    display.contextMenuPending = true;
     display.selForContextMenu = cm.doc.sel;
     clearTimeout(display.detectingSelectAll);
 
@@ -20163,9 +20268,10 @@ CodeMirror.registerHelper("fold", "include", function(cm, start) {
       }
     }
     function rehide() {
+      display.contextMenuPending = false;
       display.inputDiv.style.position = "relative";
       display.input.style.cssText = oldCSS;
-      if (ie && ie_version < 9) display.scrollbarV.scrollTop = display.scroller.scrollTop = scrollPos;
+      if (ie && ie_version < 9) display.scrollbars.setScrollTop(display.scroller.scrollTop = scrollPos);
       slowPoll(cm);
 
       // Try to detect the user choosing select-all
@@ -20515,7 +20621,7 @@ CodeMirror.registerHelper("fold", "include", function(cm, start) {
     if (doScroll != null && !phantom) {
       var scrollNode = elt("div", "\u200b", null, "position: absolute; top: " +
                            (coords.top - display.viewOffset - paddingTop(cm.display)) + "px; height: " +
-                           (coords.bottom - coords.top + scrollerCutOff) + "px; left: " +
+                           (coords.bottom - coords.top + scrollGap(cm) + display.barHeight) + "px; left: " +
                            coords.left + "px; width: 2px;");
       cm.display.lineSpace.appendChild(scrollNode);
       scrollNode.scrollIntoView(doScroll);
@@ -20544,8 +20650,9 @@ CodeMirror.registerHelper("fold", "include", function(cm, start) {
         setScrollLeft(cm, scrollPos.scrollLeft);
         if (Math.abs(cm.doc.scrollLeft - startLeft) > 1) changed = true;
       }
-      if (!changed) return coords;
+      if (!changed) break;
     }
+    return coords;
   }
 
   // Scroll a given set of coordinates into view (immediately).
@@ -20563,7 +20670,7 @@ CodeMirror.registerHelper("fold", "include", function(cm, start) {
     var display = cm.display, snapMargin = textHeight(cm.display);
     if (y1 < 0) y1 = 0;
     var screentop = cm.curOp && cm.curOp.scrollTop != null ? cm.curOp.scrollTop : display.scroller.scrollTop;
-    var screen = display.scroller.clientHeight - scrollerCutOff, result = {};
+    var screen = displayHeight(cm), result = {};
     if (y2 - y1 > screen) y2 = y1 + screen;
     var docBottom = cm.doc.height + paddingVert(display);
     var atTop = y1 < snapMargin, atBottom = y2 > docBottom - snapMargin;
@@ -20575,7 +20682,7 @@ CodeMirror.registerHelper("fold", "include", function(cm, start) {
     }
 
     var screenleft = cm.curOp && cm.curOp.scrollLeft != null ? cm.curOp.scrollLeft : display.scroller.scrollLeft;
-    var screenw = display.scroller.clientWidth - scrollerCutOff - display.gutters.offsetWidth;
+    var screenw = displayWidth(cm) - (cm.options.fixedGutter ? display.gutters.offsetWidth : 0);
     var tooWide = x2 - x1 > screenw;
     if (tooWide) x2 = x1 + screenw;
     if (x1 < 10)
@@ -20584,7 +20691,6 @@ CodeMirror.registerHelper("fold", "include", function(cm, start) {
       result.scrollLeft = Math.max(0, x1 - (tooWide ? 0 : 10));
     else if (x2 > screenw + screenleft - 3)
       result.scrollLeft = x2 + (tooWide ? 0 : 10) - screenw;
-
     return result;
   }
 
@@ -21039,6 +21145,7 @@ CodeMirror.registerHelper("fold", "include", function(cm, start) {
       pos = cursorCoords(this, clipPos(this.doc, pos));
       var top = pos.bottom, left = pos.left;
       node.style.position = "absolute";
+      node.setAttribute("cm-ignore-events", "true");
       display.sizer.appendChild(node);
       if (vert == "over") {
         top = pos.top;
@@ -21173,10 +21280,11 @@ CodeMirror.registerHelper("fold", "include", function(cm, start) {
       if (y != null) this.curOp.scrollTop = y;
     }),
     getScrollInfo: function() {
-      var scroller = this.display.scroller, co = scrollerCutOff;
+      var scroller = this.display.scroller;
       return {left: scroller.scrollLeft, top: scroller.scrollTop,
-              height: scroller.scrollHeight - co, width: scroller.scrollWidth - co,
-              clientHeight: scroller.clientHeight - co, clientWidth: scroller.clientWidth - co};
+              height: scroller.scrollHeight - scrollGap(this) - this.display.barHeight,
+              width: scroller.scrollWidth - scrollGap(this) - this.display.barWidth,
+              clientHeight: displayHeight(this), clientWidth: displayWidth(this)};
     },
 
     scrollIntoView: methodOp(function(range, margin) {
@@ -21318,7 +21426,13 @@ CodeMirror.registerHelper("fold", "include", function(cm, start) {
     cm.display.gutters.style.left = val ? compensateForHScroll(cm.display) + "px" : "0";
     cm.refresh();
   }, true);
-  option("coverGutterNextToScrollbar", false, updateScrollbars, true);
+  option("coverGutterNextToScrollbar", false, function(cm) {updateScrollbars(cm);}, true);
+  option("scrollbarStyle", "native", function(cm) {
+    initScrollbars(cm);
+    updateScrollbars(cm);
+    cm.display.scrollbars.setScrollTop(cm.doc.scrollTop);
+    cm.display.scrollbars.setScrollLeft(cm.doc.scrollLeft);
+  }, true);
   option("lineNumbers", false, function(cm) {
     setGuttersForLineNumbers(cm.options);
     guttersChanged(cm);
@@ -21748,18 +21862,18 @@ CodeMirror.registerHelper("fold", "include", function(cm, start) {
     return keymap;
   };
 
-  var lookupKey = CodeMirror.lookupKey = function(key, map, handle) {
+  var lookupKey = CodeMirror.lookupKey = function(key, map, handle, context) {
     map = getKeyMap(map);
-    var found = map.call ? map.call(key) : map[key];
+    var found = map.call ? map.call(key, context) : map[key];
     if (found === false) return "nothing";
     if (found === "...") return "multi";
     if (found != null && handle(found)) return "handled";
 
     if (map.fallthrough) {
       if (Object.prototype.toString.call(map.fallthrough) != "[object Array]")
-        return lookupKey(key, map.fallthrough, handle);
+        return lookupKey(key, map.fallthrough, handle, context);
       for (var i = 0; i < map.fallthrough.length; i++) {
-        var result = lookupKey(key, map.fallthrough[i], handle);
+        var result = lookupKey(key, map.fallthrough[i], handle, context);
         if (result) return result;
       }
     }
@@ -22066,7 +22180,7 @@ CodeMirror.registerHelper("fold", "include", function(cm, start) {
       // Showing up as a widget implies collapsed (widget replaces text)
       marker.collapsed = true;
       marker.widgetNode = elt("span", [marker.replacedWith], "CodeMirror-widget");
-      if (!options.handleMouseEvents) marker.widgetNode.ignoreEvents = true;
+      if (!options.handleMouseEvents) marker.widgetNode.setAttribute("cm-ignore-events", "true");
       if (options.insertLeft) marker.widgetNode.insertLeft = true;
     }
     if (marker.collapsed) {
@@ -22110,7 +22224,7 @@ CodeMirror.registerHelper("fold", "include", function(cm, start) {
       if (updateMaxLine) cm.curOp.updateMaxLine = true;
       if (marker.collapsed)
         regChange(cm, from.line, to.line + 1);
-      else if (marker.className || marker.title || marker.startStyle || marker.endStyle)
+      else if (marker.className || marker.title || marker.startStyle || marker.endStyle || marker.css)
         for (var i = from.line; i <= to.line; i++) regLineChange(cm, i, "text");
       if (marker.atomic) reCheckSelection(cm.doc);
       signalLater(cm, "markerAdded", cm, marker);
@@ -22690,8 +22804,11 @@ CodeMirror.registerHelper("fold", "include", function(cm, start) {
         if (mName) style = "m-" + (style ? mName + " " + style : mName);
       }
       if (!flattenSpans || curStyle != style) {
-        if (curStart < stream.start) f(stream.start, curStyle);
-        curStart = stream.start; curStyle = style;
+        while (curStart < stream.start) {
+          curStart = Math.min(stream.start, curStart + 50000);
+          f(curStart, curStyle);
+        }
+        curStyle = style;
       }
       stream.start = stream.pos;
     }
@@ -22848,7 +22965,7 @@ CodeMirror.registerHelper("fold", "include", function(cm, start) {
 
   // Build up the DOM representation for a single token, and add it to
   // the line map. Takes care to render special characters separately.
-  function buildToken(builder, text, style, startStyle, endStyle, title) {
+  function buildToken(builder, text, style, startStyle, endStyle, title, css) {
     if (!text) return;
     var special = builder.cm.options.specialChars, mustWrap = false;
     if (!special.test(text)) {
@@ -22887,11 +23004,11 @@ CodeMirror.registerHelper("fold", "include", function(cm, start) {
         builder.pos++;
       }
     }
-    if (style || startStyle || endStyle || mustWrap) {
+    if (style || startStyle || endStyle || mustWrap || css) {
       var fullStyle = style || "";
       if (startStyle) fullStyle += startStyle;
       if (endStyle) fullStyle += endStyle;
-      var token = elt("span", [content], fullStyle);
+      var token = elt("span", [content], fullStyle, css);
       if (title) token.title = title;
       return builder.content.appendChild(token);
     }
@@ -22950,11 +23067,11 @@ CodeMirror.registerHelper("fold", "include", function(cm, start) {
       return;
     }
 
-    var len = allText.length, pos = 0, i = 1, text = "", style;
+    var len = allText.length, pos = 0, i = 1, text = "", style, css;
     var nextChange = 0, spanStyle, spanEndStyle, spanStartStyle, title, collapsed;
     for (;;) {
       if (nextChange == pos) { // Update current marker set
-        spanStyle = spanEndStyle = spanStartStyle = title = "";
+        spanStyle = spanEndStyle = spanStartStyle = title = css = "";
         collapsed = null; nextChange = Infinity;
         var foundBookmarks = [];
         for (var j = 0; j < spans.length; ++j) {
@@ -22962,6 +23079,7 @@ CodeMirror.registerHelper("fold", "include", function(cm, start) {
           if (sp.from <= pos && (sp.to == null || sp.to > pos)) {
             if (sp.to != null && nextChange > sp.to) { nextChange = sp.to; spanEndStyle = ""; }
             if (m.className) spanStyle += " " + m.className;
+            if (m.css) css = m.css;
             if (m.startStyle && sp.from == pos) spanStartStyle += " " + m.startStyle;
             if (m.endStyle && sp.to == nextChange) spanEndStyle += " " + m.endStyle;
             if (m.title && !title) title = m.title;
@@ -22989,7 +23107,7 @@ CodeMirror.registerHelper("fold", "include", function(cm, start) {
           if (!collapsed) {
             var tokenText = end > upto ? text.slice(0, upto - pos) : text;
             builder.addToken(builder, tokenText, style ? style + spanStyle : spanStyle,
-                             spanStartStyle, pos + tokenText.length == nextChange ? spanEndStyle : "", title);
+                             spanStartStyle, pos + tokenText.length == nextChange ? spanEndStyle : "", title, css);
           }
           if (end >= upto) {text = text.slice(upto - pos); pos = upto; break;}
           pos = end;
@@ -23416,7 +23534,7 @@ CodeMirror.registerHelper("fold", "include", function(cm, start) {
       });
     }),
     removeLineClass: docMethodOp(function(handle, where, cls) {
-      return changeLine(this, handle, "class", function(line) {
+      return changeLine(this, handle, where == "gutter" ? "gutter" : "class", function(line) {
         var prop = where == "text" ? "textClass"
                  : where == "background" ? "bgClass"
                  : where == "gutter" ? "gutterClass" : "wrapClass";
@@ -24072,7 +24190,7 @@ CodeMirror.registerHelper("fold", "include", function(cm, start) {
   // MISC UTILITIES
 
   // Number of pixels added to scroller and sizer to hide scrollbar
-  var scrollerCutOff = 30;
+  var scrollerGap = 30;
 
   // Returned or thrown by various protocols to signal 'I'm not
   // handling this'.
@@ -24298,7 +24416,6 @@ CodeMirror.registerHelper("fold", "include", function(cm, start) {
     on(window, "resize", function() {
       if (resizeTimer == null) resizeTimer = setTimeout(function() {
         resizeTimer = null;
-        knownScrollbarWidth = null;
         forEachCodeMirror(onResize);
       }, 100);
     });
@@ -24318,16 +24435,6 @@ CodeMirror.registerHelper("fold", "include", function(cm, start) {
     var div = elt('div');
     return "draggable" in div || "dragDrop" in div;
   }();
-
-  var knownScrollbarWidth;
-  function scrollbarWidth(measure) {
-    if (knownScrollbarWidth != null) return knownScrollbarWidth;
-    var test = elt("div", null, null, "width: 50px; height: 50px; overflow-x: scroll");
-    removeChildrenAndAdd(measure, test);
-    if (test.offsetWidth)
-      knownScrollbarWidth = test.offsetHeight - test.clientHeight;
-    return knownScrollbarWidth || 0;
-  }
 
   var zwspSupported;
   function zeroWidthElement(measure) {
@@ -24710,7 +24817,7 @@ CodeMirror.registerHelper("fold", "include", function(cm, start) {
 
   // THE END
 
-  CodeMirror.version = "4.8.0";
+  CodeMirror.version = "4.11.0";
 
   return CodeMirror;
 });
@@ -24923,6 +25030,8 @@ CodeMirror.defineMode("javascript", function(config, parserConfig) {
         ++depth;
       } else if (wordRE.test(ch)) {
         sawSomething = true;
+      } else if (/["'\/]/.test(ch)) {
+        return;
       } else if (sawSomething && !depth) {
         ++pos;
         break;
@@ -25790,7 +25899,7 @@ if (!CodeMirror.mimeModes.hasOwnProperty("text/html"))
 },{"../../lib/codemirror":11}],14:[function(require,module,exports){
 !function() {
   var d3 = {
-    version: "3.5.2"
+    version: "3.5.3"
   };
   if (!Date.now) Date.now = function() {
     return +new Date();
@@ -34365,12 +34474,8 @@ if (!CodeMirror.mimeModes.hasOwnProperty("text/html"))
     return function() {
       var lock, active;
       if ((lock = this[ns]) && (active = lock[lock.active])) {
-        if (--lock.count) {
-          delete lock[lock.active];
-          lock.active += .5;
-        } else {
-          delete this[ns];
-        }
+        if (--lock.count) delete lock[lock.active]; else delete this[ns];
+        lock.active += .5;
         active.event && active.event.interrupt.call(this, this.__data__, active.index);
       }
     };
@@ -37579,7 +37684,7 @@ $.each( { show: "fadeIn", hide: "fadeOut" }, function( method, defaultEffect ) {
 
 },{"jquery":19}],19:[function(require,module,exports){
 /*!
- * jQuery JavaScript Library v1.11.1
+ * jQuery JavaScript Library v1.11.2
  * http://jquery.com/
  *
  * Includes Sizzle.js
@@ -37589,7 +37694,7 @@ $.each( { show: "fadeIn", hide: "fadeOut" }, function( method, defaultEffect ) {
  * Released under the MIT license
  * http://jquery.org/license
  *
- * Date: 2014-05-01T17:42Z
+ * Date: 2014-12-17T15:27Z
  */
 
 (function( global, factory ) {
@@ -37644,7 +37749,7 @@ var support = {};
 
 
 var
-	version = "1.11.1",
+	version = "1.11.2",
 
 	// Define a local copy of jQuery
 	jQuery = function( selector, context ) {
@@ -37849,7 +37954,8 @@ jQuery.extend({
 		// parseFloat NaNs numeric-cast false positives (null|true|false|"")
 		// ...but misinterprets leading-number strings, particularly hex literals ("0x...")
 		// subtraction forces infinities to NaN
-		return !jQuery.isArray( obj ) && obj - parseFloat( obj ) >= 0;
+		// adding 1 corrects loss of precision from parseFloat (#15100)
+		return !jQuery.isArray( obj ) && (obj - parseFloat( obj ) + 1) >= 0;
 	},
 
 	isEmptyObject: function( obj ) {
@@ -38164,14 +38270,14 @@ function isArraylike( obj ) {
 }
 var Sizzle =
 /*!
- * Sizzle CSS Selector Engine v1.10.19
+ * Sizzle CSS Selector Engine v2.2.0-pre
  * http://sizzlejs.com/
  *
- * Copyright 2013 jQuery Foundation, Inc. and other contributors
+ * Copyright 2008, 2014 jQuery Foundation, Inc. and other contributors
  * Released under the MIT license
  * http://jquery.org/license
  *
- * Date: 2014-04-18
+ * Date: 2014-12-16
  */
 (function( window ) {
 
@@ -38198,7 +38304,7 @@ var i,
 	contains,
 
 	// Instance-specific data
-	expando = "sizzle" + -(new Date()),
+	expando = "sizzle" + 1 * new Date(),
 	preferredDoc = window.document,
 	dirruns = 0,
 	done = 0,
@@ -38213,7 +38319,6 @@ var i,
 	},
 
 	// General-purpose constants
-	strundefined = typeof undefined,
 	MAX_NEGATIVE = 1 << 31,
 
 	// Instance methods
@@ -38223,12 +38328,13 @@ var i,
 	push_native = arr.push,
 	push = arr.push,
 	slice = arr.slice,
-	// Use a stripped-down indexOf if we can't use a native one
-	indexOf = arr.indexOf || function( elem ) {
+	// Use a stripped-down indexOf as it's faster than native
+	// http://jsperf.com/thor-indexof-vs-for/5
+	indexOf = function( list, elem ) {
 		var i = 0,
-			len = this.length;
+			len = list.length;
 		for ( ; i < len; i++ ) {
-			if ( this[i] === elem ) {
+			if ( list[i] === elem ) {
 				return i;
 			}
 		}
@@ -38268,6 +38374,7 @@ var i,
 		")\\)|)",
 
 	// Leading and non-escaped trailing whitespace, capturing some non-whitespace characters preceding the latter
+	rwhitespace = new RegExp( whitespace + "+", "g" ),
 	rtrim = new RegExp( "^" + whitespace + "+|((?:^|[^\\\\])(?:\\\\.)*)" + whitespace + "+$", "g" ),
 
 	rcomma = new RegExp( "^" + whitespace + "*," + whitespace + "*" ),
@@ -38319,6 +38426,14 @@ var i,
 				String.fromCharCode( high + 0x10000 ) :
 				// Supplemental Plane codepoint (surrogate pair)
 				String.fromCharCode( high >> 10 | 0xD800, high & 0x3FF | 0xDC00 );
+	},
+
+	// Used for iframes
+	// See setDocument()
+	// Removing the function wrapper causes a "Permission Denied"
+	// error in IE
+	unloadHandler = function() {
+		setDocument();
 	};
 
 // Optimize for push.apply( _, NodeList )
@@ -38361,19 +38476,18 @@ function Sizzle( selector, context, results, seed ) {
 
 	context = context || document;
 	results = results || [];
+	nodeType = context.nodeType;
 
-	if ( !selector || typeof selector !== "string" ) {
+	if ( typeof selector !== "string" || !selector ||
+		nodeType !== 1 && nodeType !== 9 && nodeType !== 11 ) {
+
 		return results;
 	}
 
-	if ( (nodeType = context.nodeType) !== 1 && nodeType !== 9 ) {
-		return [];
-	}
+	if ( !seed && documentIsHTML ) {
 
-	if ( documentIsHTML && !seed ) {
-
-		// Shortcuts
-		if ( (match = rquickExpr.exec( selector )) ) {
+		// Try to shortcut find operations when possible (e.g., not under DocumentFragment)
+		if ( nodeType !== 11 && (match = rquickExpr.exec( selector )) ) {
 			// Speed-up: Sizzle("#ID")
 			if ( (m = match[1]) ) {
 				if ( nodeType === 9 ) {
@@ -38405,7 +38519,7 @@ function Sizzle( selector, context, results, seed ) {
 				return results;
 
 			// Speed-up: Sizzle(".CLASS")
-			} else if ( (m = match[3]) && support.getElementsByClassName && context.getElementsByClassName ) {
+			} else if ( (m = match[3]) && support.getElementsByClassName ) {
 				push.apply( results, context.getElementsByClassName( m ) );
 				return results;
 			}
@@ -38415,7 +38529,7 @@ function Sizzle( selector, context, results, seed ) {
 		if ( support.qsa && (!rbuggyQSA || !rbuggyQSA.test( selector )) ) {
 			nid = old = expando;
 			newContext = context;
-			newSelector = nodeType === 9 && selector;
+			newSelector = nodeType !== 1 && selector;
 
 			// qSA works strangely on Element-rooted queries
 			// We can work around this by specifying an extra ID on the root
@@ -38602,7 +38716,7 @@ function createPositionalPseudo( fn ) {
  * @returns {Element|Object|Boolean} The input node if acceptable, otherwise a falsy value
  */
 function testContext( context ) {
-	return context && typeof context.getElementsByTagName !== strundefined && context;
+	return context && typeof context.getElementsByTagName !== "undefined" && context;
 }
 
 // Expose support vars for convenience
@@ -38626,9 +38740,8 @@ isXML = Sizzle.isXML = function( elem ) {
  * @returns {Object} Returns the current document
  */
 setDocument = Sizzle.setDocument = function( node ) {
-	var hasCompare,
-		doc = node ? node.ownerDocument || node : preferredDoc,
-		parent = doc.defaultView;
+	var hasCompare, parent,
+		doc = node ? node.ownerDocument || node : preferredDoc;
 
 	// If no document and documentElement is available, return
 	if ( doc === document || doc.nodeType !== 9 || !doc.documentElement ) {
@@ -38638,9 +38751,7 @@ setDocument = Sizzle.setDocument = function( node ) {
 	// Set our document
 	document = doc;
 	docElem = doc.documentElement;
-
-	// Support tests
-	documentIsHTML = !isXML( doc );
+	parent = doc.defaultView;
 
 	// Support: IE>8
 	// If iframe document is assigned to "document" variable and if iframe has been reloaded,
@@ -38649,21 +38760,22 @@ setDocument = Sizzle.setDocument = function( node ) {
 	if ( parent && parent !== parent.top ) {
 		// IE11 does not have attachEvent, so all must suffer
 		if ( parent.addEventListener ) {
-			parent.addEventListener( "unload", function() {
-				setDocument();
-			}, false );
+			parent.addEventListener( "unload", unloadHandler, false );
 		} else if ( parent.attachEvent ) {
-			parent.attachEvent( "onunload", function() {
-				setDocument();
-			});
+			parent.attachEvent( "onunload", unloadHandler );
 		}
 	}
+
+	/* Support tests
+	---------------------------------------------------------------------- */
+	documentIsHTML = !isXML( doc );
 
 	/* Attributes
 	---------------------------------------------------------------------- */
 
 	// Support: IE<8
-	// Verify that getAttribute really returns attributes and not properties (excepting IE8 booleans)
+	// Verify that getAttribute really returns attributes and not properties
+	// (excepting IE8 booleans)
 	support.attributes = assert(function( div ) {
 		div.className = "i";
 		return !div.getAttribute("className");
@@ -38678,17 +38790,8 @@ setDocument = Sizzle.setDocument = function( node ) {
 		return !div.getElementsByTagName("*").length;
 	});
 
-	// Check if getElementsByClassName can be trusted
-	support.getElementsByClassName = rnative.test( doc.getElementsByClassName ) && assert(function( div ) {
-		div.innerHTML = "<div class='a'></div><div class='a i'></div>";
-
-		// Support: Safari<4
-		// Catch class over-caching
-		div.firstChild.className = "i";
-		// Support: Opera<10
-		// Catch gEBCN failure to find non-leading classes
-		return div.getElementsByClassName("i").length === 2;
-	});
+	// Support: IE<9
+	support.getElementsByClassName = rnative.test( doc.getElementsByClassName );
 
 	// Support: IE<10
 	// Check if getElementById returns elements by name
@@ -38702,7 +38805,7 @@ setDocument = Sizzle.setDocument = function( node ) {
 	// ID find and filter
 	if ( support.getById ) {
 		Expr.find["ID"] = function( id, context ) {
-			if ( typeof context.getElementById !== strundefined && documentIsHTML ) {
+			if ( typeof context.getElementById !== "undefined" && documentIsHTML ) {
 				var m = context.getElementById( id );
 				// Check parentNode to catch when Blackberry 4.6 returns
 				// nodes that are no longer in the document #6963
@@ -38723,7 +38826,7 @@ setDocument = Sizzle.setDocument = function( node ) {
 		Expr.filter["ID"] =  function( id ) {
 			var attrId = id.replace( runescape, funescape );
 			return function( elem ) {
-				var node = typeof elem.getAttributeNode !== strundefined && elem.getAttributeNode("id");
+				var node = typeof elem.getAttributeNode !== "undefined" && elem.getAttributeNode("id");
 				return node && node.value === attrId;
 			};
 		};
@@ -38732,14 +38835,20 @@ setDocument = Sizzle.setDocument = function( node ) {
 	// Tag
 	Expr.find["TAG"] = support.getElementsByTagName ?
 		function( tag, context ) {
-			if ( typeof context.getElementsByTagName !== strundefined ) {
+			if ( typeof context.getElementsByTagName !== "undefined" ) {
 				return context.getElementsByTagName( tag );
+
+			// DocumentFragment nodes don't have gEBTN
+			} else if ( support.qsa ) {
+				return context.querySelectorAll( tag );
 			}
 		} :
+
 		function( tag, context ) {
 			var elem,
 				tmp = [],
 				i = 0,
+				// By happy coincidence, a (broken) gEBTN appears on DocumentFragment nodes too
 				results = context.getElementsByTagName( tag );
 
 			// Filter out possible comments
@@ -38757,7 +38866,7 @@ setDocument = Sizzle.setDocument = function( node ) {
 
 	// Class
 	Expr.find["CLASS"] = support.getElementsByClassName && function( className, context ) {
-		if ( typeof context.getElementsByClassName !== strundefined && documentIsHTML ) {
+		if ( documentIsHTML ) {
 			return context.getElementsByClassName( className );
 		}
 	};
@@ -38786,13 +38895,15 @@ setDocument = Sizzle.setDocument = function( node ) {
 			// setting a boolean content attribute,
 			// since its presence should be enough
 			// http://bugs.jquery.com/ticket/12359
-			div.innerHTML = "<select msallowclip=''><option selected=''></option></select>";
+			docElem.appendChild( div ).innerHTML = "<a id='" + expando + "'></a>" +
+				"<select id='" + expando + "-\f]' msallowcapture=''>" +
+				"<option selected=''></option></select>";
 
 			// Support: IE8, Opera 11-12.16
 			// Nothing should be selected when empty strings follow ^= or $= or *=
 			// The test attribute must be unknown in Opera but "safe" for WinRT
 			// http://msdn.microsoft.com/en-us/library/ie/hh465388.aspx#attribute_section
-			if ( div.querySelectorAll("[msallowclip^='']").length ) {
+			if ( div.querySelectorAll("[msallowcapture^='']").length ) {
 				rbuggyQSA.push( "[*^$]=" + whitespace + "*(?:''|\"\")" );
 			}
 
@@ -38802,11 +38913,23 @@ setDocument = Sizzle.setDocument = function( node ) {
 				rbuggyQSA.push( "\\[" + whitespace + "*(?:value|" + booleans + ")" );
 			}
 
+			// Support: Chrome<29, Android<4.2+, Safari<7.0+, iOS<7.0+, PhantomJS<1.9.7+
+			if ( !div.querySelectorAll( "[id~=" + expando + "-]" ).length ) {
+				rbuggyQSA.push("~=");
+			}
+
 			// Webkit/Opera - :checked should return selected option elements
 			// http://www.w3.org/TR/2011/REC-css3-selectors-20110929/#checked
 			// IE8 throws error here and will not see later tests
 			if ( !div.querySelectorAll(":checked").length ) {
 				rbuggyQSA.push(":checked");
+			}
+
+			// Support: Safari 8+, iOS 8+
+			// https://bugs.webkit.org/show_bug.cgi?id=136851
+			// In-page `selector#id sibing-combinator selector` fails
+			if ( !div.querySelectorAll( "a#" + expando + "+*" ).length ) {
+				rbuggyQSA.push(".#.+[+~]");
 			}
 		});
 
@@ -38924,7 +39047,7 @@ setDocument = Sizzle.setDocument = function( node ) {
 
 			// Maintain original order
 			return sortInput ?
-				( indexOf.call( sortInput, a ) - indexOf.call( sortInput, b ) ) :
+				( indexOf( sortInput, a ) - indexOf( sortInput, b ) ) :
 				0;
 		}
 
@@ -38951,7 +39074,7 @@ setDocument = Sizzle.setDocument = function( node ) {
 				aup ? -1 :
 				bup ? 1 :
 				sortInput ?
-				( indexOf.call( sortInput, a ) - indexOf.call( sortInput, b ) ) :
+				( indexOf( sortInput, a ) - indexOf( sortInput, b ) ) :
 				0;
 
 		// If the nodes are siblings, we can do a quick check
@@ -39014,7 +39137,7 @@ Sizzle.matchesSelector = function( elem, expr ) {
 					elem.document && elem.document.nodeType !== 11 ) {
 				return ret;
 			}
-		} catch(e) {}
+		} catch (e) {}
 	}
 
 	return Sizzle( expr, document, null, [ elem ] ).length > 0;
@@ -39233,7 +39356,7 @@ Expr = Sizzle.selectors = {
 			return pattern ||
 				(pattern = new RegExp( "(^|" + whitespace + ")" + className + "(" + whitespace + "|$)" )) &&
 				classCache( className, function( elem ) {
-					return pattern.test( typeof elem.className === "string" && elem.className || typeof elem.getAttribute !== strundefined && elem.getAttribute("class") || "" );
+					return pattern.test( typeof elem.className === "string" && elem.className || typeof elem.getAttribute !== "undefined" && elem.getAttribute("class") || "" );
 				});
 		},
 
@@ -39255,7 +39378,7 @@ Expr = Sizzle.selectors = {
 					operator === "^=" ? check && result.indexOf( check ) === 0 :
 					operator === "*=" ? check && result.indexOf( check ) > -1 :
 					operator === "$=" ? check && result.slice( -check.length ) === check :
-					operator === "~=" ? ( " " + result + " " ).indexOf( check ) > -1 :
+					operator === "~=" ? ( " " + result.replace( rwhitespace, " " ) + " " ).indexOf( check ) > -1 :
 					operator === "|=" ? result === check || result.slice( 0, check.length + 1 ) === check + "-" :
 					false;
 			};
@@ -39375,7 +39498,7 @@ Expr = Sizzle.selectors = {
 							matched = fn( seed, argument ),
 							i = matched.length;
 						while ( i-- ) {
-							idx = indexOf.call( seed, matched[i] );
+							idx = indexOf( seed, matched[i] );
 							seed[ idx ] = !( matches[ idx ] = matched[i] );
 						}
 					}) :
@@ -39414,6 +39537,8 @@ Expr = Sizzle.selectors = {
 				function( elem, context, xml ) {
 					input[0] = elem;
 					matcher( input, null, xml, results );
+					// Don't keep the element (issue #299)
+					input[0] = null;
 					return !results.pop();
 				};
 		}),
@@ -39425,6 +39550,7 @@ Expr = Sizzle.selectors = {
 		}),
 
 		"contains": markFunction(function( text ) {
+			text = text.replace( runescape, funescape );
 			return function( elem ) {
 				return ( elem.textContent || elem.innerText || getText( elem ) ).indexOf( text ) > -1;
 			};
@@ -39846,7 +39972,7 @@ function setMatcher( preFilter, selector, matcher, postFilter, postFinder, postS
 				i = matcherOut.length;
 				while ( i-- ) {
 					if ( (elem = matcherOut[i]) &&
-						(temp = postFinder ? indexOf.call( seed, elem ) : preMap[i]) > -1 ) {
+						(temp = postFinder ? indexOf( seed, elem ) : preMap[i]) > -1 ) {
 
 						seed[temp] = !(results[temp] = elem);
 					}
@@ -39881,13 +40007,16 @@ function matcherFromTokens( tokens ) {
 			return elem === checkContext;
 		}, implicitRelative, true ),
 		matchAnyContext = addCombinator( function( elem ) {
-			return indexOf.call( checkContext, elem ) > -1;
+			return indexOf( checkContext, elem ) > -1;
 		}, implicitRelative, true ),
 		matchers = [ function( elem, context, xml ) {
-			return ( !leadingRelative && ( xml || context !== outermostContext ) ) || (
+			var ret = ( !leadingRelative && ( xml || context !== outermostContext ) ) || (
 				(checkContext = context).nodeType ?
 					matchContext( elem, context, xml ) :
 					matchAnyContext( elem, context, xml ) );
+			// Avoid hanging onto element (issue #299)
+			checkContext = null;
+			return ret;
 		} ];
 
 	for ( ; i < len; i++ ) {
@@ -40137,7 +40266,7 @@ select = Sizzle.select = function( selector, context, results, seed ) {
 // Sort stability
 support.sortStable = expando.split("").sort( sortOrder ).join("") === expando;
 
-// Support: Chrome<14
+// Support: Chrome 14-35+
 // Always assume duplicates if they aren't passed to the comparison function
 support.detectDuplicates = !!hasDuplicate;
 
@@ -43695,7 +43824,14 @@ var getStyles, curCSS,
 
 if ( window.getComputedStyle ) {
 	getStyles = function( elem ) {
-		return elem.ownerDocument.defaultView.getComputedStyle( elem, null );
+		// Support: IE<=11+, Firefox<=30+ (#15098, #14150)
+		// IE throws on elements created in popups
+		// FF meanwhile throws on frame elements through "defaultView.getComputedStyle"
+		if ( elem.ownerDocument.defaultView.opener ) {
+			return elem.ownerDocument.defaultView.getComputedStyle( elem, null );
+		}
+
+		return window.getComputedStyle( elem, null );
 	};
 
 	curCSS = function( elem, name, computed ) {
@@ -43943,6 +44079,8 @@ function addGetHookIf( conditionFn, hookFn ) {
 
 			reliableMarginRightVal =
 				!parseFloat( ( window.getComputedStyle( contents, null ) || {} ).marginRight );
+
+			div.removeChild( contents );
 		}
 
 		// Support: IE8
@@ -46650,7 +46788,8 @@ jQuery.extend({
 		}
 
 		// We can fire global events as of now if asked to
-		fireGlobals = s.global;
+		// Don't fire events if jQuery.event is undefined in an AMD-usage scenario (#15118)
+		fireGlobals = jQuery.event && s.global;
 
 		// Watch for a new set of requests
 		if ( fireGlobals && jQuery.active++ === 0 ) {
@@ -46909,13 +47048,6 @@ jQuery.each( [ "get", "post" ], function( i, method ) {
 	};
 });
 
-// Attach a bunch of functions for handling common AJAX events
-jQuery.each( [ "ajaxStart", "ajaxStop", "ajaxComplete", "ajaxError", "ajaxSuccess", "ajaxSend" ], function( i, type ) {
-	jQuery.fn[ type ] = function( fn ) {
-		return this.on( type, fn );
-	};
-});
-
 
 jQuery._evalUrl = function( url ) {
 	return jQuery.ajax({
@@ -47141,8 +47273,9 @@ var xhrId = 0,
 
 // Support: IE<10
 // Open requests must be manually aborted on unload (#5280)
-if ( window.ActiveXObject ) {
-	jQuery( window ).on( "unload", function() {
+// See https://support.microsoft.com/kb/2856746 for more info
+if ( window.attachEvent ) {
+	window.attachEvent( "onunload", function() {
 		for ( var key in xhrCallbacks ) {
 			xhrCallbacks[ key ]( undefined, true );
 		}
@@ -47576,6 +47709,16 @@ jQuery.fn.load = function( url, params, callback ) {
 
 
 
+// Attach a bunch of functions for handling common AJAX events
+jQuery.each( [ "ajaxStart", "ajaxStop", "ajaxComplete", "ajaxError", "ajaxSuccess", "ajaxSend" ], function( i, type ) {
+	jQuery.fn[ type ] = function( fn ) {
+		return this.on( type, fn );
+	};
+});
+
+
+
+
 jQuery.expr.filters.animated = function( elem ) {
 	return jQuery.grep(jQuery.timers, function( fn ) {
 		return elem === fn.elem;
@@ -47888,20 +48031,20 @@ return jQuery;
 }));
 
 },{}],20:[function(require,module,exports){
-// Generated by CoffeeScript 1.4.0
 (function() {
+  var callWithJQuery;
 
-  (function(mod) {
+  callWithJQuery = function(pivotModule) {
     if (typeof exports === "object" && typeof module === "object") {
-      return mod(require("jquery"));
+      return pivotModule(require("jquery"));
     } else if (typeof define === "function" && define.amd) {
-      return define(["jquery"], mod);
+      return define(["jquery"], pivotModule);
     } else {
-      mod(jQuery);
+      return pivotModule(jQuery);
     }
-  })(function(jQuery) {
-    var $;
-    $ = jQuery;
+  };
+
+  callWithJQuery(function($) {
     return $.pivotUtilities.d3_renderers = {
       Treemap: function(pivotData, opts) {
         var addToTree, color, defaults, height, margin, result, rowKey, tree, treemap, value, width, _i, _len, _ref;
@@ -47915,18 +48058,18 @@ return jQuery;
           children: []
         };
         addToTree = function(tree, path, value) {
-          var child, newChild, x, _i, _len, _ref, _ref1;
+          var child, newChild, x, _i, _len, _ref;
           if (path.length === 0) {
             tree.value = value;
             return;
           }
-          if ((_ref = tree.children) == null) {
+          if (tree.children == null) {
             tree.children = [];
           }
           x = path.shift();
-          _ref1 = tree.children;
-          for (_i = 0, _len = _ref1.length; _i < _len; _i++) {
-            child = _ref1[_i];
+          _ref = tree.children;
+          for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+            child = _ref[_i];
             if (!(child.name === x)) {
               continue;
             }
@@ -47982,21 +48125,23 @@ return jQuery;
 
 }).call(this);
 
+//# sourceMappingURL=d3_renderers.js.map
 },{"jquery":19}],21:[function(require,module,exports){
-// Generated by CoffeeScript 1.4.0
 (function() {
+  var callWithJQuery;
 
-  (function(mod) {
+  callWithJQuery = function(pivotModule) {
     if (typeof exports === "object" && typeof module === "object") {
-      return mod(require("jquery"));
+      return pivotModule(require("jquery"));
     } else if (typeof define === "function" && define.amd) {
-      return define(["jquery"], mod);
+      return define(["jquery"], pivotModule);
     } else {
-      mod(jQuery);
+      return pivotModule(jQuery);
     }
-  })(function(jQuery) {
-    var $, makeGoogleChart;
-    $ = jQuery;
+  };
+
+  callWithJQuery(function($) {
+    var makeGoogleChart;
     makeGoogleChart = function(chartType, extraOptions) {
       return function(pivotData, opts) {
         var agg, colKey, colKeys, dataArray, dataTable, defaults, groupByTitle, h, hAxisTitle, headers, k, numCharsInHAxis, options, result, row, rowKey, rowKeys, title, v, vAxisTitle, wrapper, _i, _j, _len, _len1;
@@ -48105,30 +48250,31 @@ return jQuery;
 
 }).call(this);
 
+//# sourceMappingURL=gchart_renderers.js.map
 },{"jquery":19}],22:[function(require,module,exports){
-// Generated by CoffeeScript 1.4.0
 (function() {
-  var __indexOf = [].indexOf || function(item) { for (var i = 0, l = this.length; i < l; i++) { if (i in this && this[i] === item) return i; } return -1; },
+  var callWithJQuery,
+    __indexOf = [].indexOf || function(item) { for (var i = 0, l = this.length; i < l; i++) { if (i in this && this[i] === item) return i; } return -1; },
     __slice = [].slice,
     __bind = function(fn, me){ return function(){ return fn.apply(me, arguments); }; },
     __hasProp = {}.hasOwnProperty;
 
-  (function(mod) {
+  callWithJQuery = function(pivotModule) {
     if (typeof exports === "object" && typeof module === "object") {
-      return mod(require("jquery"));
+      return pivotModule(require("jquery"));
     } else if (typeof define === "function" && define.amd) {
-      return define(["jquery"], mod);
+      return define(["jquery"], pivotModule);
     } else {
-      mod(jQuery);
+      return pivotModule(jQuery);
     }
-  })(function(jQuery) {
-    var $, PivotData, addSeparators, aggregatorTemplates, aggregators, dayNamesEn, derivers, locales, mthNamesEn, naturalSort, numberFormat, pivotTableRenderer, renderers, usFmt, usFmtInt, usFmtPct, zeroPad,
-      _this = this;
-    $ = jQuery;
-    /*
-    	Utilities
-    */
+  };
 
+  callWithJQuery(function($) {
+
+    /*
+    Utilities
+     */
+    var PivotData, addSeparators, aggregatorTemplates, aggregators, dayNamesEn, derivers, locales, mthNamesEn, naturalSort, numberFormat, pivotTableRenderer, renderers, usFmt, usFmtInt, usFmtPct, zeroPad;
     addSeparators = function(nStr, thousandsSep, decimalSep) {
       var rgx, x, x1, x2;
       nStr += '';
@@ -48490,43 +48636,45 @@ return jQuery;
         };
       }
     };
-    naturalSort = function(as, bs) {
-      var a, a1, b, b1, rd, rx, rz;
-      rx = /(\d+)|(\D+)/g;
-      rd = /\d/;
-      rz = /^0/;
-      if (typeof as === "number" || typeof bs === "number") {
-        if (isNaN(as)) {
-          return 1;
+    naturalSort = (function(_this) {
+      return function(as, bs) {
+        var a, a1, b, b1, rd, rx, rz;
+        rx = /(\d+)|(\D+)/g;
+        rd = /\d/;
+        rz = /^0/;
+        if (typeof as === "number" || typeof bs === "number") {
+          if (isNaN(as)) {
+            return 1;
+          }
+          if (isNaN(bs)) {
+            return -1;
+          }
+          return as - bs;
         }
-        if (isNaN(bs)) {
-          return -1;
+        a = String(as).toLowerCase();
+        b = String(bs).toLowerCase();
+        if (a === b) {
+          return 0;
         }
-        return as - bs;
-      }
-      a = String(as).toLowerCase();
-      b = String(bs).toLowerCase();
-      if (a === b) {
-        return 0;
-      }
-      if (!(rd.test(a) && rd.test(b))) {
-        return (a > b ? 1 : -1);
-      }
-      a = a.match(rx);
-      b = b.match(rx);
-      while (a.length && b.length) {
-        a1 = a.shift();
-        b1 = b.shift();
-        if (a1 !== b1) {
-          if (rd.test(a1) && rd.test(b1)) {
-            return a1.replace(rz, ".0") - b1.replace(rz, ".0");
-          } else {
-            return (a1 > b1 ? 1 : -1);
+        if (!(rd.test(a) && rd.test(b))) {
+          return (a > b ? 1 : -1);
+        }
+        a = a.match(rx);
+        b = b.match(rx);
+        while (a.length && b.length) {
+          a1 = a.shift();
+          b1 = b.shift();
+          if (a1 !== b1) {
+            if (rd.test(a1) && rd.test(b1)) {
+              return a1.replace(rz, ".0") - b1.replace(rz, ".0");
+            } else {
+              return (a1 > b1 ? 1 : -1);
+            }
           }
         }
-      }
-      return a.length - b.length;
-    };
+        return a.length - b.length;
+      };
+    })(this);
     $.pivotUtilities = {
       aggregatorTemplates: aggregatorTemplates,
       aggregators: aggregators,
@@ -48536,26 +48684,18 @@ return jQuery;
       naturalSort: naturalSort,
       numberFormat: numberFormat
     };
+
     /*
-    	Data Model class
-    */
-
+    Data Model class
+     */
     PivotData = (function() {
-
       function PivotData(input, opts) {
         this.getAggregator = __bind(this.getAggregator, this);
-
         this.getRowKeys = __bind(this.getRowKeys, this);
-
         this.getColKeys = __bind(this.getColKeys, this);
-
         this.sortKeys = __bind(this.sortKeys, this);
-
         this.arrSort = __bind(this.arrSort, this);
-
         this.natSort = __bind(this.natSort, this);
-
-        var _this = this;
         this.aggregator = opts.aggregator;
         this.aggregatorName = opts.aggregatorName;
         this.colAttrs = opts.cols;
@@ -48568,11 +48708,13 @@ return jQuery;
         this.colTotals = {};
         this.allTotal = this.aggregator(this, [], []);
         this.sorted = false;
-        PivotData.forEachRecord(input, opts.derivedAttributes, function(record) {
-          if (opts.filter(record)) {
-            return _this.processRecord(record);
-          }
-        });
+        PivotData.forEachRecord(input, opts.derivedAttributes, (function(_this) {
+          return function(record) {
+            if (opts.filter(record)) {
+              return _this.processRecord(record);
+            }
+          };
+        })(this));
       }
 
       PivotData.forEachRecord = function(input, derivedAttributes, f) {
@@ -48738,10 +48880,10 @@ return jQuery;
       return PivotData;
 
     })();
-    /*
-    	Default Renderer for hierarchical table layout
-    */
 
+    /*
+    Default Renderer for hierarchical table layout
+     */
     pivotTableRenderer = function(pivotData, opts) {
       var aggregator, c, colAttrs, colKey, colKeys, defaults, i, j, r, result, rowAttrs, rowKey, rowKeys, spanSize, td, th, totalAggregator, tr, txt, val, x;
       defaults = {
@@ -48910,12 +49052,12 @@ return jQuery;
       result.setAttribute("data-numcols", colKeys.length);
       return result;
     };
-    /*
-    	Pivot Table core: create PivotData object and call Renderer on it
-    */
 
+    /*
+    Pivot Table core: create PivotData object and call Renderer on it
+     */
     $.fn.pivot = function(input, opts) {
-      var defaults, pivotData, result, x;
+      var defaults, e, pivotData, result, x;
       defaults = {
         cols: [],
         rows: [],
@@ -48935,13 +49077,15 @@ return jQuery;
         pivotData = new PivotData(input, opts);
         try {
           result = opts.renderer(pivotData, opts.rendererOptions);
-        } catch (e) {
+        } catch (_error) {
+          e = _error;
           if (typeof console !== "undefined" && console !== null) {
             console.error(e.stack);
           }
           result = $("<span>").html(opts.localeStrings.renderError);
         }
-      } catch (e) {
+      } catch (_error) {
+        e = _error;
         if (typeof console !== "undefined" && console !== null) {
           console.error(e.stack);
         }
@@ -48953,13 +49097,12 @@ return jQuery;
       }
       return this.append(result);
     };
-    /*
-    	Pivot Table UI: calls Pivot Table core above with options set by user
-    */
 
+    /*
+    Pivot Table UI: calls Pivot Table core above with options set by user
+     */
     $.fn.pivotUI = function(input, inputOpts, overwrite, locale) {
-      var a, aggregator, attrLength, axisValues, c, colList, defaults, existingOpts, i, initialRender, k, opts, pivotTable, refresh, refreshDelayed, renderer, rendererControl, shownAttributes, tblCols, tr1, tr2, uiTable, unusedAttrsVerticalAutoOverride, x, _fn, _i, _j, _k, _l, _len, _len1, _len2, _len3, _ref, _ref1, _ref2, _ref3, _ref4,
-        _this = this;
+      var a, aggregator, attrLength, axisValues, c, colList, defaults, e, existingOpts, i, initialRender, k, opts, pivotTable, refresh, refreshDelayed, renderer, rendererControl, shownAttributes, tblCols, tr1, tr2, uiTable, unusedAttrsVerticalAutoOverride, x, _fn, _i, _j, _k, _l, _len, _len1, _len2, _len3, _ref, _ref1, _ref2, _ref3, _ref4;
       if (overwrite == null) {
         overwrite = false;
       }
@@ -48988,7 +49131,7 @@ return jQuery;
         localeStrings: locales[locale].localeStrings
       };
       existingOpts = this.data("pivotUIOptions");
-      if (!(existingOpts != null) || overwrite) {
+      if ((existingOpts == null) || overwrite) {
         opts = $.extend(defaults, inputOpts);
       } else {
         opts = existingOpts;
@@ -49018,7 +49161,7 @@ return jQuery;
           axisValues[x] = {};
         }
         PivotData.forEachRecord(input, opts.derivedAttributes, function(record) {
-          var v, _base, _ref1, _results;
+          var v, _base, _results;
           _results = [];
           for (k in record) {
             if (!__hasProp.call(record, k)) continue;
@@ -49029,7 +49172,7 @@ return jQuery;
             if (v == null) {
               v = "null";
             }
-            if ((_ref1 = (_base = axisValues[k])[v]) == null) {
+            if ((_base = axisValues[k])[v] == null) {
               _base[v] = 0;
             }
             _results.push(axisValues[k][v]++);
@@ -49194,112 +49337,116 @@ return jQuery;
           this.find(".pvtRenderer").val(opts.rendererName);
         }
         initialRender = true;
-        refreshDelayed = function() {
-          var attr, exclusions, natSort, newDropdown, numInputsToProcess, pivotUIOptions, pvtVals, subopts, unusedAttrsContainer, vals, _len4, _m, _n, _ref5;
-          subopts = {
-            derivedAttributes: opts.derivedAttributes,
-            localeStrings: opts.localeStrings,
-            rendererOptions: opts.rendererOptions,
-            cols: [],
-            rows: []
-          };
-          numInputsToProcess = (_ref5 = opts.aggregators[aggregator.val()]([])().numInputs) != null ? _ref5 : 0;
-          vals = [];
-          _this.find(".pvtRows li span.pvtAttr").each(function() {
-            return subopts.rows.push($(this).data("attrName"));
-          });
-          _this.find(".pvtCols li span.pvtAttr").each(function() {
-            return subopts.cols.push($(this).data("attrName"));
-          });
-          _this.find(".pvtVals select.pvtAttrDropdown").each(function() {
-            if (numInputsToProcess === 0) {
-              return $(this).remove();
-            } else {
-              numInputsToProcess--;
-              if ($(this).val() !== "") {
-                return vals.push($(this).val());
-              }
-            }
-          });
-          if (numInputsToProcess !== 0) {
-            pvtVals = _this.find(".pvtVals");
-            for (x = _m = 0; 0 <= numInputsToProcess ? _m < numInputsToProcess : _m > numInputsToProcess; x = 0 <= numInputsToProcess ? ++_m : --_m) {
-              newDropdown = $("<select class='pvtAttrDropdown'>").append($("<option>")).bind("change", function() {
-                return refresh();
-              });
-              for (_n = 0, _len4 = shownAttributes.length; _n < _len4; _n++) {
-                attr = shownAttributes[_n];
-                newDropdown.append($("<option>").val(attr).text(attr));
-              }
-              pvtVals.append(newDropdown);
-            }
-          }
-          if (initialRender) {
-            vals = opts.vals;
-            i = 0;
-            _this.find(".pvtVals select.pvtAttrDropdown").each(function() {
-              $(this).val(vals[i]);
-              return i++;
+        refreshDelayed = (function(_this) {
+          return function() {
+            var attr, exclusions, natSort, newDropdown, numInputsToProcess, pivotUIOptions, pvtVals, subopts, unusedAttrsContainer, vals, _len4, _m, _n, _ref5;
+            subopts = {
+              derivedAttributes: opts.derivedAttributes,
+              localeStrings: opts.localeStrings,
+              rendererOptions: opts.rendererOptions,
+              cols: [],
+              rows: []
+            };
+            numInputsToProcess = (_ref5 = opts.aggregators[aggregator.val()]([])().numInputs) != null ? _ref5 : 0;
+            vals = [];
+            _this.find(".pvtRows li span.pvtAttr").each(function() {
+              return subopts.rows.push($(this).data("attrName"));
             });
-            initialRender = false;
-          }
-          subopts.aggregatorName = aggregator.val();
-          subopts.vals = vals;
-          subopts.aggregator = opts.aggregators[aggregator.val()](vals);
-          subopts.renderer = opts.renderers[renderer.val()];
-          exclusions = {};
-          _this.find('input.pvtFilter').not(':checked').each(function() {
-            var filter;
-            filter = $(this).data("filter");
-            if (exclusions[filter[0]] != null) {
-              return exclusions[filter[0]].push(filter[1]);
-            } else {
-              return exclusions[filter[0]] = [filter[1]];
+            _this.find(".pvtCols li span.pvtAttr").each(function() {
+              return subopts.cols.push($(this).data("attrName"));
+            });
+            _this.find(".pvtVals select.pvtAttrDropdown").each(function() {
+              if (numInputsToProcess === 0) {
+                return $(this).remove();
+              } else {
+                numInputsToProcess--;
+                if ($(this).val() !== "") {
+                  return vals.push($(this).val());
+                }
+              }
+            });
+            if (numInputsToProcess !== 0) {
+              pvtVals = _this.find(".pvtVals");
+              for (x = _m = 0; 0 <= numInputsToProcess ? _m < numInputsToProcess : _m > numInputsToProcess; x = 0 <= numInputsToProcess ? ++_m : --_m) {
+                newDropdown = $("<select class='pvtAttrDropdown'>").append($("<option>")).bind("change", function() {
+                  return refresh();
+                });
+                for (_n = 0, _len4 = shownAttributes.length; _n < _len4; _n++) {
+                  attr = shownAttributes[_n];
+                  newDropdown.append($("<option>").val(attr).text(attr));
+                }
+                pvtVals.append(newDropdown);
+              }
             }
-          });
-          subopts.filter = function(record) {
-            var excludedItems, _ref6;
-            if (!opts.filter(record)) {
-              return false;
+            if (initialRender) {
+              vals = opts.vals;
+              i = 0;
+              _this.find(".pvtVals select.pvtAttrDropdown").each(function() {
+                $(this).val(vals[i]);
+                return i++;
+              });
+              initialRender = false;
             }
-            for (k in exclusions) {
-              excludedItems = exclusions[k];
-              if (_ref6 = "" + record[k], __indexOf.call(excludedItems, _ref6) >= 0) {
+            subopts.aggregatorName = aggregator.val();
+            subopts.vals = vals;
+            subopts.aggregator = opts.aggregators[aggregator.val()](vals);
+            subopts.renderer = opts.renderers[renderer.val()];
+            exclusions = {};
+            _this.find('input.pvtFilter').not(':checked').each(function() {
+              var filter;
+              filter = $(this).data("filter");
+              if (exclusions[filter[0]] != null) {
+                return exclusions[filter[0]].push(filter[1]);
+              } else {
+                return exclusions[filter[0]] = [filter[1]];
+              }
+            });
+            subopts.filter = function(record) {
+              var excludedItems, _ref6;
+              if (!opts.filter(record)) {
                 return false;
               }
+              for (k in exclusions) {
+                excludedItems = exclusions[k];
+                if (_ref6 = "" + record[k], __indexOf.call(excludedItems, _ref6) >= 0) {
+                  return false;
+                }
+              }
+              return true;
+            };
+            pivotTable.pivot(input, subopts);
+            pivotUIOptions = $.extend(opts, {
+              cols: subopts.cols,
+              rows: subopts.rows,
+              vals: vals,
+              exclusions: exclusions,
+              aggregatorName: aggregator.val(),
+              rendererName: renderer.val()
+            });
+            _this.data("pivotUIOptions", pivotUIOptions);
+            if (opts.autoSortUnusedAttrs) {
+              natSort = $.pivotUtilities.naturalSort;
+              unusedAttrsContainer = _this.find("td.pvtUnused.pvtAxisContainer");
+              $(unusedAttrsContainer).children("li").sort(function(a, b) {
+                return natSort($(a).text(), $(b).text());
+              }).appendTo(unusedAttrsContainer);
             }
-            return true;
+            pivotTable.css("opacity", 1);
+            if (opts.onRefresh != null) {
+              return opts.onRefresh(pivotUIOptions);
+            }
           };
-          pivotTable.pivot(input, subopts);
-          pivotUIOptions = $.extend(opts, {
-            cols: subopts.cols,
-            rows: subopts.rows,
-            vals: vals,
-            exclusions: exclusions,
-            aggregatorName: aggregator.val(),
-            rendererName: renderer.val()
-          });
-          _this.data("pivotUIOptions", pivotUIOptions);
-          if (opts.autoSortUnusedAttrs) {
-            natSort = $.pivotUtilities.naturalSort;
-            unusedAttrsContainer = _this.find("td.pvtUnused.pvtAxisContainer");
-            $(unusedAttrsContainer).children("li").sort(function(a, b) {
-              return natSort($(a).text(), $(b).text());
-            }).appendTo(unusedAttrsContainer);
-          }
-          pivotTable.css("opacity", 1);
-          if (opts.onRefresh != null) {
-            return opts.onRefresh(pivotUIOptions);
-          }
-        };
-        refresh = function() {
-          pivotTable.css("opacity", 0.5);
-          return setTimeout(refreshDelayed, 10);
-        };
+        })(this);
+        refresh = (function(_this) {
+          return function() {
+            pivotTable.css("opacity", 0.5);
+            return setTimeout(refreshDelayed, 10);
+          };
+        })(this);
         refresh();
         this.find(".pvtAxisContainer").sortable({
           update: function(e, ui) {
-            if (!(ui.sender != null)) {
+            if (ui.sender == null) {
               return refresh();
             }
           },
@@ -49307,7 +49454,8 @@ return jQuery;
           items: 'li',
           placeholder: 'pvtPlaceholder'
         });
-      } catch (e) {
+      } catch (_error) {
+        e = _error;
         if (typeof console !== "undefined" && console !== null) {
           console.error(e.stack);
         }
@@ -49315,13 +49463,12 @@ return jQuery;
       }
       return this;
     };
-    /*
-    	Heatmap post-processing
-    */
 
+    /*
+    Heatmap post-processing
+     */
     $.fn.heatmap = function(scope) {
-      var colorGen, heatmapper, i, j, numCols, numRows, _i, _j,
-        _this = this;
+      var colorGen, heatmapper, i, j, numCols, numRows, _i, _j;
       if (scope == null) {
         scope = "heatmap";
       }
@@ -49355,26 +49502,28 @@ return jQuery;
           return hexGen(hex);
         };
       };
-      heatmapper = function(scope, color) {
-        var colorFor, forEachCell, values;
-        forEachCell = function(f) {
-          return _this.find(scope).each(function() {
-            var x;
-            x = $(this).data("value");
-            if ((x != null) && isFinite(x)) {
-              return f(x, $(this));
-            }
+      heatmapper = (function(_this) {
+        return function(scope, color) {
+          var colorFor, forEachCell, values;
+          forEachCell = function(f) {
+            return _this.find(scope).each(function() {
+              var x;
+              x = $(this).data("value");
+              if ((x != null) && isFinite(x)) {
+                return f(x, $(this));
+              }
+            });
+          };
+          values = [];
+          forEachCell(function(x) {
+            return values.push(x);
+          });
+          colorFor = colorGen(color, Math.min.apply(Math, values), Math.max.apply(Math, values));
+          return forEachCell(function(x, elem) {
+            return elem.css("background-color", "#" + colorFor(x));
           });
         };
-        values = [];
-        forEachCell(function(x) {
-          return values.push(x);
-        });
-        colorFor = colorGen(color, Math.min.apply(Math, values), Math.max.apply(Math, values));
-        return forEachCell(function(x, elem) {
-          return elem.css("background-color", "#" + colorFor(x));
-        });
-      };
+      })(this);
       switch (scope) {
         case "heatmap":
           heatmapper(".pvtVal", "red");
@@ -49393,61 +49542,62 @@ return jQuery;
       heatmapper(".pvtTotal.colTotal", "red");
       return this;
     };
-    /*
-    	Barchart post-processing
-    */
 
+    /*
+    Barchart post-processing
+     */
     return $.fn.barchart = function() {
-      var barcharter, i, numCols, numRows, _i,
-        _this = this;
+      var barcharter, i, numCols, numRows, _i;
       numRows = this.data("numrows");
       numCols = this.data("numcols");
-      barcharter = function(scope) {
-        var forEachCell, max, scaler, values;
-        forEachCell = function(f) {
-          return _this.find(scope).each(function() {
-            var x;
-            x = $(this).data("value");
-            if ((x != null) && isFinite(x)) {
-              return f(x, $(this));
-            }
+      barcharter = (function(_this) {
+        return function(scope) {
+          var forEachCell, max, scaler, values;
+          forEachCell = function(f) {
+            return _this.find(scope).each(function() {
+              var x;
+              x = $(this).data("value");
+              if ((x != null) && isFinite(x)) {
+                return f(x, $(this));
+              }
+            });
+          };
+          values = [];
+          forEachCell(function(x) {
+            return values.push(x);
+          });
+          max = Math.max.apply(Math, values);
+          scaler = function(x) {
+            return 100 * x / (1.4 * max);
+          };
+          return forEachCell(function(x, elem) {
+            var text, wrapper;
+            text = elem.text();
+            wrapper = $("<div>").css({
+              "position": "relative",
+              "height": "55px"
+            });
+            wrapper.append($("<div>").css({
+              "position": "absolute",
+              "bottom": 0,
+              "left": 0,
+              "right": 0,
+              "height": scaler(x) + "%",
+              "background-color": "gray"
+            }));
+            wrapper.append($("<div>").text(text).css({
+              "position": "relative",
+              "padding-left": "5px",
+              "padding-right": "5px"
+            }));
+            return elem.css({
+              "padding": 0,
+              "padding-top": "5px",
+              "text-align": "center"
+            }).html(wrapper);
           });
         };
-        values = [];
-        forEachCell(function(x) {
-          return values.push(x);
-        });
-        max = Math.max.apply(Math, values);
-        scaler = function(x) {
-          return 100 * x / (1.4 * max);
-        };
-        return forEachCell(function(x, elem) {
-          var text, wrapper;
-          text = elem.text();
-          wrapper = $("<div>").css({
-            "position": "relative",
-            "height": "55px"
-          });
-          wrapper.append($("<div>").css({
-            "position": "absolute",
-            "bottom": 0,
-            "left": 0,
-            "right": 0,
-            "height": scaler(x) + "%",
-            "background-color": "gray"
-          }));
-          wrapper.append($("<div>").text(text).css({
-            "position": "relative",
-            "padding-left": "5px",
-            "padding-right": "5px"
-          }));
-          return elem.css({
-            "padding": 0,
-            "padding-top": "5px",
-            "text-align": "center"
-          }).html(wrapper);
-        });
-      };
+      })(this);
       for (i = _i = 0; 0 <= numRows ? _i < numRows : _i > numRows; i = 0 <= numRows ? ++_i : --_i) {
         barcharter(".pvtVal.row" + i);
       }
@@ -49458,6 +49608,7 @@ return jQuery;
 
 }).call(this);
 
+//# sourceMappingURL=pivot.js.map
 },{"jquery":19}],23:[function(require,module,exports){
 ;(function(win){
 	var store = {},
@@ -49760,7 +49911,7 @@ module.exports = {
 module.exports={
   "name": "yasgui-yasr",
   "description": "Yet Another SPARQL Resultset GUI",
-  "version": "2.4.1",
+  "version": "2.4.2",
   "main": "src/main.js",
   "licenses": [
     {
@@ -50201,7 +50352,8 @@ var loader = function() {
 			checkAndWait();
 		} else {
 			if ((typeof window !== "undefined" ? window.google : typeof global !== "undefined" ? global.google : null)) {
-				mod.emit('initError');
+				//already loaded! everything is fine
+				mod.emit('initDone');
 			} else if (loadingFailed) {
 				mod.emit('initError')
 			} else {
@@ -50778,10 +50930,13 @@ var drawHeader = function(yasr) {
 				if (currentPlugin && currentPlugin.getDownloadInfo) {
 					var downloadInfo = currentPlugin.getDownloadInfo();
 					var downloadUrl = stringToUrl(downloadInfo.getContent(), (downloadInfo.contentType? downloadInfo.contentType: "text/plain"));
-					var downloadMockLink = $("<a></a>");
-					downloadMockLink.attr("href", downloadUrl);
-					downloadMockLink.attr("download", downloadInfo.filename);
-					downloadMockLink.get(0).click();
+					var downloadMockLink = $("<a></a>",
+							{
+						href: downloadUrl,
+						download: downloadInfo.filename
+					});
+					require('./utils.js').fireClick(downloadMockLink);
+//					downloadMockLink[0].click();
 				}
 			});
 		yasr.header.append(button);
@@ -50838,7 +50993,7 @@ try {root.registerOutput('table', require("./table.js"))} catch(e){};
 try {root.registerOutput('error', require("./error.js"))} catch(e){};
 try {root.registerOutput('pivot', require("./pivot.js"))} catch(e){};
 try {root.registerOutput('gchart', require("./gchart.js"))} catch(e){};
-},{"../package.json":28,"./boolean.js":30,"./defaults.js":31,"./error.js":32,"./gChartLoader.js":33,"./gchart.js":34,"./imgs.js":35,"./parsers/wrapper.js":41,"./pivot.js":43,"./rawResponse.js":44,"./table.js":45,"jquery":19,"yasgui-utils":25}],37:[function(require,module,exports){
+},{"../package.json":28,"./boolean.js":30,"./defaults.js":31,"./error.js":32,"./gChartLoader.js":33,"./gchart.js":34,"./imgs.js":35,"./parsers/wrapper.js":41,"./pivot.js":43,"./rawResponse.js":44,"./table.js":45,"./utils.js":46,"jquery":19,"yasgui-utils":25}],37:[function(require,module,exports){
 'use strict';
 var $ = require("jquery");
 var root = module.exports = function(queryResponse) {
@@ -51393,7 +51548,7 @@ var root = module.exports = function(yasr) {
 			/**
 			 * post process
 			 */
-			//use 'move' handler for variables
+			//use 'move' handler for variables. This removes the 'filter' button though. Might want to re-enable this in the future
 			var icon = $(yUtils.svg.getElement(imgs.move));
 			$pivotWrapper.find('.pvtTriangle').replaceWith(icon);
 			
@@ -51675,17 +51830,23 @@ var root = module.exports = function(yasr) {
 		
 		addEvents();
 		
+		//finally, make the columns dragable:
+		table.colResizable();
+		//and: make sure the height of the resize handlers matches the height of the table header
+		var thHeight = table.find('thead').outerHeight();
+		$(yasr.resultsContainer).find('.JCLRgrip').height(table.find('thead').outerHeight());
+		
 		//move the table upward, so the table options nicely aligns with the yasr header
 		var headerHeight = yasr.header.outerHeight() - 5; //add some space of 5 px between table and yasr header
 		if (headerHeight > 0) {
 			yasr.resultsContainer.find(".dataTables_wrapper")
-			.css("position", "relative")
-			.css("top", "-" + headerHeight + "px")
-			.css("margin-bottom", "-" + headerHeight + "px");
+				.css("position", "relative")
+				.css("top", "-" + headerHeight + "px")
+				.css("margin-bottom", "-" + headerHeight + "px");
+			
+			//and: make sure the height of the resize handlers matches the height of the table header
+			$(yasr.resultsContainer).find('.JCLRgrip').css('marginTop', headerHeight + 'px');
 		}
-		
-		//finally, make the columns dragable:
-		table.colResizable();
 		
 		
 	};
@@ -52012,6 +52173,21 @@ module.exports = {
 			}
 		}
 	},
+	fireClick : function($els) {
+		if (!$els)
+			return;
+		$els.each(function(i, el) {
+			var $el = $(el);
+			if (document.dispatchEvent) { // W3C
+				var oEvent = document.createEvent("MouseEvents");
+				oEvent.initMouseEvent("click", true, true, window, 1, 1, 1, 1, 1,
+						false, false, false, false, 0, $el[0]);
+				$el[0].dispatchEvent(oEvent);
+			} else if (document.fireEvent) { // IE
+				$el[0].click();
+			}
+		});
+	}
 };
 },{"jquery":19}]},{},[1])(1)
 });
