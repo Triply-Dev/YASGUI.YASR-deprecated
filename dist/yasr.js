@@ -352,8 +352,8 @@ RegExp.escape= function(s) {
     return s.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&');
 };
 
-(function( $ ) {
   'use strict'
+  var $ = (function(){try{return require('jquery')}catch(e){return window.jQuery}})();
   /**
    * jQuery.csv.defaults
    * Encapsulates the method paramater defaults for the CSV plugin module.
@@ -1166,9 +1166,9 @@ RegExp.escape= function(s) {
   $.csv2Array = $.csv.toArrays;
   $.csv2Dictionary = $.csv.toObjects;
 
-})( jQuery );
 
-},{}],4:[function(require,module,exports){
+
+},{"jquery":undefined}],4:[function(require,module,exports){
 // Copyright Joyent, Inc. and other Node contributors.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
@@ -1845,6 +1845,10 @@ CodeMirror.registerHelper("fold", "include", function(cm, start) {
       return editorOptions[name];
     return defaultOptions[name];
   }
+
+  CodeMirror.defineExtension("foldOption", function(options, name) {
+    return getOption(this, options, name);
+  });
 });
 
 },{"codemirror":undefined}],8:[function(require,module,exports){
@@ -1917,14 +1921,16 @@ CodeMirror.registerHelper("fold", "include", function(cm, start) {
 
   function updateFoldInfo(cm, from, to) {
     var opts = cm.state.foldGutter.options, cur = from;
+    var minSize = cm.foldOption(opts, "minFoldSize");
+    var func = cm.foldOption(opts, "rangeFinder");
     cm.eachLine(from, to, function(line) {
       var mark = null;
       if (isFolded(cm, cur)) {
         mark = marker(opts.indicatorFolded);
       } else {
-        var pos = Pos(cur, 0), func = opts.rangeFinder || CodeMirror.fold.auto;
+        var pos = Pos(cur, 0);
         var range = func && func(cm, pos);
-        if (range && range.from.line + 1 < range.to.line)
+        if (range && range.to.line - range.from.line >= minSize)
           mark = marker(opts.indicatorOpen);
       }
       cm.setGutterMarker(line, opts.gutter, mark);
@@ -2770,6 +2776,12 @@ CodeMirror.defineMode("javascript", function(config, parserConfig) {
     if (type == "if") return cont(expression, comprehension);
   }
 
+  function isContinuedStatement(state, textAfter) {
+    return state.lastType == "operator" || state.lastType == "," ||
+      isOperatorChar.test(textAfter.charAt(0)) ||
+      /[,.]/.test(textAfter.charAt(0));
+  }
+
   // Interface
 
   return {
@@ -2821,7 +2833,7 @@ CodeMirror.defineMode("javascript", function(config, parserConfig) {
       else if (type == "form" && firstChar == "{") return lexical.indented;
       else if (type == "form") return lexical.indented + indentUnit;
       else if (type == "stat")
-        return lexical.indented + (state.lastType == "operator" || state.lastType == "," ? statementIndent || indentUnit : 0);
+        return lexical.indented + (isContinuedStatement(state, textAfter) ? statementIndent || indentUnit : 0);
       else if (lexical.info == "switch" && !closing && parserConfig.doubleIndentSwitch != false)
         return lexical.indented + (/^(?:case|default)\b/.test(textAfter) ? indentUnit : 2 * indentUnit);
       else if (lexical.align) return lexical.column + (closing ? 0 : 1);
@@ -3764,7 +3776,7 @@ module.exports = {
 module.exports={
   "name": "yasgui-yasr",
   "description": "Yet Another SPARQL Resultset GUI",
-  "version": "2.4.2",
+  "version": "2.4.3",
   "main": "src/main.js",
   "licenses": [
     {
@@ -4854,7 +4866,7 @@ var root = module.exports = function(queryResponse) {
 };
 },{"./dlv.js":29,"jquery":undefined}],29:[function(require,module,exports){
 'use strict';
-var $ = jQuery = (function(){try{return require('jquery')}catch(e){return window.jQuery}})();
+var $ = (function(){try{return require('jquery')}catch(e){return window.jQuery}})();
 require("../../lib/jquery.csv-0.71.js");
 var root = module.exports = function(queryResponse, separator) {
 	var json = {};
