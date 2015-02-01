@@ -1,5 +1,5 @@
 'use strict';
-var $ = jQuery = require('jquery');
+var $ = require('jquery');
 require("../../lib/jquery.csv-0.71.js");
 var root = module.exports = function(queryResponse, separator) {
 	var json = {};
