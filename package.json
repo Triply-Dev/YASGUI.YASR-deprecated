@@ -1,7 +1,7 @@
 {
   "name": "yasgui-yasr",
   "description": "Yet Another SPARQL Resultset GUI",
-  "version": "2.4.2",
+  "version": "2.4.3",
   "main": "src/main.js",
   "licenses": [
     {
