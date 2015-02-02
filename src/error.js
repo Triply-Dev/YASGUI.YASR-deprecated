@@ -39,7 +39,16 @@ var root = module.exports = function(yasr) {
 			//for backwards compatability (when creating the error string was done externally
 			responseText = error;
 		}
-		if (responseText) $container.append($("<pre>").text(responseText));
+		if (responseText) {
+			$container.append($("<pre>", {class:'corsMessage'}).text(responseText));
+		} else if (error.status === 0){
+			//cors disabled, wrong url, or endpoint down
+			$container.append(
+				$('<div>', {class: 'corsMessage'})
+				.append(options.corsMessage)
+			);
+		}
+		
 	};
 	
 	
@@ -61,5 +70,5 @@ var root = module.exports = function(yasr) {
  * @attribute YASR.plugins.error.defaults
  */
 root.defaults = {
-	
+	corsMessage: 'Unable to get response from endpoint'
 };
