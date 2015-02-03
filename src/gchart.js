@@ -97,7 +97,16 @@ var root = module.exports = function(yasr){
 				var jsonResults = yasr.results.getAsJson();
 				
 				jsonResults.head.vars.forEach(function(variable) {
-					var type = utils.getGoogleType(jsonResults.results.bindings[0][variable]);
+					var type = 'string';
+					try {
+						type = utils.getGoogleTypeForBindings(jsonResults.results.bindings, variable);
+					} catch(e) {
+						if (e instanceof require('./exceptions.js').GoogleTypeException) {
+							yasr.warn(e.toHtml())
+						} else {
+							throw e;
+						}
+					}
 					dataTable.addColumn(type, variable);
 				});
 				var usedPrefixes = null;
@@ -106,8 +115,8 @@ var root = module.exports = function(yasr){
 				}
 				jsonResults.results.bindings.forEach(function(binding) {
 					var row = [];
-					jsonResults.head.vars.forEach(function(variable) {
-						row.push(utils.castGoogleType(binding[variable], usedPrefixes));
+					jsonResults.head.vars.forEach(function(variable, columnId) {
+						row.push(utils.castGoogleType(binding[variable], usedPrefixes, dataTable.getColumnType(columnId)));
 					})
 					dataTable.addRow(row);
 				});

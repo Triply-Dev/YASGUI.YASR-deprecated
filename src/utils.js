@@ -1,5 +1,7 @@
 'use strict';
-var $ = require('jquery');
+var $ = require('jquery'),
+	GoogleTypeException = require('./exceptions.js').GoogleTypeException;
+
 module.exports = {
 	uriToPrefixed: function(prefixes, uri) {
 		if (prefixes) {
@@ -12,56 +14,80 @@ module.exports = {
 		}
 		return uri;
 	},
-	getGoogleType: function(binding) {
+	getGoogleTypeForBinding: function(binding) {
 		if (binding.type != null && (binding.type === 'typed-literal' || binding.type === 'literal')) {
 			switch (binding.datatype) {
-			case 'http://www.w3.org/2001/XMLSchema#float':
-			case 'http://www.w3.org/2001/XMLSchema#decimal':
-			case 'http://www.w3.org/2001/XMLSchema#int':
-			case 'http://www.w3.org/2001/XMLSchema#integer':
-			case 'http://www.w3.org/2001/XMLSchema#long':
-			case 'http://www.w3.org/2001/XMLSchema#gYearMonth':
-			case 'http://www.w3.org/2001/XMLSchema#gYear':
-			case 'http://www.w3.org/2001/XMLSchema#gMonthDay':
-			case 'http://www.w3.org/2001/XMLSchema#gDay':
-			case 'http://www.w3.org/2001/XMLSchema#gMonth':
-				return "number";
-			case 'http://www.w3.org/2001/XMLSchema#date':
-				return "date";
-			case 'http://www.w3.org/2001/XMLSchema#dateTime':
-				return "datetime";
-			case 'http://www.w3.org/2001/XMLSchema#time':
-				return "timeofday";
-			default:
-				return "string";
+				case 'http://www.w3.org/2001/XMLSchema#float':
+				case 'http://www.w3.org/2001/XMLSchema#decimal':
+				case 'http://www.w3.org/2001/XMLSchema#int':
+				case 'http://www.w3.org/2001/XMLSchema#integer':
+				case 'http://www.w3.org/2001/XMLSchema#long':
+				case 'http://www.w3.org/2001/XMLSchema#gYearMonth':
+				case 'http://www.w3.org/2001/XMLSchema#gYear':
+				case 'http://www.w3.org/2001/XMLSchema#gMonthDay':
+				case 'http://www.w3.org/2001/XMLSchema#gDay':
+				case 'http://www.w3.org/2001/XMLSchema#gMonth':
+					return "number";
+				case 'http://www.w3.org/2001/XMLSchema#date':
+					return "date";
+				case 'http://www.w3.org/2001/XMLSchema#dateTime':
+					return "datetime";
+				case 'http://www.w3.org/2001/XMLSchema#time':
+					return "timeofday";
+				default:
+					return "string";
 			}
 		} else {
 			return "string";
 		}
 	},
-	castGoogleType: function(binding, prefixes){
+	getGoogleTypeForBindings: function(bindings, varName) {
+		var types = {};
+		var typeCount = 0;
+		bindings.forEach(function(binding){
+			var type = module.exports.getGoogleTypeForBinding(binding[varName]);
+			if (!(type in types)) {
+				types[type] = 0;
+				typeCount++;
+			}
+			types[type]++;
+		});
+		if (typeCount == 0) {
+			return 'string';
+		} else if (typeCount == 1) {
+			for (var type in types) {
+				return type;//just return this one
+			}
+		} else {
+			//we have conflicting types. Throw error
+			throw new GoogleTypeException(types, varName);
+		}
+	},
+	
+	castGoogleType: function(binding, prefixes, googleType) {
 		if (binding == null) {
 			return null;
 		}
-		if (binding.type != null && (binding.type === 'typed-literal' || binding.type === 'literal')) {
+		
+		if (googleType != 'string' && binding.type != null && (binding.type === 'typed-literal' || binding.type === 'literal')) {
 			switch (binding.datatype) {
-			case 'http://www.w3.org/2001/XMLSchema#float':
-			case 'http://www.w3.org/2001/XMLSchema#decimal':
-			case 'http://www.w3.org/2001/XMLSchema#int':
-			case 'http://www.w3.org/2001/XMLSchema#integer':
-			case 'http://www.w3.org/2001/XMLSchema#long':
-			case 'http://www.w3.org/2001/XMLSchema#gYearMonth':
-			case 'http://www.w3.org/2001/XMLSchema#gYear':
-			case 'http://www.w3.org/2001/XMLSchema#gMonthDay':
-			case 'http://www.w3.org/2001/XMLSchema#gDay':
-			case 'http://www.w3.org/2001/XMLSchema#gMonth':
-				return Number(binding.value);
-			case 'http://www.w3.org/2001/XMLSchema#date':
-			case 'http://www.w3.org/2001/XMLSchema#dateTime':
-			case 'http://www.w3.org/2001/XMLSchema#time':
-				return new Date(binding.value);
-			default:
-				return binding.value;
+				case 'http://www.w3.org/2001/XMLSchema#float':
+				case 'http://www.w3.org/2001/XMLSchema#decimal':
+				case 'http://www.w3.org/2001/XMLSchema#int':
+				case 'http://www.w3.org/2001/XMLSchema#integer':
+				case 'http://www.w3.org/2001/XMLSchema#long':
+				case 'http://www.w3.org/2001/XMLSchema#gYearMonth':
+				case 'http://www.w3.org/2001/XMLSchema#gYear':
+				case 'http://www.w3.org/2001/XMLSchema#gMonthDay':
+				case 'http://www.w3.org/2001/XMLSchema#gDay':
+				case 'http://www.w3.org/2001/XMLSchema#gMonth':
+					return Number(binding.value);
+				case 'http://www.w3.org/2001/XMLSchema#date':
+				case 'http://www.w3.org/2001/XMLSchema#dateTime':
+				case 'http://www.w3.org/2001/XMLSchema#time':
+					return new Date(binding.value);
+				default:
+					return binding.value;
 			}
 		} else {
 			if (binding.type = 'uri') {
