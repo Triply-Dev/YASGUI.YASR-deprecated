@@ -1,41 +1,12 @@
 @import "./variables.scss";
 .yasr {
 	padding-top: 5px;
-	
-	.svgImg {
-		display:inline-block;
-		bottom: -2px;/**to properly align img**/
-	} 
-	button.btn_smallscreen {
-		display: none;
-	}
-	button.btn_smallscreen div, button.btn_fullscreen div {
-		width: 15px;
-		height: 15px;
-	}
-	&.yasr_fullscreen {
-		z-index: $zIndex-fullscreen;
-		
-		
-		.btn_smallscreen {
-			display: inline-block;
-		}
-		.btn_fullscreen {
-			display: none;
-		}
-		position: fixed;
-		top: 0;
-		bottom:0;
-		left:0;
-		right:0;
-	
-	}
 	background-color:white;
 	font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
 	font-size: 14px;
 	line-height: 1.428571429;
 	color: #333333;
-	
+/* 	position:relative; */
 	@import "../../node_modules/bootstrap-sass/assets/stylesheets/bootstrap/_variables.scss";
 	
 	@import "../../lib/DataTables/media/css/jquery.dataTables.css";

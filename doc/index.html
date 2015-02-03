@@ -55,11 +55,29 @@
 					<li><code>exception: string</code> (optional): YASR can display SPARQL errors as well
 				</ul>
 			</div>
+      <div class="doc">
+        <code>yasr.draw()</code>
+        <p>
+          If there are any results already stored in YASR, draw them according to the currently selected visualization plugin
+        </p>
+			</div>
+      <div class="doc">
+        <code>yasr.draw()</code>
+        <p>
+          If there are any results already stored in YASR, draw them according to the currently selected visualization plugin
+        </p>
+			</div>
+      <div class="doc">
+        <code>yasr.warn(warningMsg: string|object)</code>
+        <p>
+          Show a warning message to the user. Input can either be an html string, or a jQuery object
+        </p>
+			</div>
 			<div class="doc">
-			<code>yasr.somethingDrawn() → boolean</code>
-			<p>
-			Check whether a result has been drawn
-			</p>
+        <code>yasr.somethingDrawn() → boolean</code>
+        <p>
+        Check whether a result has been drawn
+        </p>
 			</div>
 			
 			
@@ -162,7 +180,7 @@
 				
 			</div>
 			<div class="doc" style="margin-left: 30px;">yasr, plugin, binding, sparqlVar, {'rowId': rowId, 'colId': colId, 'usedPrefixes': usedPrefixes})
-				<code style="display: inline-block; white-space:normal;">getCellContent: function (yasr: doc, plugin: doc, bindings: object, var: string, context:object) → string <Br>(default: YASR.plugins.table.getCellContent)</code>
+				<code style="display: inline-block; white-space:normal;">getCellContent: function (yasr: doc, plugin: doc, bindings: object, var: string, context:object) → string </code>
 				<p>Draw the cell content, for a given binding</p>
 			</div>
 			

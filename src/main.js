@@ -147,6 +147,114 @@ var root = module.exports = function(parent, options, queryResults) {
 			}
 		}
 	};
+	var $toggableWarning = null;
+	var $toggableWarningClose = null;
+	var $toggableWarningMsg = null;
+	yasr.warn = function(warning) {
+		if (!$toggableWarning) {
+			//first time instantiation
+			$toggableWarning = $('<div>', {class: 'toggableWarning'}).prependTo(yasr.container).hide();
+			$toggableWarningClose = $('<span>', {class: 'toggleWarning'})
+				.html('&times;')
+				.click(function() {
+					$toggableWarning.hide(400);
+				})
+				.appendTo($toggableWarning);
+			$toggableWarningMsg = $('<span>', {class: 'toggableMsg'}).appendTo($toggableWarning);
+		}
+		$toggableWarningMsg.empty();
+		if (warning instanceof $) {
+			$toggableWarningMsg.append(warning);
+		} else {
+			$toggableWarningMsg.html(warning);
+		}
+		$toggableWarning.show(400);
+	};
+	
+
+	var drawHeader = function(yasr) {
+		var drawOutputSelector = function() {
+			var btnGroup = $('<div class="yasr_btnGroup"></div>');
+			$.each(yasr.plugins, function(pluginName, plugin) {
+				if (plugin.hideFromSelection) return;
+				var name = plugin.name || pluginName;
+				var button = $("<button class='yasr_btn'></button>")
+				.text(name)
+				.addClass("select_" + pluginName)
+				.click(function() {
+					//update buttons
+					btnGroup.find("button.selected").removeClass("selected");
+					$(this).addClass("selected");
+					//set and draw output
+					yasr.options.output = pluginName;
+					
+					//store if needed
+					var selectorId = yasr.getPersistencyId(yasr.options.persistency.outputSelector);
+					if (selectorId) {
+						utils.storage.set(selectorId, yasr.options.output, "month");
+					}
+					
+					//close warning if there is any
+					if ($toggableWarning) $toggableWarning.hide(400);
+					
+					yasr.draw();
+					yasr.updateHeader();
+				})
+				.appendTo(btnGroup);
+				if (yasr.options.output == pluginName) button.addClass("selected");
+			});
+			
+			if (btnGroup.children().length > 1) yasr.header.append(btnGroup);
+		};
+		var drawDownloadIcon = function() {
+			var stringToUrl = function(string, contentType) {
+				var url = null;
+				var windowUrl = window.URL || window.webkitURL || window.mozURL || window.msURL;
+				if (windowUrl && Blob) {
+					var blob = new Blob([string], {type: contentType});
+					url = windowUrl.createObjectURL(blob);
+				}
+				return url;
+			};
+			var button = $("<button class='yasr_btn yasr_downloadIcon btn_icon'></button>")
+				.append(require("yasgui-utils").svg.getElement(require('./imgs.js').download))
+				.click(function() {
+					var currentPlugin = yasr.plugins[yasr.options.output];
+					if (currentPlugin && currentPlugin.getDownloadInfo) {
+						var downloadInfo = currentPlugin.getDownloadInfo();
+						var downloadUrl = stringToUrl(downloadInfo.getContent(), (downloadInfo.contentType? downloadInfo.contentType: "text/plain"));
+						var downloadMockLink = $("<a></a>",
+								{
+							href: downloadUrl,
+							download: downloadInfo.filename
+						});
+						require('./utils.js').fireClick(downloadMockLink);
+//						downloadMockLink[0].click();
+					}
+				});
+			yasr.header.append(button);
+		};
+		var drawFullscreenButton = function() {
+			var button = $("<button class='yasr_btn btn_fullscreen btn_icon'></button>")
+				.append(require("yasgui-utils").svg.getElement(require('./imgs.js').fullscreen))
+				.click(function() {
+					yasr.container.addClass('yasr_fullscreen');
+				});
+			yasr.header.append(button);
+		};
+		var drawSmallscreenButton = function() {
+			var button = $("<button class='yasr_btn btn_smallscreen btn_icon'></button>")
+				.append(require("yasgui-utils").svg.getElement(require('./imgs.js').smallscreen))
+				.click(function() {
+					yasr.container.removeClass('yasr_fullscreen');
+				});
+			yasr.header.append(button);
+		};
+		drawFullscreenButton();drawSmallscreenButton();
+		if (yasr.options.drawOutputSelector) drawOutputSelector();
+		if (yasr.options.drawDownloadIcon) drawDownloadIcon();
+	};
+	
 	
 	
 
@@ -194,86 +302,6 @@ var root = module.exports = function(parent, options, queryResults) {
 };
 
 
-var drawHeader = function(yasr) {
-	var drawOutputSelector = function() {
-		var btnGroup = $('<div class="yasr_btnGroup"></div>');
-		$.each(yasr.plugins, function(pluginName, plugin) {
-			if (plugin.hideFromSelection) return;
-			var name = plugin.name || pluginName;
-			var button = $("<button class='yasr_btn'></button>")
-			.text(name)
-			.addClass("select_" + pluginName)
-			.click(function() {
-				//update buttons
-				btnGroup.find("button.selected").removeClass("selected");
-				$(this).addClass("selected");
-				//set and draw output
-				yasr.options.output = pluginName;
-				
-				//store if needed
-				var selectorId = yasr.getPersistencyId(yasr.options.persistency.outputSelector);
-				if (selectorId) {
-					utils.storage.set(selectorId, yasr.options.output, "month");
-				}
-				
-				
-				yasr.draw();
-				yasr.updateHeader();
-			})
-			.appendTo(btnGroup);
-			if (yasr.options.output == pluginName) button.addClass("selected");
-		});
-		
-		if (btnGroup.children().length > 1) yasr.header.append(btnGroup);
-	};
-	var drawDownloadIcon = function() {
-		var stringToUrl = function(string, contentType) {
-			var url = null;
-			var windowUrl = window.URL || window.webkitURL || window.mozURL || window.msURL;
-			if (windowUrl && Blob) {
-				var blob = new Blob([string], {type: contentType});
-				url = windowUrl.createObjectURL(blob);
-			}
-			return url;
-		};
-		var button = $("<button class='yasr_btn yasr_downloadIcon btn_icon'></button>")
-			.append(require("yasgui-utils").svg.getElement(require('./imgs.js').download))
-			.click(function() {
-				var currentPlugin = yasr.plugins[yasr.options.output];
-				if (currentPlugin && currentPlugin.getDownloadInfo) {
-					var downloadInfo = currentPlugin.getDownloadInfo();
-					var downloadUrl = stringToUrl(downloadInfo.getContent(), (downloadInfo.contentType? downloadInfo.contentType: "text/plain"));
-					var downloadMockLink = $("<a></a>",
-							{
-						href: downloadUrl,
-						download: downloadInfo.filename
-					});
-					require('./utils.js').fireClick(downloadMockLink);
-//					downloadMockLink[0].click();
-				}
-			});
-		yasr.header.append(button);
-	};
-	var drawFullscreenButton = function() {
-		var button = $("<button class='yasr_btn btn_fullscreen btn_icon'></button>")
-			.append(require("yasgui-utils").svg.getElement(require('./imgs.js').fullscreen))
-			.click(function() {
-				yasr.container.addClass('yasr_fullscreen');
-			});
-		yasr.header.append(button);
-	};
-	var drawSmallscreenButton = function() {
-		var button = $("<button class='yasr_btn btn_smallscreen btn_icon'></button>")
-			.append(require("yasgui-utils").svg.getElement(require('./imgs.js').smallscreen))
-			.click(function() {
-				yasr.container.removeClass('yasr_fullscreen');
-			});
-		yasr.header.append(button);
-	};
-	drawFullscreenButton();drawSmallscreenButton();
-	if (yasr.options.drawOutputSelector) drawOutputSelector();
-	if (yasr.options.drawDownloadIcon) drawDownloadIcon();
-};
 
 root.plugins = {};
 root.registerOutput = function(name, constructor) {
