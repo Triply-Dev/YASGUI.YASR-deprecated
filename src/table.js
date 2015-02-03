@@ -55,7 +55,7 @@ var root = module.exports = function(yasr) {
 		return rows;
 	};
 	
-
+	var eventId = yasr.getPersistencyId('eventId') || '';
 	var addEvents = function() {
 		table.on( 'order.dt', function () {
 		    drawSvgIcons();
@@ -88,6 +88,10 @@ var root = module.exports = function(yasr) {
 			}
 		});
 		
+		
+		$(window).off('resize.' + eventId);//remove previously attached handlers
+		$(window).on('resize.' + eventId, hideOrShowDatatablesControls);
+		hideOrShowDatatablesControls();
 	};
 	
 	plugin.draw = function() {
@@ -166,6 +170,28 @@ var root = module.exports = function(yasr) {
 			buttonTitle: "Download as CSV"
 		};
 	};
+	
+	var hideOrShowDatatablesControls = function() {
+		var show = true;
+		var downloadIcon = yasr.container.find('.yasr_downloadIcon');
+		var dataTablesFilter = yasr.container.find('.dataTables_filter');
+		var downloadPosLeft = downloadIcon.offset().left;
+		if (downloadPosLeft > 0) {
+			var downloadPosRight = downloadPosLeft + downloadIcon.outerWidth();
+			
+			var filterPosLeft = dataTablesFilter.offset().left;
+			if (filterPosLeft > 0 && filterPosLeft < downloadPosRight) {
+				//overlapping! hide
+				show = false;
+			}
+		}
+		if (show) {
+			dataTablesFilter.css("visibility", "visible");
+		} else {
+			dataTablesFilter.css("visibility", "hidden");
+		}
+		
+	}
 	
 	return plugin;
 };
