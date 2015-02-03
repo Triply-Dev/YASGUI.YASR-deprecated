@@ -3710,6 +3710,7 @@ var times = {
 
 var root = module.exports = {
 	set : function(key, val, exp) {
+    if (!store.enabled) return;//this is probably in private mode. Don't run, as we might get Js errors
 		if (key && val) {
 			if (typeof exp == "string") {
 				exp = times[exp]();
@@ -3724,9 +3725,11 @@ var root = module.exports = {
 		}
 	},
 	remove: function(key) {
+    if (!store.enabled) return;//this is probably in private mode. Don't run, as we might get Js errors
 		if (key) store.remove(key)
 	},
 	get : function(key) {
+    if (!store.enabled) return null;//this is probably in private mode. Don't run, as we might get Js errors
 		if (key) {
 			var info = store.get(key);
 			if (!info) {
@@ -3776,7 +3779,7 @@ module.exports = {
 module.exports={
   "name": "yasgui-yasr",
   "description": "Yet Another SPARQL Resultset GUI",
-  "version": "2.4.3",
+  "version": "2.4.4",
   "main": "src/main.js",
   "licenses": [
     {
@@ -4127,27 +4130,40 @@ var root = module.exports = function(yasr) {
 		var error = yasr.results.getException();
 		$container.empty().appendTo(yasr.resultsContainer);
 
-		var statusText = 'Error';
-		if (error.statusText && error.statusText.length < 100) {
-			//use a max: otherwise the alert span will look ugly
-			statusText = error.statusText;
-		}
-		if (error.status != undefined) {
+		
+		if (error.status !== 0) {
+			var statusText = 'Error';
+			if (error.statusText && error.statusText.length < 100) {
+				//use a max: otherwise the alert span will look ugly
+				statusText = error.statusText;
+			}
+			
+			
 			statusText += ' (#' + error.status + ')';
-		}
-		$container
+			
+			$container
 			.append(
 				$("<span>", {class:'exception'})
 				.text(statusText)
 			);
-		var responseText = null;
-		if (error.responseText) {
-			responseText = error.responseText;
-		} else if (typeof error == "string") {
-			//for backwards compatability (when creating the error string was done externally
-			responseText = error;
+			
+			var responseText = null;
+			if (error.responseText) {
+				responseText = error.responseText;
+			} else if (typeof error == "string") {
+				//for backwards compatability (when creating the error string was done externally
+				responseText = error;
+			}
+			if (responseText) $container.append($("<pre>").text(responseText));
+		} else {
+		
+			//cors disabled, wrong url, or endpoint down
+			$container.append(
+				$('<div>', {class: 'corsMessage'})
+				.append(options.corsMessage)
+			);
 		}
-		if (responseText) $container.append($("<pre>").text(responseText));
+		
 	};
 	
 	
@@ -4169,7 +4185,7 @@ var root = module.exports = function(yasr) {
  * @attribute YASR.plugins.error.defaults
  */
 root.defaults = {
-	
+	corsMessage: 'Unable to get response from endpoint'
 };
 },{"jquery":undefined}],24:[function(require,module,exports){
 (function (global){
@@ -5639,7 +5655,7 @@ var root = module.exports = function(yasr) {
 		return rows;
 	};
 	
-
+	var eventId = yasr.getPersistencyId('eventId') || '';
 	var addEvents = function() {
 		table.on( 'order.dt', function () {
 		    drawSvgIcons();
@@ -5672,6 +5688,10 @@ var root = module.exports = function(yasr) {
 			}
 		});
 		
+		
+		$(window).off('resize.' + eventId);//remove previously attached handlers
+		$(window).on('resize.' + eventId, hideOrShowDatatablesControls);
+		hideOrShowDatatablesControls();
 	};
 	
 	plugin.draw = function() {
@@ -5750,6 +5770,28 @@ var root = module.exports = function(yasr) {
 			buttonTitle: "Download as CSV"
 		};
 	};
+	
+	var hideOrShowDatatablesControls = function() {
+		var show = true;
+		var downloadIcon = yasr.container.find('.yasr_downloadIcon');
+		var dataTablesFilter = yasr.container.find('.dataTables_filter');
+		var downloadPosLeft = downloadIcon.offset().left;
+		if (downloadPosLeft > 0) {
+			var downloadPosRight = downloadPosLeft + downloadIcon.outerWidth();
+			
+			var filterPosLeft = dataTablesFilter.offset().left;
+			if (filterPosLeft > 0 && filterPosLeft < downloadPosRight) {
+				//overlapping! hide
+				show = false;
+			}
+		}
+		if (show) {
+			dataTablesFilter.css("visibility", "visible");
+		} else {
+			dataTablesFilter.css("visibility", "hidden");
+		}
+		
+	}
 	
 	return plugin;
 };
