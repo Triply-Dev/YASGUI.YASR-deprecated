@@ -83,6 +83,11 @@ module.exports = {
 				case 'http://www.w3.org/2001/XMLSchema#gMonth':
 					return Number(binding.value);
 				case 'http://www.w3.org/2001/XMLSchema#date':
+					//grrr, the date function does not parse -any- date (including most xsd dates!)
+					//datetime and time seem to be fine though.
+					//so, first try our custom parser. if that does not work, try the regular date parser anyway
+					var date = parseXmlSchemaDate(binding.value);
+					if (date) return date;
 				case 'http://www.w3.org/2001/XMLSchema#dateTime':
 				case 'http://www.w3.org/2001/XMLSchema#time':
 					return new Date(binding.value);
@@ -112,4 +117,15 @@ module.exports = {
 			}
 		});
 	}
+};
+//There are no PROPER xml schema to js date parsers
+//A few libraries exist: moment, jsdate, Xdate, but none of them parse valid xml schema dates (e.g. 1999-11-05+02:00).
+//And: I'm not going to write one myself
+//There are other hacky solutions (regular expressions based on trial/error) such as http://stackoverflow.com/questions/2731579/convert-an-xml-schema-date-string-to-a-javascript-date
+//But if we're doing hacky stuff, I at least want to do it MYSELF!
+var parseXmlSchemaDate = function(dateString) {
+	//change +02:00 to Z+02:00 (something which is parseable by js date)
+	var date = new Date(dateString.replace(/(\d)([\+-]\d{2}:\d{2})/, '$1Z$2'));
+	if (isNaN(date)) return null;
+	return date;
 };
