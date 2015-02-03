@@ -3,7 +3,7 @@
 //the current browserify version does not support require-ing js files which are used as entry-point
 //this way, we can still require our main.js file
 module.exports = require('./main.js');
-},{"./main.js":27}],2:[function(require,module,exports){
+},{"./main.js":28}],2:[function(require,module,exports){
 /**
                _ _____           _          _     _      
               | |  __ \         (_)        | |   | |     
@@ -3779,7 +3779,7 @@ module.exports = {
 module.exports={
   "name": "yasgui-yasr",
   "description": "Yet Another SPARQL Resultset GUI",
-  "version": "2.4.4",
+  "version": "2.4.5",
   "main": "src/main.js",
   "licenses": [
     {
@@ -4012,7 +4012,7 @@ root.version = {
 };
 
 
-},{"../package.json":19,"./imgs.js":26,"jquery":undefined,"yasgui-utils":16}],22:[function(require,module,exports){
+},{"../package.json":19,"./imgs.js":27,"jquery":undefined,"yasgui-utils":16}],22:[function(require,module,exports){
 'use strict';
 var $ = (function(){try{return require('jquery')}catch(e){return window.jQuery}})();
 module.exports = {
@@ -4188,6 +4188,26 @@ root.defaults = {
 	corsMessage: 'Unable to get response from endpoint'
 };
 },{"jquery":undefined}],24:[function(require,module,exports){
+module.exports = {
+	GoogleTypeException:  function(foundTypes, varName) {
+	   this.foundTypes = foundTypes;
+	   this.varName = varName;
+	   this.toString = function() {
+		  var string = 'Conflicting data types found for variable ' + this.varName + '. Assuming all values of this variable are "string".';
+		  string += ' To avoid this issue, cast the values in your SPARQL query to the intended xsd datatype';
+		 
+	      return string;
+	   };
+	   this.toHtml = function() {
+		  var string = 'Conflicting data types found for variable <i>' + this.varName + '</i>. Assuming all values of this variable are "string".';
+		  string += ' As a result, several Google Charts will not render values of this particular variable.';
+		  string += ' To avoid this issue, cast the values in your SPARQL query to the intended xsd datatype';
+		 
+	      return string;
+	   };
+	}
+}
+},{}],25:[function(require,module,exports){
 (function (global){
 var EventEmitter = require('events').EventEmitter,
 	$ = (function(){try{return require('jquery')}catch(e){return window.jQuery}})();
@@ -4298,7 +4318,7 @@ module.exports = new loader();
 
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"events":4,"jquery":undefined}],25:[function(require,module,exports){
+},{"events":4,"jquery":undefined}],26:[function(require,module,exports){
 (function (global){
 'use strict';
 /**
@@ -4399,7 +4419,16 @@ var root = module.exports = function(yasr){
 				var jsonResults = yasr.results.getAsJson();
 				
 				jsonResults.head.vars.forEach(function(variable) {
-					var type = utils.getGoogleType(jsonResults.results.bindings[0][variable]);
+					var type = 'string';
+					try {
+						type = utils.getGoogleTypeForBindings(jsonResults.results.bindings, variable);
+					} catch(e) {
+						if (e instanceof require('./exceptions.js').GoogleTypeException) {
+							yasr.warn(e.toHtml())
+						} else {
+							throw e;
+						}
+					}
 					dataTable.addColumn(type, variable);
 				});
 				var usedPrefixes = null;
@@ -4408,8 +4437,8 @@ var root = module.exports = function(yasr){
 				}
 				jsonResults.results.bindings.forEach(function(binding) {
 					var row = [];
-					jsonResults.head.vars.forEach(function(variable) {
-						row.push(utils.castGoogleType(binding[variable], usedPrefixes));
+					jsonResults.head.vars.forEach(function(variable, columnId) {
+						row.push(utils.castGoogleType(binding[variable], usedPrefixes, dataTable.getColumnType(columnId)));
 					})
 					dataTable.addRow(row);
 				});
@@ -4552,7 +4581,7 @@ function deepEq$(x, y, type){
   }
 }
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"./gChartLoader.js":24,"./utils.js":37,"jquery":undefined,"yasgui-utils":16}],26:[function(require,module,exports){
+},{"./exceptions.js":24,"./gChartLoader.js":25,"./utils.js":38,"jquery":undefined,"yasgui-utils":16}],27:[function(require,module,exports){
 'use strict';
 module.exports = {
 	cross: '<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" x="0px" y="0px" width="30px" height="30px" viewBox="0 0 100 100" enable-background="new 0 0 100 100" xml:space="preserve"><g>	<path d="M83.288,88.13c-2.114,2.112-5.575,2.112-7.689,0L53.659,66.188c-2.114-2.112-5.573-2.112-7.687,0L24.251,87.907   c-2.113,2.114-5.571,2.114-7.686,0l-4.693-4.691c-2.114-2.114-2.114-5.573,0-7.688l21.719-21.721c2.113-2.114,2.113-5.573,0-7.686   L11.872,24.4c-2.114-2.113-2.114-5.571,0-7.686l4.842-4.842c2.113-2.114,5.571-2.114,7.686,0L46.12,33.591   c2.114,2.114,5.572,2.114,7.688,0l21.721-21.719c2.114-2.114,5.573-2.114,7.687,0l4.695,4.695c2.111,2.113,2.111,5.571-0.003,7.686   L66.188,45.973c-2.112,2.114-2.112,5.573,0,7.686L88.13,75.602c2.112,2.111,2.112,5.572,0,7.687L83.288,88.13z"/></g></svg>',
@@ -4565,7 +4594,7 @@ module.exports = {
 	fullscreen: '<svg   xmlns:dc="http://purl.org/dc/elements/1.1/"   xmlns:cc="http://creativecommons.org/ns#"   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"   xmlns:svg="http://www.w3.org/2000/svg"   xmlns="http://www.w3.org/2000/svg"   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"   version="1.1"      x="0px"   y="0px"   width="100%"   height="100%"   viewBox="5 -10 74.074074 100"   enable-background="new 0 0 100 100"   xml:space="preserve"   inkscape:version="0.48.4 r9939"   sodipodi:docname="noun_2186_cc.svg"><metadata     ><rdf:RDF><cc:Work         rdf:about=""><dc:format>image/svg+xml</dc:format><dc:type           rdf:resource="http://purl.org/dc/dcmitype/StillImage" /></cc:Work></rdf:RDF></metadata><defs      /><sodipodi:namedview     pagecolor="#ffffff"     bordercolor="#666666"     borderopacity="1"     objecttolerance="10"     gridtolerance="10"     guidetolerance="10"     inkscape:pageopacity="0"     inkscape:pageshadow="2"     inkscape:window-width="640"     inkscape:window-height="480"          showgrid="false"     fit-margin-top="0"     fit-margin-left="0"     fit-margin-right="0"     fit-margin-bottom="0"     inkscape:zoom="2.36"     inkscape:cx="44.101509"     inkscape:cy="31.481481"     inkscape:window-x="65"     inkscape:window-y="24"     inkscape:window-maximized="0"     inkscape:current-layer="Layer_1" /><path     d="m -7.962963,-10 v 38.889 l 16.667,-16.667 16.667,16.667 5.555,-5.555 -16.667,-16.667 16.667,-16.667 h -38.889 z"          inkscape:connector-curvature="0"     style="fill:#010101" /><path     d="m 92.037037,-10 v 38.889 l -16.667,-16.667 -16.666,16.667 -5.556,-5.555 16.666,-16.667 -16.666,-16.667 h 38.889 z"          inkscape:connector-curvature="0"     style="fill:#010101" /><path     d="M -7.962963,90 V 51.111 l 16.667,16.666 16.667,-16.666 5.555,5.556 -16.667,16.666 16.667,16.667 h -38.889 z"          inkscape:connector-curvature="0"     style="fill:#010101" /><path     d="M 92.037037,90 V 51.111 l -16.667,16.666 -16.666,-16.666 -5.556,5.556 16.666,16.666 -16.666,16.667 h 38.889 z"          inkscape:connector-curvature="0"     style="fill:#010101" /></svg>',
 	smallscreen: '<svg   xmlns:dc="http://purl.org/dc/elements/1.1/"   xmlns:cc="http://creativecommons.org/ns#"   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"   xmlns:svg="http://www.w3.org/2000/svg"   xmlns="http://www.w3.org/2000/svg"   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"   version="1.1"      x="0px"   y="0px"   width="100%"   height="100%"   viewBox="5 -10 74.074074 100"   enable-background="new 0 0 100 100"   xml:space="preserve"   inkscape:version="0.48.4 r9939"   sodipodi:docname="noun_2186_cc.svg"><metadata     ><rdf:RDF><cc:Work         rdf:about=""><dc:format>image/svg+xml</dc:format><dc:type           rdf:resource="http://purl.org/dc/dcmitype/StillImage" /></cc:Work></rdf:RDF></metadata><defs      /><sodipodi:namedview     pagecolor="#ffffff"     bordercolor="#666666"     borderopacity="1"     objecttolerance="10"     gridtolerance="10"     guidetolerance="10"     inkscape:pageopacity="0"     inkscape:pageshadow="2"     inkscape:window-width="1855"     inkscape:window-height="1056"          showgrid="false"     fit-margin-top="0"     fit-margin-left="0"     fit-margin-right="0"     fit-margin-bottom="0"     inkscape:zoom="2.36"     inkscape:cx="44.101509"     inkscape:cy="31.481481"     inkscape:window-x="65"     inkscape:window-y="24"     inkscape:window-maximized="1"     inkscape:current-layer="Layer_1" /><path     d="m 30.926037,28.889 0,-38.889 -16.667,16.667 -16.667,-16.667 -5.555,5.555 16.667,16.667 -16.667,16.667 38.889,0 z"          inkscape:connector-curvature="0"     style="fill:#010101" /><path     d="m 53.148037,28.889 0,-38.889 16.667,16.667 16.666,-16.667 5.556,5.555 -16.666,16.667 16.666,16.667 -38.889,0 z"          inkscape:connector-curvature="0"     style="fill:#010101" /><path     d="m 30.926037,51.111 0,38.889 -16.667,-16.666 -16.667,16.666 -5.555,-5.556 16.667,-16.666 -16.667,-16.667 38.889,0 z"          inkscape:connector-curvature="0"     style="fill:#010101" /><path     d="m 53.148037,51.111 0,38.889 16.667,-16.666 16.666,16.666 5.556,-5.556 -16.666,-16.666 16.666,-16.667 -38.889,0 z"          inkscape:connector-curvature="0"     style="fill:#010101" /></svg>',
 };
-},{}],27:[function(require,module,exports){
+},{}],28:[function(require,module,exports){
 'use strict';
 var $ = (function(){try{return require('jquery')}catch(e){return window.jQuery}})();
 var utils = require("yasgui-utils");
@@ -4715,6 +4744,114 @@ var root = module.exports = function(parent, options, queryResults) {
 			}
 		}
 	};
+	var $toggableWarning = null;
+	var $toggableWarningClose = null;
+	var $toggableWarningMsg = null;
+	yasr.warn = function(warning) {
+		if (!$toggableWarning) {
+			//first time instantiation
+			$toggableWarning = $('<div>', {class: 'toggableWarning'}).prependTo(yasr.container).hide();
+			$toggableWarningClose = $('<span>', {class: 'toggleWarning'})
+				.html('&times;')
+				.click(function() {
+					$toggableWarning.hide(400);
+				})
+				.appendTo($toggableWarning);
+			$toggableWarningMsg = $('<span>', {class: 'toggableMsg'}).appendTo($toggableWarning);
+		}
+		$toggableWarningMsg.empty();
+		if (warning instanceof $) {
+			$toggableWarningMsg.append(warning);
+		} else {
+			$toggableWarningMsg.html(warning);
+		}
+		$toggableWarning.show(400);
+	};
+	
+
+	var drawHeader = function(yasr) {
+		var drawOutputSelector = function() {
+			var btnGroup = $('<div class="yasr_btnGroup"></div>');
+			$.each(yasr.plugins, function(pluginName, plugin) {
+				if (plugin.hideFromSelection) return;
+				var name = plugin.name || pluginName;
+				var button = $("<button class='yasr_btn'></button>")
+				.text(name)
+				.addClass("select_" + pluginName)
+				.click(function() {
+					//update buttons
+					btnGroup.find("button.selected").removeClass("selected");
+					$(this).addClass("selected");
+					//set and draw output
+					yasr.options.output = pluginName;
+					
+					//store if needed
+					var selectorId = yasr.getPersistencyId(yasr.options.persistency.outputSelector);
+					if (selectorId) {
+						utils.storage.set(selectorId, yasr.options.output, "month");
+					}
+					
+					//close warning if there is any
+					if ($toggableWarning) $toggableWarning.hide(400);
+					
+					yasr.draw();
+					yasr.updateHeader();
+				})
+				.appendTo(btnGroup);
+				if (yasr.options.output == pluginName) button.addClass("selected");
+			});
+			
+			if (btnGroup.children().length > 1) yasr.header.append(btnGroup);
+		};
+		var drawDownloadIcon = function() {
+			var stringToUrl = function(string, contentType) {
+				var url = null;
+				var windowUrl = window.URL || window.webkitURL || window.mozURL || window.msURL;
+				if (windowUrl && Blob) {
+					var blob = new Blob([string], {type: contentType});
+					url = windowUrl.createObjectURL(blob);
+				}
+				return url;
+			};
+			var button = $("<button class='yasr_btn yasr_downloadIcon btn_icon'></button>")
+				.append(require("yasgui-utils").svg.getElement(require('./imgs.js').download))
+				.click(function() {
+					var currentPlugin = yasr.plugins[yasr.options.output];
+					if (currentPlugin && currentPlugin.getDownloadInfo) {
+						var downloadInfo = currentPlugin.getDownloadInfo();
+						var downloadUrl = stringToUrl(downloadInfo.getContent(), (downloadInfo.contentType? downloadInfo.contentType: "text/plain"));
+						var downloadMockLink = $("<a></a>",
+								{
+							href: downloadUrl,
+							download: downloadInfo.filename
+						});
+						require('./utils.js').fireClick(downloadMockLink);
+//						downloadMockLink[0].click();
+					}
+				});
+			yasr.header.append(button);
+		};
+		var drawFullscreenButton = function() {
+			var button = $("<button class='yasr_btn btn_fullscreen btn_icon'></button>")
+				.append(require("yasgui-utils").svg.getElement(require('./imgs.js').fullscreen))
+				.click(function() {
+					yasr.container.addClass('yasr_fullscreen');
+				});
+			yasr.header.append(button);
+		};
+		var drawSmallscreenButton = function() {
+			var button = $("<button class='yasr_btn btn_smallscreen btn_icon'></button>")
+				.append(require("yasgui-utils").svg.getElement(require('./imgs.js').smallscreen))
+				.click(function() {
+					yasr.container.removeClass('yasr_fullscreen');
+				});
+			yasr.header.append(button);
+		};
+		drawFullscreenButton();drawSmallscreenButton();
+		if (yasr.options.drawOutputSelector) drawOutputSelector();
+		if (yasr.options.drawDownloadIcon) drawDownloadIcon();
+	};
+	
 	
 	
 
@@ -4762,86 +4899,6 @@ var root = module.exports = function(parent, options, queryResults) {
 };
 
 
-var drawHeader = function(yasr) {
-	var drawOutputSelector = function() {
-		var btnGroup = $('<div class="yasr_btnGroup"></div>');
-		$.each(yasr.plugins, function(pluginName, plugin) {
-			if (plugin.hideFromSelection) return;
-			var name = plugin.name || pluginName;
-			var button = $("<button class='yasr_btn'></button>")
-			.text(name)
-			.addClass("select_" + pluginName)
-			.click(function() {
-				//update buttons
-				btnGroup.find("button.selected").removeClass("selected");
-				$(this).addClass("selected");
-				//set and draw output
-				yasr.options.output = pluginName;
-				
-				//store if needed
-				var selectorId = yasr.getPersistencyId(yasr.options.persistency.outputSelector);
-				if (selectorId) {
-					utils.storage.set(selectorId, yasr.options.output, "month");
-				}
-				
-				
-				yasr.draw();
-				yasr.updateHeader();
-			})
-			.appendTo(btnGroup);
-			if (yasr.options.output == pluginName) button.addClass("selected");
-		});
-		
-		if (btnGroup.children().length > 1) yasr.header.append(btnGroup);
-	};
-	var drawDownloadIcon = function() {
-		var stringToUrl = function(string, contentType) {
-			var url = null;
-			var windowUrl = window.URL || window.webkitURL || window.mozURL || window.msURL;
-			if (windowUrl && Blob) {
-				var blob = new Blob([string], {type: contentType});
-				url = windowUrl.createObjectURL(blob);
-			}
-			return url;
-		};
-		var button = $("<button class='yasr_btn yasr_downloadIcon btn_icon'></button>")
-			.append(require("yasgui-utils").svg.getElement(require('./imgs.js').download))
-			.click(function() {
-				var currentPlugin = yasr.plugins[yasr.options.output];
-				if (currentPlugin && currentPlugin.getDownloadInfo) {
-					var downloadInfo = currentPlugin.getDownloadInfo();
-					var downloadUrl = stringToUrl(downloadInfo.getContent(), (downloadInfo.contentType? downloadInfo.contentType: "text/plain"));
-					var downloadMockLink = $("<a></a>",
-							{
-						href: downloadUrl,
-						download: downloadInfo.filename
-					});
-					require('./utils.js').fireClick(downloadMockLink);
-//					downloadMockLink[0].click();
-				}
-			});
-		yasr.header.append(button);
-	};
-	var drawFullscreenButton = function() {
-		var button = $("<button class='yasr_btn btn_fullscreen btn_icon'></button>")
-			.append(require("yasgui-utils").svg.getElement(require('./imgs.js').fullscreen))
-			.click(function() {
-				yasr.container.addClass('yasr_fullscreen');
-			});
-		yasr.header.append(button);
-	};
-	var drawSmallscreenButton = function() {
-		var button = $("<button class='yasr_btn btn_smallscreen btn_icon'></button>")
-			.append(require("yasgui-utils").svg.getElement(require('./imgs.js').smallscreen))
-			.click(function() {
-				yasr.container.removeClass('yasr_fullscreen');
-			});
-		yasr.header.append(button);
-	};
-	drawFullscreenButton();drawSmallscreenButton();
-	if (yasr.options.drawOutputSelector) drawOutputSelector();
-	if (yasr.options.drawDownloadIcon) drawDownloadIcon();
-};
 
 root.plugins = {};
 root.registerOutput = function(name, constructor) {
@@ -4874,13 +4931,13 @@ try {root.registerOutput('table', require("./table.js"))} catch(e){};
 try {root.registerOutput('error', require("./error.js"))} catch(e){};
 try {root.registerOutput('pivot', require("./pivot.js"))} catch(e){};
 try {root.registerOutput('gchart', require("./gchart.js"))} catch(e){};
-},{"../package.json":19,"./boolean.js":21,"./defaults.js":22,"./error.js":23,"./gChartLoader.js":24,"./gchart.js":25,"./imgs.js":26,"./parsers/wrapper.js":32,"./pivot.js":34,"./rawResponse.js":35,"./table.js":36,"./utils.js":37,"jquery":undefined,"yasgui-utils":16}],28:[function(require,module,exports){
+},{"../package.json":19,"./boolean.js":21,"./defaults.js":22,"./error.js":23,"./gChartLoader.js":25,"./gchart.js":26,"./imgs.js":27,"./parsers/wrapper.js":33,"./pivot.js":35,"./rawResponse.js":36,"./table.js":37,"./utils.js":38,"jquery":undefined,"yasgui-utils":16}],29:[function(require,module,exports){
 'use strict';
 var $ = (function(){try{return require('jquery')}catch(e){return window.jQuery}})();
 var root = module.exports = function(queryResponse) {
 	return require("./dlv.js")(queryResponse, ",");
 };
-},{"./dlv.js":29,"jquery":undefined}],29:[function(require,module,exports){
+},{"./dlv.js":30,"jquery":undefined}],30:[function(require,module,exports){
 'use strict';
 var $ = (function(){try{return require('jquery')}catch(e){return window.jQuery}})();
 require("../../lib/jquery.csv-0.71.js");
@@ -4942,7 +4999,7 @@ var root = module.exports = function(queryResponse, separator) {
 	
 	return json;
 };
-},{"../../lib/jquery.csv-0.71.js":3,"jquery":undefined}],30:[function(require,module,exports){
+},{"../../lib/jquery.csv-0.71.js":3,"jquery":undefined}],31:[function(require,module,exports){
 'use strict';
 var $ = (function(){try{return require('jquery')}catch(e){return window.jQuery}})();
 var root = module.exports = function(queryResponse) {
@@ -4960,13 +5017,13 @@ var root = module.exports = function(queryResponse) {
 	return false;
 	
 };
-},{"jquery":undefined}],31:[function(require,module,exports){
+},{"jquery":undefined}],32:[function(require,module,exports){
 'use strict';
 var $ = (function(){try{return require('jquery')}catch(e){return window.jQuery}})();
 var root = module.exports = function(queryResponse) {
 	return require("./dlv.js")(queryResponse, "\t");
 };
-},{"./dlv.js":29,"jquery":undefined}],32:[function(require,module,exports){
+},{"./dlv.js":30,"jquery":undefined}],33:[function(require,module,exports){
 'use strict';
 var $ = (function(){try{return require('jquery')}catch(e){return window.jQuery}})();
 
@@ -5200,7 +5257,7 @@ var root = module.exports = function(dataOrJqXhr, textStatus, jqXhrOrErrorString
 
 
 
-},{"./csv.js":28,"./json.js":30,"./tsv.js":31,"./xml.js":33,"jquery":undefined}],33:[function(require,module,exports){
+},{"./csv.js":29,"./json.js":31,"./tsv.js":32,"./xml.js":34,"jquery":undefined}],34:[function(require,module,exports){
 'use strict';
 var $ = (function(){try{return require('jquery')}catch(e){return window.jQuery}})();
 var root = module.exports = function(xml) {
@@ -5286,7 +5343,7 @@ var root = module.exports = function(xml) {
 	return json;
 };
 
-},{"jquery":undefined}],34:[function(require,module,exports){
+},{"jquery":undefined}],35:[function(require,module,exports){
 'use strict';
 var $ = (function(){try{return require('jquery')}catch(e){return window.jQuery}})(),
 	utils = require('./utils.js'),
@@ -5508,7 +5565,7 @@ root.version = {
 	"YASR-rawResponse" : require("../package.json").version,
 	"jquery": $.fn.jquery,
 };
-},{"../node_modules/pivottable/dist/d3_renderers.js":12,"../node_modules/pivottable/dist/gchart_renderers.js":13,"../package.json":19,"./gChartLoader.js":24,"./imgs.js":26,"./utils.js":37,"d3":undefined,"jquery":undefined,"jquery-ui/sortable":undefined,"pivottable":undefined,"yasgui-utils":16}],35:[function(require,module,exports){
+},{"../node_modules/pivottable/dist/d3_renderers.js":12,"../node_modules/pivottable/dist/gchart_renderers.js":13,"../package.json":19,"./gChartLoader.js":25,"./imgs.js":27,"./utils.js":38,"d3":undefined,"jquery":undefined,"jquery-ui/sortable":undefined,"pivottable":undefined,"yasgui-utils":16}],36:[function(require,module,exports){
 'use strict';
 var $ = (function(){try{return require('jquery')}catch(e){return window.jQuery}})(),
 	CodeMirror = (function(){try{return require('codemirror')}catch(e){return window.CodeMirror}})();
@@ -5597,7 +5654,7 @@ root.version = {
 	"jquery": $.fn.jquery,
 	"CodeMirror" : CodeMirror.version
 };
-},{"../package.json":19,"codemirror":undefined,"codemirror/addon/edit/matchbrackets.js":5,"codemirror/addon/fold/brace-fold.js":6,"codemirror/addon/fold/foldcode.js":7,"codemirror/addon/fold/foldgutter.js":8,"codemirror/addon/fold/xml-fold.js":9,"codemirror/mode/javascript/javascript.js":10,"codemirror/mode/xml/xml.js":11,"jquery":undefined}],36:[function(require,module,exports){
+},{"../package.json":19,"codemirror":undefined,"codemirror/addon/edit/matchbrackets.js":5,"codemirror/addon/fold/brace-fold.js":6,"codemirror/addon/fold/foldcode.js":7,"codemirror/addon/fold/foldgutter.js":8,"codemirror/addon/fold/xml-fold.js":9,"codemirror/mode/javascript/javascript.js":10,"codemirror/mode/xml/xml.js":11,"jquery":undefined}],37:[function(require,module,exports){
 'use strict';
 var $ = (function(){try{return require('jquery')}catch(e){return window.jQuery}})(),
 	yutils = require("yasgui-utils"),
@@ -6006,9 +6063,11 @@ root.version = {
 	"jquery-datatables": $.fn.DataTable.version
 };
 
-},{"../lib/colResizable-1.4.js":2,"../package.json":19,"./bindingsToCsv.js":20,"./imgs.js":26,"datatables":undefined,"jquery":undefined,"yasgui-utils":16}],37:[function(require,module,exports){
+},{"../lib/colResizable-1.4.js":2,"../package.json":19,"./bindingsToCsv.js":20,"./imgs.js":27,"datatables":undefined,"jquery":undefined,"yasgui-utils":16}],38:[function(require,module,exports){
 'use strict';
-var $ = (function(){try{return require('jquery')}catch(e){return window.jQuery}})();
+var $ = (function(){try{return require('jquery')}catch(e){return window.jQuery}})(),
+	GoogleTypeException = require('./exceptions.js').GoogleTypeException;
+
 module.exports = {
 	uriToPrefixed: function(prefixes, uri) {
 		if (prefixes) {
@@ -6021,56 +6080,85 @@ module.exports = {
 		}
 		return uri;
 	},
-	getGoogleType: function(binding) {
+	getGoogleTypeForBinding: function(binding) {
 		if (binding.type != null && (binding.type === 'typed-literal' || binding.type === 'literal')) {
 			switch (binding.datatype) {
-			case 'http://www.w3.org/2001/XMLSchema#float':
-			case 'http://www.w3.org/2001/XMLSchema#decimal':
-			case 'http://www.w3.org/2001/XMLSchema#int':
-			case 'http://www.w3.org/2001/XMLSchema#integer':
-			case 'http://www.w3.org/2001/XMLSchema#long':
-			case 'http://www.w3.org/2001/XMLSchema#gYearMonth':
-			case 'http://www.w3.org/2001/XMLSchema#gYear':
-			case 'http://www.w3.org/2001/XMLSchema#gMonthDay':
-			case 'http://www.w3.org/2001/XMLSchema#gDay':
-			case 'http://www.w3.org/2001/XMLSchema#gMonth':
-				return "number";
-			case 'http://www.w3.org/2001/XMLSchema#date':
-				return "date";
-			case 'http://www.w3.org/2001/XMLSchema#dateTime':
-				return "datetime";
-			case 'http://www.w3.org/2001/XMLSchema#time':
-				return "timeofday";
-			default:
-				return "string";
+				case 'http://www.w3.org/2001/XMLSchema#float':
+				case 'http://www.w3.org/2001/XMLSchema#decimal':
+				case 'http://www.w3.org/2001/XMLSchema#int':
+				case 'http://www.w3.org/2001/XMLSchema#integer':
+				case 'http://www.w3.org/2001/XMLSchema#long':
+				case 'http://www.w3.org/2001/XMLSchema#gYearMonth':
+				case 'http://www.w3.org/2001/XMLSchema#gYear':
+				case 'http://www.w3.org/2001/XMLSchema#gMonthDay':
+				case 'http://www.w3.org/2001/XMLSchema#gDay':
+				case 'http://www.w3.org/2001/XMLSchema#gMonth':
+					return "number";
+				case 'http://www.w3.org/2001/XMLSchema#date':
+					return "date";
+				case 'http://www.w3.org/2001/XMLSchema#dateTime':
+					return "datetime";
+				case 'http://www.w3.org/2001/XMLSchema#time':
+					return "timeofday";
+				default:
+					return "string";
 			}
 		} else {
 			return "string";
 		}
 	},
-	castGoogleType: function(binding, prefixes){
+	getGoogleTypeForBindings: function(bindings, varName) {
+		var types = {};
+		var typeCount = 0;
+		bindings.forEach(function(binding){
+			var type = module.exports.getGoogleTypeForBinding(binding[varName]);
+			if (!(type in types)) {
+				types[type] = 0;
+				typeCount++;
+			}
+			types[type]++;
+		});
+		if (typeCount == 0) {
+			return 'string';
+		} else if (typeCount == 1) {
+			for (var type in types) {
+				return type;//just return this one
+			}
+		} else {
+			//we have conflicting types. Throw error
+			throw new GoogleTypeException(types, varName);
+		}
+	},
+	
+	castGoogleType: function(binding, prefixes, googleType) {
 		if (binding == null) {
 			return null;
 		}
-		if (binding.type != null && (binding.type === 'typed-literal' || binding.type === 'literal')) {
+		
+		if (googleType != 'string' && binding.type != null && (binding.type === 'typed-literal' || binding.type === 'literal')) {
 			switch (binding.datatype) {
-			case 'http://www.w3.org/2001/XMLSchema#float':
-			case 'http://www.w3.org/2001/XMLSchema#decimal':
-			case 'http://www.w3.org/2001/XMLSchema#int':
-			case 'http://www.w3.org/2001/XMLSchema#integer':
-			case 'http://www.w3.org/2001/XMLSchema#long':
-			case 'http://www.w3.org/2001/XMLSchema#gYearMonth':
-			case 'http://www.w3.org/2001/XMLSchema#gYear':
-			case 'http://www.w3.org/2001/XMLSchema#gMonthDay':
-			case 'http://www.w3.org/2001/XMLSchema#gDay':
-			case 'http://www.w3.org/2001/XMLSchema#gMonth':
-				return Number(binding.value);
-			case 'http://www.w3.org/2001/XMLSchema#date':
-			case 'http://www.w3.org/2001/XMLSchema#dateTime':
-			case 'http://www.w3.org/2001/XMLSchema#time':
-				return new Date(binding.value);
-			default:
-				return binding.value;
+				case 'http://www.w3.org/2001/XMLSchema#float':
+				case 'http://www.w3.org/2001/XMLSchema#decimal':
+				case 'http://www.w3.org/2001/XMLSchema#int':
+				case 'http://www.w3.org/2001/XMLSchema#integer':
+				case 'http://www.w3.org/2001/XMLSchema#long':
+				case 'http://www.w3.org/2001/XMLSchema#gYearMonth':
+				case 'http://www.w3.org/2001/XMLSchema#gYear':
+				case 'http://www.w3.org/2001/XMLSchema#gMonthDay':
+				case 'http://www.w3.org/2001/XMLSchema#gDay':
+				case 'http://www.w3.org/2001/XMLSchema#gMonth':
+					return Number(binding.value);
+				case 'http://www.w3.org/2001/XMLSchema#date':
+					//grrr, the date function does not parse -any- date (including most xsd dates!)
+					//datetime and time seem to be fine though.
+					//so, first try our custom parser. if that does not work, try the regular date parser anyway
+					var date = parseXmlSchemaDate(binding.value);
+					if (date) return date;
+				case 'http://www.w3.org/2001/XMLSchema#dateTime':
+				case 'http://www.w3.org/2001/XMLSchema#time':
+					return new Date(binding.value);
+				default:
+					return binding.value;
 			}
 		} else {
 			if (binding.type = 'uri') {
@@ -6096,7 +6184,18 @@ module.exports = {
 		});
 	}
 };
-},{"jquery":undefined}]},{},[1])(1)
+//There are no PROPER xml schema to js date parsers
+//A few libraries exist: moment, jsdate, Xdate, but none of them parse valid xml schema dates (e.g. 1999-11-05+02:00).
+//And: I'm not going to write one myself
+//There are other hacky solutions (regular expressions based on trial/error) such as http://stackoverflow.com/questions/2731579/convert-an-xml-schema-date-string-to-a-javascript-date
+//But if we're doing hacky stuff, I at least want to do it MYSELF!
+var parseXmlSchemaDate = function(dateString) {
+	//change +02:00 to Z+02:00 (something which is parseable by js date)
+	var date = new Date(dateString.replace(/(\d)([\+-]\d{2}:\d{2})/, '$1Z$2'));
+	if (isNaN(date)) return null;
+	return date;
+};
+},{"./exceptions.js":24,"jquery":undefined}]},{},[1])(1)
 });
 
 

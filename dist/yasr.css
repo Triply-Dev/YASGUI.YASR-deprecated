@@ -5,6 +5,7 @@
   font-size: 14px;
   line-height: 1.42857;
   color: #333333;
+  /* 	position:relative; */
   /*
  * Table styles
  */
@@ -59,26 +60,6 @@
   /* Used to force a border model for a node */
   /* See issue #2901 */
   /* Help users use markselection to safely style text background */ }
-  .yasr .svgImg {
-    display: inline-block;
-    bottom: -2px;
-    /**to properly align img**/ }
-  .yasr button.btn_smallscreen {
-    display: none; }
-  .yasr button.btn_smallscreen div, .yasr button.btn_fullscreen div {
-    width: 15px;
-    height: 15px; }
-  .yasr.yasr_fullscreen {
-    z-index: 10;
-    position: fixed;
-    top: 0;
-    bottom: 0;
-    left: 0;
-    right: 0; }
-    .yasr.yasr_fullscreen .btn_smallscreen {
-      display: inline-block; }
-    .yasr.yasr_fullscreen .btn_fullscreen {
-      display: none; }
   .yasr table.dataTable {
     width: 100%;
     margin: 0 auto;
@@ -718,6 +699,26 @@
     content: "\25BE"; }
   .yasr .CodeMirror-foldgutter-folded:after {
     content: "\25B8"; }
+  .yasr .svgImg {
+    display: inline-block;
+    bottom: -2px;
+    /**to properly align img**/ }
+  .yasr button.btn_smallscreen {
+    display: none; }
+  .yasr button.btn_smallscreen div, .yasr button.btn_fullscreen div {
+    width: 15px;
+    height: 15px; }
+  .yasr.yasr_fullscreen {
+    z-index: 10;
+    position: fixed;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    right: 0; }
+    .yasr.yasr_fullscreen .btn_smallscreen {
+      display: inline-block; }
+    .yasr.yasr_fullscreen .btn_fullscreen {
+      display: none; }
   .yasr a {
     color: #428bca;
     text-decoration: none; }
@@ -792,6 +793,31 @@
       border-radius: 0; }
     .yasr .yasr_btnGroup button + button {
       margin-left: -1px; }
+  .yasr .toggableWarning {
+    color: #8a6d3b;
+    background-color: #fcf8e3;
+    border-color: #faebcc;
+    padding: 15px 35px 15px 15px;
+    border: 1px solid transparent;
+    border-radius: 4px; }
+    .yasr .toggableWarning .toggleWarning {
+      float: right;
+      font-size: 21px;
+      cursor: pointer;
+      font-weight: 700;
+      line-height: 1;
+      color: #000;
+      text-shadow: 0 1px 0 #fff;
+      opacity: 0.2;
+      position: relative;
+      top: -2px;
+      right: -21px;
+      color: inherit; }
+      .yasr .toggableWarning .toggleWarning:hover {
+        color: #000;
+        cursor: pointer;
+        filter: alpha(opacity=50);
+        opacity: 0.5; }
   .yasr .booleanResult {
     width: 70px;
     margin: 0 auto;
