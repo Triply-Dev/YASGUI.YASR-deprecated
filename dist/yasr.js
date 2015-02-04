@@ -3779,7 +3779,7 @@ module.exports = {
 module.exports={
   "name": "yasgui-yasr",
   "description": "Yet Another SPARQL Resultset GUI",
-  "version": "2.4.5",
+  "version": "2.4.6",
   "main": "src/main.js",
   "licenses": [
     {
@@ -5658,6 +5658,7 @@ root.version = {
 'use strict';
 var $ = (function(){try{return require('jquery')}catch(e){return window.jQuery}})(),
 	yutils = require("yasgui-utils"),
+	utils = require('./utils.js'),
 	imgs = require('./imgs.js');
 (function(){try{return require('datatables')}catch(e){return window.jQuery}})();
 require("../lib/colResizable-1.4.js");
@@ -5855,19 +5856,19 @@ var root = module.exports = function(yasr) {
 
 
 var formatLiteral = function(yasr, plugin, literalBinding) {
-	var stringRepresentation = literalBinding.value;
+	var stringRepresentation = utils.escapeHtmlEntities(literalBinding.value);
 	if (literalBinding["xml:lang"]) {
-		stringRepresentation = '"' + literalBinding.value + '"@' + literalBinding["xml:lang"];
+		stringRepresentation = '"' + stringRepresentation + '"@' + literalBinding["xml:lang"];
 	} else if (literalBinding.datatype) {
 		var xmlSchemaNs = "http://www.w3.org/2001/XMLSchema#";
 		var dataType = literalBinding.datatype;
-		if (dataType.indexOf(xmlSchemaNs) == 0) {
+		if (dataType.indexOf(xmlSchemaNs) === 0) {
 			dataType = "xsd:" + dataType.substring(xmlSchemaNs.length);
 		} else {
-			dataType = "<" + dataType + ">";
+			dataType = "&lt;" + dataType + "&gt;";
 		}
 		
-		stringRepresentation = '"' + stringRepresentation + '"^^' + dataType;
+		stringRepresentation = '"' + stringRepresentation + '"<sup>^^' + dataType + '</sup>';
 	}
 	return stringRepresentation;
 };
@@ -6063,12 +6064,16 @@ root.version = {
 	"jquery-datatables": $.fn.DataTable.version
 };
 
-},{"../lib/colResizable-1.4.js":2,"../package.json":19,"./bindingsToCsv.js":20,"./imgs.js":27,"datatables":undefined,"jquery":undefined,"yasgui-utils":16}],38:[function(require,module,exports){
+},{"../lib/colResizable-1.4.js":2,"../package.json":19,"./bindingsToCsv.js":20,"./imgs.js":27,"./utils.js":38,"datatables":undefined,"jquery":undefined,"yasgui-utils":16}],38:[function(require,module,exports){
 'use strict';
 var $ = (function(){try{return require('jquery')}catch(e){return window.jQuery}})(),
 	GoogleTypeException = require('./exceptions.js').GoogleTypeException;
 
 module.exports = {
+	escapeHtmlEntities: function(unescaped) {
+		//taken from http://stackoverflow.com/questions/5499078/fastest-method-to-escape-html-tags-as-html-entities
+		return unescaped.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;') ;
+	},
 	uriToPrefixed: function(prefixes, uri) {
 		if (prefixes) {
 			for (var prefix in prefixes) {
