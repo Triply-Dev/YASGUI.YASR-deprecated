@@ -1,6 +1,7 @@
 'use strict';
 var $ = require("jquery"),
 	yutils = require("yasgui-utils"),
+	utils = require('./utils.js'),
 	imgs = require('./imgs.js');
 require("../lib/DataTables/media/js/jquery.dataTables.js");
 require("../lib/colResizable-1.4.js");
@@ -198,19 +199,19 @@ var root = module.exports = function(yasr) {
 
 
 var formatLiteral = function(yasr, plugin, literalBinding) {
-	var stringRepresentation = literalBinding.value;
+	var stringRepresentation = utils.escapeHtmlEntities(literalBinding.value);
 	if (literalBinding["xml:lang"]) {
-		stringRepresentation = '"' + literalBinding.value + '"@' + literalBinding["xml:lang"];
+		stringRepresentation = '"' + stringRepresentation + '"@' + literalBinding["xml:lang"];
 	} else if (literalBinding.datatype) {
 		var xmlSchemaNs = "http://www.w3.org/2001/XMLSchema#";
 		var dataType = literalBinding.datatype;
-		if (dataType.indexOf(xmlSchemaNs) == 0) {
+		if (dataType.indexOf(xmlSchemaNs) === 0) {
 			dataType = "xsd:" + dataType.substring(xmlSchemaNs.length);
 		} else {
-			dataType = "<" + dataType + ">";
+			dataType = "&lt;" + dataType + "&gt;";
 		}
 		
-		stringRepresentation = '"' + stringRepresentation + '"^^' + dataType;
+		stringRepresentation = '"' + stringRepresentation + '"<sup>^^' + dataType + '</sup>';
 	}
 	return stringRepresentation;
 };
