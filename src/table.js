@@ -201,7 +201,7 @@ var root = module.exports = function(yasr) {
 var formatLiteral = function(yasr, plugin, literalBinding) {
 	var stringRepresentation = utils.escapeHtmlEntities(literalBinding.value);
 	if (literalBinding["xml:lang"]) {
-		stringRepresentation = '"' + stringRepresentation + '"@' + literalBinding["xml:lang"];
+		stringRepresentation = '"' + stringRepresentation + '"<sup>@' + literalBinding["xml:lang"] + '</sup>';
 	} else if (literalBinding.datatype) {
 		var xmlSchemaNs = "http://www.w3.org/2001/XMLSchema#";
 		var dataType = literalBinding.datatype;
