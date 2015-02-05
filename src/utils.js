@@ -19,6 +19,7 @@ module.exports = {
 		return uri;
 	},
 	getGoogleTypeForBinding: function(binding) {
+		if (binding == null) return null;
 		if (binding.type != null && (binding.type === 'typed-literal' || binding.type === 'literal')) {
 			switch (binding.datatype) {
 				case 'http://www.w3.org/2001/XMLSchema#float':
@@ -50,11 +51,13 @@ module.exports = {
 		var typeCount = 0;
 		bindings.forEach(function(binding){
 			var type = module.exports.getGoogleTypeForBinding(binding[varName]);
-			if (!(type in types)) {
-				types[type] = 0;
-				typeCount++;
+			if (type != null) {
+				if (!(type in types)) {
+					types[type] = 0;
+					typeCount++;
+				}
+				types[type]++;
 			}
-			types[type]++;
 		});
 		if (typeCount == 0) {
 			return 'string';
