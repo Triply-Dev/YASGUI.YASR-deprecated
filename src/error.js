@@ -15,10 +15,24 @@ var root = module.exports = function(yasr) {
 	var $container = $("<div class='errorResult'></div>");
 	var options = $.extend(true, {}, root.defaults);
 	
+	var getTryBtn = function(){
+		var $tryBtn = null;
+		if (options.tryQueryLink) {
+			var link = options.tryQueryLink();
+			$tryBtn = $('<button>', {class: 'yasr_btn yasr_tryQuery'})
+				.text('Try query in new browser window')
+				.click(function() {
+					window.open(link, '_blank');
+					$(this).blur();
+				})
+		}
+		return $tryBtn;
+	}
+	
 	var draw = function() {
 		var error = yasr.results.getException();
 		$container.empty().appendTo(yasr.resultsContainer);
-
+		var $header = $("<div>", {class:'errorHeader'}).appendTo($container);
 		
 		if (error.status !== 0) {
 			var statusText = 'Error';
@@ -26,15 +40,14 @@ var root = module.exports = function(yasr) {
 				//use a max: otherwise the alert span will look ugly
 				statusText = error.statusText;
 			}
-			
-			
 			statusText += ' (#' + error.status + ')';
 			
-			$container
-			.append(
-				$("<span>", {class:'exception'})
-				.text(statusText)
-			);
+			$header
+				.append(
+					$("<span>", {class:'exception'})
+					.text(statusText)
+				)
+				.append(getTryBtn());
 			
 			var responseText = null;
 			if (error.responseText) {
@@ -45,11 +58,12 @@ var root = module.exports = function(yasr) {
 			}
 			if (responseText) $container.append($("<pre>").text(responseText));
 		} else {
-		
+			$header.append(getTryBtn());
 			//cors disabled, wrong url, or endpoint down
-			$container.append(
+			$container
+				.append(
 				$('<div>', {class: 'corsMessage'})
-				.append(options.corsMessage)
+					.append(options.corsMessage)
 			);
 		}
 		
@@ -74,5 +88,6 @@ var root = module.exports = function(yasr) {
  * @attribute YASR.plugins.error.defaults
  */
 root.defaults = {
-	corsMessage: 'Unable to get response from endpoint'
+	corsMessage: 'Unable to get response from endpoint',
+	tryQueryLink: null,
 };

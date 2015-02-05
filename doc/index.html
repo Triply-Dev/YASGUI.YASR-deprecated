@@ -285,6 +285,22 @@
 				<code>YASR.plugins.error(yasr: Object) → yasr-error (doc): </code>
 				<p>Constructor of plugin which displays query response errors</p>
 			</div>
+      <div class="doc">
+			<code>YASR.plugins.error.defaults</code>
+			<p>Settings object</p>
+			</div>
+			<div class="doc" style="margin-left: 30px">
+			<code>corsMessage: string (default: 'Unable to get response from endpoint')</code>
+			<p>The message to show when no response was returned. I.e., a DNS or TCP error. 
+      Depending on how you use YASR, there might be several reasons for this missing response, such as 
+      a CORS-disabled endpoint, the user being offline (where the endpoint is online), an endpoint under maintenance, or simply a wrong URL.</p>
+      
+			</div>
+      <div class="doc" style="margin-left: 30px">
+			<code>tryQueryLink: function → string  (default: null)</code>
+			<p>Set this function to present the user with a button to try the same query via a regular browser window. 
+      This function simply returns the http link to open the browser window for.</p>
+			</div>
 			
 
 		<h2 id="addingPlugin">Writing a plugin</h2>

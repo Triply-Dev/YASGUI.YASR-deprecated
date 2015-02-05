@@ -1,18 +1,29 @@
 .errorResult {
-	padding: 10px;
-	span.exception {
-		display: inline;
-		padding: .2em .6em .3em;
-		font-size: 75%;
-		font-weight: 700;
-		line-height: 1;
-		color: #fff;
-		text-align: center;
-		white-space: nowrap;
-		vertical-align: baseline;
-		border-radius: .25em;
-		background-color: #d9534f;
+	.errorHeader {
+		overflow:hidden;
+		.yasr_tryQuery {
+			float:right;
+			padding-top: 3px;
+			padding-bottom:3px;
+		}
+		span.exception {
+			display: inline;
+			padding: .2em .6em .3em;
+			font-size: 75%;
+			font-weight: 700;
+			line-height: 1;
+			color: #fff;
+			text-align: center;
+			white-space: nowrap;
+			vertical-align: baseline;
+			border-radius: .25em;
+			background-color: #d9534f;
+			
+		}
 	}
+	
+	padding: 10px;
+	
 	pre {
 		display: block;
 		padding: 10px;
