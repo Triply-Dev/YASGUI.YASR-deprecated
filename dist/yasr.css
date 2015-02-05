@@ -827,18 +827,24 @@
       margin-right: 7px; }
   .yasr .errorResult {
     padding: 10px; }
-    .yasr .errorResult span.exception {
-      display: inline;
-      padding: 0.2em 0.6em 0.3em;
-      font-size: 75%;
-      font-weight: 700;
-      line-height: 1;
-      color: #fff;
-      text-align: center;
-      white-space: nowrap;
-      vertical-align: baseline;
-      border-radius: 0.25em;
-      background-color: #d9534f; }
+    .yasr .errorResult .errorHeader {
+      overflow: hidden; }
+      .yasr .errorResult .errorHeader .yasr_tryQuery {
+        float: right;
+        padding-top: 3px;
+        padding-bottom: 3px; }
+      .yasr .errorResult .errorHeader span.exception {
+        display: inline;
+        padding: 0.2em 0.6em 0.3em;
+        font-size: 75%;
+        font-weight: 700;
+        line-height: 1;
+        color: #fff;
+        text-align: center;
+        white-space: nowrap;
+        vertical-align: baseline;
+        border-radius: 0.25em;
+        background-color: #d9534f; }
     .yasr .errorResult pre {
       display: block;
       padding: 10px;

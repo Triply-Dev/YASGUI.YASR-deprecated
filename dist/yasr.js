@@ -3779,7 +3779,7 @@ module.exports = {
 module.exports={
   "name": "yasgui-yasr",
   "description": "Yet Another SPARQL Resultset GUI",
-  "version": "2.4.6",
+  "version": "2.4.7",
   "main": "src/main.js",
   "licenses": [
     {
@@ -4126,10 +4126,24 @@ var root = module.exports = function(yasr) {
 	var $container = $("<div class='errorResult'></div>");
 	var options = $.extend(true, {}, root.defaults);
 	
+	var getTryBtn = function(){
+		var $tryBtn = null;
+		if (options.tryQueryLink) {
+			var link = options.tryQueryLink();
+			$tryBtn = $('<button>', {class: 'yasr_btn yasr_tryQuery'})
+				.text('Try query in new browser window')
+				.click(function() {
+					window.open(link, '_blank');
+					$(this).blur();
+				})
+		}
+		return $tryBtn;
+	}
+	
 	var draw = function() {
 		var error = yasr.results.getException();
 		$container.empty().appendTo(yasr.resultsContainer);
-
+		var $header = $("<div>", {class:'errorHeader'}).appendTo($container);
 		
 		if (error.status !== 0) {
 			var statusText = 'Error';
@@ -4137,15 +4151,14 @@ var root = module.exports = function(yasr) {
 				//use a max: otherwise the alert span will look ugly
 				statusText = error.statusText;
 			}
-			
-			
 			statusText += ' (#' + error.status + ')';
 			
-			$container
-			.append(
-				$("<span>", {class:'exception'})
-				.text(statusText)
-			);
+			$header
+				.append(
+					$("<span>", {class:'exception'})
+					.text(statusText)
+				)
+				.append(getTryBtn());
 			
 			var responseText = null;
 			if (error.responseText) {
@@ -4156,11 +4169,12 @@ var root = module.exports = function(yasr) {
 			}
 			if (responseText) $container.append($("<pre>").text(responseText));
 		} else {
-		
+			$header.append(getTryBtn());
 			//cors disabled, wrong url, or endpoint down
-			$container.append(
+			$container
+				.append(
 				$('<div>', {class: 'corsMessage'})
-				.append(options.corsMessage)
+					.append(options.corsMessage)
 			);
 		}
 		
@@ -4185,7 +4199,8 @@ var root = module.exports = function(yasr) {
  * @attribute YASR.plugins.error.defaults
  */
 root.defaults = {
-	corsMessage: 'Unable to get response from endpoint'
+	corsMessage: 'Unable to get response from endpoint',
+	tryQueryLink: null,
 };
 },{"jquery":undefined}],24:[function(require,module,exports){
 module.exports = {
@@ -5858,7 +5873,7 @@ var root = module.exports = function(yasr) {
 var formatLiteral = function(yasr, plugin, literalBinding) {
 	var stringRepresentation = utils.escapeHtmlEntities(literalBinding.value);
 	if (literalBinding["xml:lang"]) {
-		stringRepresentation = '"' + stringRepresentation + '"@' + literalBinding["xml:lang"];
+		stringRepresentation = '"' + stringRepresentation + '"<sup>@' + literalBinding["xml:lang"] + '</sup>';
 	} else if (literalBinding.datatype) {
 		var xmlSchemaNs = "http://www.w3.org/2001/XMLSchema#";
 		var dataType = literalBinding.datatype;
@@ -6086,6 +6101,7 @@ module.exports = {
 		return uri;
 	},
 	getGoogleTypeForBinding: function(binding) {
+		if (binding == null) return null;
 		if (binding.type != null && (binding.type === 'typed-literal' || binding.type === 'literal')) {
 			switch (binding.datatype) {
 				case 'http://www.w3.org/2001/XMLSchema#float':
@@ -6117,11 +6133,13 @@ module.exports = {
 		var typeCount = 0;
 		bindings.forEach(function(binding){
 			var type = module.exports.getGoogleTypeForBinding(binding[varName]);
-			if (!(type in types)) {
-				types[type] = 0;
-				typeCount++;
+			if (type != null) {
+				if (!(type in types)) {
+					types[type] = 0;
+					typeCount++;
+				}
+				types[type]++;
 			}
-			types[type]++;
 		});
 		if (typeCount == 0) {
 			return 'string';
