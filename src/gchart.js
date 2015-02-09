@@ -69,21 +69,34 @@ var root = module.exports = function(yasr){
 		getDownloadInfo: function() {
 			if (!yasr.results) return null;
 			var svgEl = yasr.resultsContainer.find('svg');
-			if (svgEl.length == 0) return null;
+			if (svgEl.length > 0) {
 			
-			return {
-				getContent: function(){
-					if (svgEl[0].outerHTML) {
-						return svgEl[0].outerHTML;
-					} else {
-						//outerHTML not supported. use workaround
-						return $('<div>').append(svgEl.clone()).html();
-					}
-				},
-				filename: "queryResults.svg",
-				contentType: "image/svg+xml",
-				buttonTitle: "Download SVG Image"
-			};
+				return {
+					getContent: function(){
+						if (svgEl[0].outerHTML) {
+							return svgEl[0].outerHTML;
+						} else {
+							//outerHTML not supported. use workaround
+							return $('<div>').append(svgEl.clone()).html();
+						}
+					},
+					filename: "queryResults.svg",
+					contentType: "image/svg+xml",
+					buttonTitle: "Download SVG Image"
+				};
+			}
+			//ok, not a svg. is it a table?
+			var $table = yasr.resultsContainer.find('.google-visualization-table-table');
+			if ($table.length > 0) {
+				return {
+					getContent: function(){
+						return $table.tableToCsv();
+					},
+					filename: "queryResults.csv",
+					contentType: "text/csv",
+					buttonTitle: "Download as CSV"
+				};
+			} 
 		},
 		getEmbedHtml: function() {
 			if (!yasr.results) return null;

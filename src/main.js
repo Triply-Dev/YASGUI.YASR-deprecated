@@ -3,7 +3,7 @@ var $ = require("jquery");
 var utils = require("yasgui-utils");
 console = console || {"log":function(){}};//make sure any console statements don't break in IE
 
-
+require('./jquery/extendJquery.js');
 
 
 /**
