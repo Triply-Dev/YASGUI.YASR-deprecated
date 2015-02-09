@@ -61,9 +61,11 @@ var root = module.exports = function(parent, options, queryResults) {
 	yasr.updateHeader = function() {
 		var downloadIcon = yasr.header.find(".yasr_downloadIcon")
 				.removeAttr("title");//and remove previous titles
-		
+		var embedButton = yasr.header.find(".yasr_embedBtn");
 		var outputPlugin = yasr.plugins[yasr.options.output];
 		if (outputPlugin) {
+			
+			//Manage download link
 			var info = (outputPlugin.getDownloadInfo? outputPlugin.getDownloadInfo(): null);
 			if (info) {
 				if (info.buttonTitle) downloadIcon.attr('title', info.buttonTitle);
@@ -76,6 +78,15 @@ var root = module.exports = function(parent, options, queryResults) {
 				downloadIcon.find("path").each(function(){
 					this.style.fill = "gray";
 				});
+			}
+			
+			//Manage embed button
+			var link = null;
+			if (outputPlugin.getEmbedHtml) link = outputPlugin.getEmbedHtml();
+			if (link && link.length > 0) {
+				embedButton.show();
+			} else {
+				embedButton.hide();
 			}
 		}
 	};
@@ -171,7 +182,7 @@ var root = module.exports = function(parent, options, queryResults) {
 		$toggableWarning.show(400);
 	};
 	
-
+	var embedBtn = null;
 	var drawHeader = function(yasr) {
 		var drawOutputSelector = function() {
 			var btnGroup = $('<div class="yasr_btnGroup"></div>');
@@ -250,9 +261,52 @@ var root = module.exports = function(parent, options, queryResults) {
 				});
 			yasr.header.append(button);
 		};
+		var drawEmbedButton = function() {
+			embedBtn = $("<button>", {class:'yasr_btn yasr_embedBtn', title: 'Get HTML snippet to embed results on a web page'})
+			.text('</>')
+			.click(function(event) {
+				var currentPlugin = yasr.plugins[yasr.options.output];
+				if (currentPlugin && currentPlugin.getEmbedHtml) {
+					var embedLink = currentPlugin.getEmbedHtml();
+					
+					event.stopPropagation();
+					var popup = $("<div class='yasr_embedPopup'></div>").appendTo(yasr.header);
+					$('html').click(function() {
+						if (popup) popup.remove();
+					});
+
+					popup.click(function(event) {
+						event.stopPropagation();
+						//dont close when clicking on popup
+					});
+					var prePopup = $("<textarea>").val(embedLink);
+					prePopup.focus(function() {
+					    var $this = $(this);
+					    $this.select();
+
+					    // Work around Chrome's little problem
+					    $this.mouseup(function() {
+					        // Prevent further mouseup intervention
+					        $this.unbind("mouseup");
+					        return false;
+					    });
+					});
+					
+					popup.empty().append(prePopup);
+					var positions = embedBtn.position();
+					var top = (positions.top + embedBtn.outerHeight()) + 'px';
+					var left = Math.max(((positions.left + embedBtn.outerWidth()) - popup.outerWidth()), 0) + 'px';
+					
+					popup.css("top",top).css("left", left);
+					
+				}
+			})
+			yasr.header.append(embedBtn);
+		};
 		drawFullscreenButton();drawSmallscreenButton();
 		if (yasr.options.drawOutputSelector) drawOutputSelector();
 		if (yasr.options.drawDownloadIcon) drawDownloadIcon();
+		drawEmbedButton();
 	};
 	
 	

@@ -194,9 +194,22 @@ var root = module.exports = function(yasr) {
 			buttonTitle: "Download SVG Image"
 		};
 	};
-	
+	var getEmbedHtml = function() {
+		if (!yasr.results) return null;
+		
+		var svgEl = yasr.resultsContainer.find('.pvtRendererArea svg')
+			.clone()//create clone, as we'd like to remove height/width attributes
+			.removeAttr('height').removeAttr('width')
+			.css('height', '').css('width','');
+		if (svgEl.length == 0) return null;
+		
+		//wrap in div, so users can more easily tune width/height
+		//don't use jquery, so we can easily influence indentation
+		return '<div style="width: 800px; height: 600px;">\n' + svgEl[0].outerHTML + '\n</div>';
+	};
 	return {
 		getDownloadInfo: getDownloadInfo,
+		getEmbedHtml: getEmbedHtml,
 		options: options,
 		draw: draw,
 		name: "Pivot Table",

@@ -335,6 +335,18 @@
 				<code>name: string</code><span class="label label-default">Optional</span>
 				<p>The human-readable name of the plugin, shown in the output selector.</p>
 			</div>
+      <div class="doc" style="margin-left: 30px">
+				<code>getDownloadInfo: function() → object</code><span class="label label-default">Optional</span>
+				<p>Enables the download button. Returns a an object with the keys <code>getContent: function() → response: string</code>,
+        <code>filename: string</code>, <code>contentType: string</code>, <code>buttonTitle: string</code> (the title attribute of the download button).
+        Returning <code>null</code> will disable the download button for the current result.
+        </p>
+			</div>
+      <div class="doc" style="margin-left: 30px">
+				<code>getEmbedHtml: function() → string</code><span class="label label-default">Optional</span>
+				<p>Enables the embed button. Function should return an html string usable to embed the current output in other web pages.
+          Returning <code>null</code> will disable the embed button for the current result. </p>
+			</div>
 		
 	
 		
