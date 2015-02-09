@@ -182,6 +182,14 @@ var root = module.exports = function(parent, options, queryResults) {
 		$toggableWarning.show(400);
 	};
 	
+	var blobDownloadSupported = null;
+	var checkBlobDownloadSupported = function() {
+		if (blobDownloadSupported === null) {
+			var windowUrl = window.URL || window.webkitURL || window.mozURL || window.msURL;
+			blobDownloadSupported = windowUrl && Blob;
+		}
+		return blobDownloadSupported;
+	};
 	var embedBtn = null;
 	var drawHeader = function(yasr) {
 		var drawOutputSelector = function() {
@@ -305,7 +313,7 @@ var root = module.exports = function(parent, options, queryResults) {
 		};
 		drawFullscreenButton();drawSmallscreenButton();
 		if (yasr.options.drawOutputSelector) drawOutputSelector();
-		if (yasr.options.drawDownloadIcon) drawDownloadIcon();
+		if (yasr.options.drawDownloadIcon && checkBlobDownloadSupported()) drawDownloadIcon();//only draw when it's supported
 		drawEmbedButton();
 	};
 	
