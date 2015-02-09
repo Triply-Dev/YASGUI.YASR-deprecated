@@ -3,7 +3,7 @@
 //the current browserify version does not support require-ing js files which are used as entry-point
 //this way, we can still require our main.js file
 module.exports = require('./main.js');
-},{"./main.js":28}],2:[function(require,module,exports){
+},{"./main.js":30}],2:[function(require,module,exports){
 /**
                _ _____           _          _     _      
               | |  __ \         (_)        | |   | |     
@@ -3689,6 +3689,31 @@ window.console = window.console || {"log":function(){}};//make sure any console 
 module.exports = {
 	storage: require("./storage.js"),
 	svg: require("./svg.js"),
+	escapeHtmlEntities : function(unescapedString) {
+		var tagsToReplace = {
+			'&' : '&amp;',
+			'<' : '&lt;',
+			'>' : '&gt;'
+		};
+
+		var replaceTag = function(tag) {
+			return tagsToReplace[tag] || tag;
+		}
+
+		return unescapedString.replace(/[&<>]/g, replaceTag);
+	},
+	nestedExists: function(obj /*, level1, level2, ... levelN*/) {
+		//taken from http://stackoverflow.com/a/2631198/1052020
+	  var args = Array.prototype.slice.call(arguments, 1);
+
+	  for (var i = 0; i < args.length; i++) {
+	    if (!obj || !obj.hasOwnProperty(args[i])) {
+	      return false;
+	    }
+	    obj = obj[args[i]];
+	  }
+	  return true;
+	},
 	version: {
 		"yasgui-utils" : require("../package.json").version,
 	}
@@ -3779,7 +3804,7 @@ module.exports = {
 module.exports={
   "name": "yasgui-yasr",
   "description": "Yet Another SPARQL Resultset GUI",
-  "version": "2.4.8",
+  "version": "2.4.9",
   "main": "src/main.js",
   "licenses": [
     {
@@ -4240,7 +4265,7 @@ var loader = function() {
 			 * Existing libraries either ignore several browsers (e.g. jquery 2.x), or use ugly hacks (timeouts or something)
 			 * So, we use our own custom ugly hack (yes, timeouts)
 			 */
-			loadScript('//google.com/jsapi', function(){
+			loadScript('http://google.com/jsapi', function(){
 				loadingMain = false;
 				mod.emit('initDone');
 			});
@@ -4390,6 +4415,7 @@ var root = module.exports = function(yasr){
 				yUtils.storage.set(persistencyIdChartConfig, yasr.options.gchart.chartConfig);
 				chartWrapper.setDataTable(tmp);
 				chartWrapper.draw();
+				yasr.updateHeader();
 			});
 			if (callback) callback();
 	};
@@ -4405,14 +4431,52 @@ var root = module.exports = function(yasr){
 		getDownloadInfo: function() {
 			if (!yasr.results) return null;
 			var svgEl = yasr.resultsContainer.find('svg');
+			if (svgEl.length > 0) {
+			
+				return {
+					getContent: function(){
+						if (svgEl[0].outerHTML) {
+							return svgEl[0].outerHTML;
+						} else {
+							//outerHTML not supported. use workaround
+							return $('<div>').append(svgEl.clone()).html();
+						}
+					},
+					filename: "queryResults.svg",
+					contentType: "image/svg+xml",
+					buttonTitle: "Download SVG Image"
+				};
+			}
+			//ok, not a svg. is it a table?
+			var $table = yasr.resultsContainer.find('.google-visualization-table-table');
+			if ($table.length > 0) {
+				return {
+					getContent: function(){
+						return $table.tableToCsv();
+					},
+					filename: "queryResults.csv",
+					contentType: "text/csv",
+					buttonTitle: "Download as CSV"
+				};
+			} 
+		},
+		getEmbedHtml: function() {
+			if (!yasr.results) return null;
+			
+			var svgEl = yasr.resultsContainer.find('svg')
+				.clone()//create clone, as we'd like to remove height/width attributes
+				.removeAttr('height').removeAttr('width')
+				.css('height', '').css('width','');
 			if (svgEl.length == 0) return null;
 			
-			return {
-				getContent: function(){return svgEl[0].outerHTML;},
-				filename: "queryResults.svg",
-				contentType: "image/svg+xml",
-				buttonTitle: "Download SVG Image"
-			};
+			var htmlString = svgEl[0].outerHTML;
+			if (!htmlString) {
+				//outerHTML not supported. use workaround
+				htmlString = $('<div>').append(svgEl.clone()).html();
+			}
+			//wrap in div, so users can more easily tune width/height
+			//don't use jquery, so we can easily influence indentation
+			return '<div style="width: 800px; height: 600px;">\n' + htmlString + '\n</div>';
 		},
 		draw: function(){
 			var doDraw = function () {
@@ -4596,7 +4660,7 @@ function deepEq$(x, y, type){
   }
 }
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"./exceptions.js":24,"./gChartLoader.js":25,"./utils.js":38,"jquery":undefined,"yasgui-utils":16}],27:[function(require,module,exports){
+},{"./exceptions.js":24,"./gChartLoader.js":25,"./utils.js":40,"jquery":undefined,"yasgui-utils":16}],27:[function(require,module,exports){
 'use strict';
 module.exports = {
 	cross: '<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" x="0px" y="0px" width="30px" height="30px" viewBox="0 0 100 100" enable-background="new 0 0 100 100" xml:space="preserve"><g>	<path d="M83.288,88.13c-2.114,2.112-5.575,2.112-7.689,0L53.659,66.188c-2.114-2.112-5.573-2.112-7.687,0L24.251,87.907   c-2.113,2.114-5.571,2.114-7.686,0l-4.693-4.691c-2.114-2.114-2.114-5.573,0-7.688l21.719-21.721c2.113-2.114,2.113-5.573,0-7.686   L11.872,24.4c-2.114-2.113-2.114-5.571,0-7.686l4.842-4.842c2.113-2.114,5.571-2.114,7.686,0L46.12,33.591   c2.114,2.114,5.572,2.114,7.688,0l21.721-21.719c2.114-2.114,5.573-2.114,7.687,0l4.695,4.695c2.111,2.113,2.111,5.571-0.003,7.686   L66.188,45.973c-2.112,2.114-2.112,5.573,0,7.686L88.13,75.602c2.112,2.111,2.112,5.572,0,7.687L83.288,88.13z"/></g></svg>',
@@ -4610,12 +4674,114 @@ module.exports = {
 	smallscreen: '<svg   xmlns:dc="http://purl.org/dc/elements/1.1/"   xmlns:cc="http://creativecommons.org/ns#"   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"   xmlns:svg="http://www.w3.org/2000/svg"   xmlns="http://www.w3.org/2000/svg"   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"   version="1.1"      x="0px"   y="0px"   width="100%"   height="100%"   viewBox="5 -10 74.074074 100"   enable-background="new 0 0 100 100"   xml:space="preserve"   inkscape:version="0.48.4 r9939"   sodipodi:docname="noun_2186_cc.svg"><metadata     ><rdf:RDF><cc:Work         rdf:about=""><dc:format>image/svg+xml</dc:format><dc:type           rdf:resource="http://purl.org/dc/dcmitype/StillImage" /></cc:Work></rdf:RDF></metadata><defs      /><sodipodi:namedview     pagecolor="#ffffff"     bordercolor="#666666"     borderopacity="1"     objecttolerance="10"     gridtolerance="10"     guidetolerance="10"     inkscape:pageopacity="0"     inkscape:pageshadow="2"     inkscape:window-width="1855"     inkscape:window-height="1056"          showgrid="false"     fit-margin-top="0"     fit-margin-left="0"     fit-margin-right="0"     fit-margin-bottom="0"     inkscape:zoom="2.36"     inkscape:cx="44.101509"     inkscape:cy="31.481481"     inkscape:window-x="65"     inkscape:window-y="24"     inkscape:window-maximized="1"     inkscape:current-layer="Layer_1" /><path     d="m 30.926037,28.889 0,-38.889 -16.667,16.667 -16.667,-16.667 -5.555,5.555 16.667,16.667 -16.667,16.667 38.889,0 z"          inkscape:connector-curvature="0"     style="fill:#010101" /><path     d="m 53.148037,28.889 0,-38.889 16.667,16.667 16.666,-16.667 5.556,5.555 -16.666,16.667 16.666,16.667 -38.889,0 z"          inkscape:connector-curvature="0"     style="fill:#010101" /><path     d="m 30.926037,51.111 0,38.889 -16.667,-16.666 -16.667,16.666 -5.555,-5.556 16.667,-16.666 -16.667,-16.667 38.889,0 z"          inkscape:connector-curvature="0"     style="fill:#010101" /><path     d="m 53.148037,51.111 0,38.889 16.667,-16.666 16.666,16.666 5.556,-5.556 -16.666,-16.666 16.666,-16.667 -38.889,0 z"          inkscape:connector-curvature="0"     style="fill:#010101" /></svg>',
 };
 },{}],28:[function(require,module,exports){
+require('./tableToCsv.js');
+},{"./tableToCsv.js":29}],29:[function(require,module,exports){
+'use strict';
+var $ = (function(){try{return require('jquery')}catch(e){return window.jQuery}})();
+
+
+$.fn.tableToCsv = function(config) {
+	var csvString = "";
+	config = $.extend({
+		quote: "\"",
+		delimiter: ",",
+		lineBreak: "\n",
+	}, config)
+	
+	
+	
+	
+	var needToQuoteString = function(value) {
+		//quote when it contains whitespace or the delimiter
+		var needQuoting = false;
+		if (value.match("[\\w|"+ config.delimiter + "|" + config.quote + "]")) {
+			needQuoting = true;
+		}
+		return needQuoting;
+	};
+	var addValueToString = function(value) {
+		//Quotes in the string need to be escaped
+		value.replace(config.quote, config.quote + config.quote);
+		if (needToQuoteString(value)) {
+			value = config.quote + value + config.quote;
+		}
+		csvString += " " + value + " " + config.delimiter;
+	};
+	
+	var addRowToString = function(rowArray) {
+		rowArray.forEach(function(val) {
+			addValueToString(val);
+		});
+		csvString += config.lineBreak;
+	}
+
+	var tableArrays = [];
+	var $el = $(this);
+	var rowSpans = {};
+	
+	
+	
+    var colCount = 0;
+    $el.find('tr:first *').each(function () {
+        if ($(this).attr('colspan')) {
+            colCount += +$(this).attr('colspan');
+        } else {
+            colCount++;
+        }
+    });
+	
+	$el.find('tr').each(function(rowId, tr) {
+		var $tr = $(tr);
+		var rowArray = []
+		
+		var skippedCols = 0;
+		for (var colId = 0; (colId + skippedCols) < colCount; colId++) {
+			
+			//for col Id, do we have a rowspan attr left? Then first add this one to rowArray
+			if (rowSpans[colId]) {
+				rowArray.push(rowSpans[colId].text);
+				rowSpans[colId].rowSpan--;
+				if (!rowSpans[colId].rowSpan) delete rowSpans[colId];
+				continue;
+			}
+			
+			var $cell = $tr.find(':nth-child(' + (colId+1) + ')');
+			console.log($cell);
+			
+			var colspan = $cell.attr('colspan');
+			var rowspan = $cell.attr('rowspan');
+			if (colspan && !isNaN(colspan)) {
+				for (var i = 0; i < colspan; i++) {
+					rowArray.push($cell.text());
+				}
+				skippedCols += (colspan -1);
+			} else if (rowspan && !isNaN(rowspan)) {
+				rowSpans[colId + skippedCols] = {
+					rowSpan: rowspan -1,
+					text: $cell.text()
+				}
+				rowArray.push($cell.text());
+				skippedCols++;
+			} else {
+				rowArray.push($cell.text());
+			}
+		}
+		addRowToString(rowArray);
+		
+		
+	})
+	
+	return csvString;
+}
+
+
+},{"jquery":undefined}],30:[function(require,module,exports){
 'use strict';
 var $ = (function(){try{return require('jquery')}catch(e){return window.jQuery}})();
 var utils = require("yasgui-utils");
 console = console || {"log":function(){}};//make sure any console statements don't break in IE
 
-
+require('./jquery/extendJquery.js');
 
 
 /**
@@ -4673,9 +4839,11 @@ var root = module.exports = function(parent, options, queryResults) {
 	yasr.updateHeader = function() {
 		var downloadIcon = yasr.header.find(".yasr_downloadIcon")
 				.removeAttr("title");//and remove previous titles
-		
+		var embedButton = yasr.header.find(".yasr_embedBtn");
 		var outputPlugin = yasr.plugins[yasr.options.output];
 		if (outputPlugin) {
+			
+			//Manage download link
 			var info = (outputPlugin.getDownloadInfo? outputPlugin.getDownloadInfo(): null);
 			if (info) {
 				if (info.buttonTitle) downloadIcon.attr('title', info.buttonTitle);
@@ -4688,6 +4856,15 @@ var root = module.exports = function(parent, options, queryResults) {
 				downloadIcon.find("path").each(function(){
 					this.style.fill = "gray";
 				});
+			}
+			
+			//Manage embed button
+			var link = null;
+			if (outputPlugin.getEmbedHtml) link = outputPlugin.getEmbedHtml();
+			if (link && link.length > 0) {
+				embedButton.show();
+			} else {
+				embedButton.hide();
 			}
 		}
 	};
@@ -4783,7 +4960,15 @@ var root = module.exports = function(parent, options, queryResults) {
 		$toggableWarning.show(400);
 	};
 	
-
+	var blobDownloadSupported = null;
+	var checkBlobDownloadSupported = function() {
+		if (blobDownloadSupported === null) {
+			var windowUrl = window.URL || window.webkitURL || window.mozURL || window.msURL;
+			blobDownloadSupported = windowUrl && Blob;
+		}
+		return blobDownloadSupported;
+	};
+	var embedBtn = null;
 	var drawHeader = function(yasr) {
 		var drawOutputSelector = function() {
 			var btnGroup = $('<div class="yasr_btnGroup"></div>');
@@ -4862,9 +5047,52 @@ var root = module.exports = function(parent, options, queryResults) {
 				});
 			yasr.header.append(button);
 		};
+		var drawEmbedButton = function() {
+			embedBtn = $("<button>", {class:'yasr_btn yasr_embedBtn', title: 'Get HTML snippet to embed results on a web page'})
+			.text('</>')
+			.click(function(event) {
+				var currentPlugin = yasr.plugins[yasr.options.output];
+				if (currentPlugin && currentPlugin.getEmbedHtml) {
+					var embedLink = currentPlugin.getEmbedHtml();
+					
+					event.stopPropagation();
+					var popup = $("<div class='yasr_embedPopup'></div>").appendTo(yasr.header);
+					$('html').click(function() {
+						if (popup) popup.remove();
+					});
+
+					popup.click(function(event) {
+						event.stopPropagation();
+						//dont close when clicking on popup
+					});
+					var prePopup = $("<textarea>").val(embedLink);
+					prePopup.focus(function() {
+					    var $this = $(this);
+					    $this.select();
+
+					    // Work around Chrome's little problem
+					    $this.mouseup(function() {
+					        // Prevent further mouseup intervention
+					        $this.unbind("mouseup");
+					        return false;
+					    });
+					});
+					
+					popup.empty().append(prePopup);
+					var positions = embedBtn.position();
+					var top = (positions.top + embedBtn.outerHeight()) + 'px';
+					var left = Math.max(((positions.left + embedBtn.outerWidth()) - popup.outerWidth()), 0) + 'px';
+					
+					popup.css("top",top).css("left", left);
+					
+				}
+			})
+			yasr.header.append(embedBtn);
+		};
 		drawFullscreenButton();drawSmallscreenButton();
 		if (yasr.options.drawOutputSelector) drawOutputSelector();
-		if (yasr.options.drawDownloadIcon) drawDownloadIcon();
+		if (yasr.options.drawDownloadIcon && checkBlobDownloadSupported()) drawDownloadIcon();//only draw when it's supported
+		drawEmbedButton();
 	};
 	
 	
@@ -4946,13 +5174,13 @@ try {root.registerOutput('table', require("./table.js"))} catch(e){};
 try {root.registerOutput('error', require("./error.js"))} catch(e){};
 try {root.registerOutput('pivot', require("./pivot.js"))} catch(e){};
 try {root.registerOutput('gchart', require("./gchart.js"))} catch(e){};
-},{"../package.json":19,"./boolean.js":21,"./defaults.js":22,"./error.js":23,"./gChartLoader.js":25,"./gchart.js":26,"./imgs.js":27,"./parsers/wrapper.js":33,"./pivot.js":35,"./rawResponse.js":36,"./table.js":37,"./utils.js":38,"jquery":undefined,"yasgui-utils":16}],29:[function(require,module,exports){
+},{"../package.json":19,"./boolean.js":21,"./defaults.js":22,"./error.js":23,"./gChartLoader.js":25,"./gchart.js":26,"./imgs.js":27,"./jquery/extendJquery.js":28,"./parsers/wrapper.js":35,"./pivot.js":37,"./rawResponse.js":38,"./table.js":39,"./utils.js":40,"jquery":undefined,"yasgui-utils":16}],31:[function(require,module,exports){
 'use strict';
 var $ = (function(){try{return require('jquery')}catch(e){return window.jQuery}})();
 var root = module.exports = function(queryResponse) {
 	return require("./dlv.js")(queryResponse, ",");
 };
-},{"./dlv.js":30,"jquery":undefined}],30:[function(require,module,exports){
+},{"./dlv.js":32,"jquery":undefined}],32:[function(require,module,exports){
 'use strict';
 var $ = (function(){try{return require('jquery')}catch(e){return window.jQuery}})();
 require("../../lib/jquery.csv-0.71.js");
@@ -5014,7 +5242,7 @@ var root = module.exports = function(queryResponse, separator) {
 	
 	return json;
 };
-},{"../../lib/jquery.csv-0.71.js":3,"jquery":undefined}],31:[function(require,module,exports){
+},{"../../lib/jquery.csv-0.71.js":3,"jquery":undefined}],33:[function(require,module,exports){
 'use strict';
 var $ = (function(){try{return require('jquery')}catch(e){return window.jQuery}})();
 var root = module.exports = function(queryResponse) {
@@ -5032,13 +5260,13 @@ var root = module.exports = function(queryResponse) {
 	return false;
 	
 };
-},{"jquery":undefined}],32:[function(require,module,exports){
+},{"jquery":undefined}],34:[function(require,module,exports){
 'use strict';
 var $ = (function(){try{return require('jquery')}catch(e){return window.jQuery}})();
 var root = module.exports = function(queryResponse) {
 	return require("./dlv.js")(queryResponse, "\t");
 };
-},{"./dlv.js":30,"jquery":undefined}],33:[function(require,module,exports){
+},{"./dlv.js":32,"jquery":undefined}],35:[function(require,module,exports){
 'use strict';
 var $ = (function(){try{return require('jquery')}catch(e){return window.jQuery}})();
 
@@ -5272,7 +5500,7 @@ var root = module.exports = function(dataOrJqXhr, textStatus, jqXhrOrErrorString
 
 
 
-},{"./csv.js":29,"./json.js":31,"./tsv.js":32,"./xml.js":34,"jquery":undefined}],34:[function(require,module,exports){
+},{"./csv.js":31,"./json.js":33,"./tsv.js":34,"./xml.js":36,"jquery":undefined}],36:[function(require,module,exports){
 'use strict';
 var $ = (function(){try{return require('jquery')}catch(e){return window.jQuery}})();
 var root = module.exports = function(xml) {
@@ -5358,7 +5586,7 @@ var root = module.exports = function(xml) {
 	return json;
 };
 
-},{"jquery":undefined}],35:[function(require,module,exports){
+},{"jquery":undefined}],37:[function(require,module,exports){
 'use strict';
 var $ = (function(){try{return require('jquery')}catch(e){return window.jQuery}})(),
 	utils = require('./utils.js'),
@@ -5546,18 +5774,59 @@ var root = module.exports = function(yasr) {
 	var getDownloadInfo =  function() {
 		if (!yasr.results) return null;
 		var svgEl = yasr.resultsContainer.find('.pvtRendererArea svg');
+		if (svgEl.length > 0) {
+		
+			return {
+				getContent: function(){
+					if (svgEl[0].outerHTML) {
+						return svgEl[0].outerHTML;
+					} else {
+						//outerHTML not supported. use workaround
+						return $('<div>').append(svgEl.clone()).html();
+					}
+				},
+				
+				filename: "queryResults.svg",
+				contentType: "image/svg+xml",
+				buttonTitle: "Download SVG Image"
+			};
+		} 
+		
+		//ok, not a svg. is it a table?
+		var $table = yasr.resultsContainer.find('.pvtRendererArea table');
+		if ($table.length > 0) {
+			return {
+				getContent: function(){
+					return $table.tableToCsv();
+				},
+				filename: "queryResults.csv",
+				contentType: "text/csv",
+				buttonTitle: "Download as CSV"
+			};
+		} 
+		
+	};
+	var getEmbedHtml = function() {
+		if (!yasr.results) return null;
+		
+		var svgEl = yasr.resultsContainer.find('.pvtRendererArea svg')
+			.clone()//create clone, as we'd like to remove height/width attributes
+			.removeAttr('height').removeAttr('width')
+			.css('height', '').css('width','');
 		if (svgEl.length == 0) return null;
 		
-		return {
-			getContent: function(){return svgEl[0].outerHTML;},
-			filename: "queryResults.svg",
-			contentType: "image/svg+xml",
-			buttonTitle: "Download SVG Image"
-		};
+		var htmlString = svgEl[0].outerHTML;
+		if (!htmlString) {
+			//outerHTML not supported. use workaround
+			htmlString = $('<div>').append(svgEl.clone()).html();
+		}
+		//wrap in div, so users can more easily tune width/height
+		//don't use jquery, so we can easily influence indentation
+		return '<div style="width: 800px; height: 600px;">\n' + htmlString + '\n</div>';
 	};
-	
 	return {
 		getDownloadInfo: getDownloadInfo,
+		getEmbedHtml: getEmbedHtml,
 		options: options,
 		draw: draw,
 		name: "Pivot Table",
@@ -5580,7 +5849,7 @@ root.version = {
 	"YASR-rawResponse" : require("../package.json").version,
 	"jquery": $.fn.jquery,
 };
-},{"../node_modules/pivottable/dist/d3_renderers.js":12,"../node_modules/pivottable/dist/gchart_renderers.js":13,"../package.json":19,"./gChartLoader.js":25,"./imgs.js":27,"./utils.js":38,"d3":undefined,"jquery":undefined,"jquery-ui/sortable":undefined,"pivottable":undefined,"yasgui-utils":16}],36:[function(require,module,exports){
+},{"../node_modules/pivottable/dist/d3_renderers.js":12,"../node_modules/pivottable/dist/gchart_renderers.js":13,"../package.json":19,"./gChartLoader.js":25,"./imgs.js":27,"./utils.js":40,"d3":undefined,"jquery":undefined,"jquery-ui/sortable":undefined,"pivottable":undefined,"yasgui-utils":16}],38:[function(require,module,exports){
 'use strict';
 var $ = (function(){try{return require('jquery')}catch(e){return window.jQuery}})(),
 	CodeMirror = (function(){try{return require('codemirror')}catch(e){return window.CodeMirror}})();
@@ -5669,7 +5938,7 @@ root.version = {
 	"jquery": $.fn.jquery,
 	"CodeMirror" : CodeMirror.version
 };
-},{"../package.json":19,"codemirror":undefined,"codemirror/addon/edit/matchbrackets.js":5,"codemirror/addon/fold/brace-fold.js":6,"codemirror/addon/fold/foldcode.js":7,"codemirror/addon/fold/foldgutter.js":8,"codemirror/addon/fold/xml-fold.js":9,"codemirror/mode/javascript/javascript.js":10,"codemirror/mode/xml/xml.js":11,"jquery":undefined}],37:[function(require,module,exports){
+},{"../package.json":19,"codemirror":undefined,"codemirror/addon/edit/matchbrackets.js":5,"codemirror/addon/fold/brace-fold.js":6,"codemirror/addon/fold/foldcode.js":7,"codemirror/addon/fold/foldgutter.js":8,"codemirror/addon/fold/xml-fold.js":9,"codemirror/mode/javascript/javascript.js":10,"codemirror/mode/xml/xml.js":11,"jquery":undefined}],39:[function(require,module,exports){
 'use strict';
 var $ = (function(){try{return require('jquery')}catch(e){return window.jQuery}})(),
 	yutils = require("yasgui-utils"),
@@ -6079,7 +6348,7 @@ root.version = {
 	"jquery-datatables": $.fn.DataTable.version
 };
 
-},{"../lib/colResizable-1.4.js":2,"../package.json":19,"./bindingsToCsv.js":20,"./imgs.js":27,"./utils.js":38,"datatables":undefined,"jquery":undefined,"yasgui-utils":16}],38:[function(require,module,exports){
+},{"../lib/colResizable-1.4.js":2,"../package.json":19,"./bindingsToCsv.js":20,"./imgs.js":27,"./utils.js":40,"datatables":undefined,"jquery":undefined,"yasgui-utils":16}],40:[function(require,module,exports){
 'use strict';
 var $ = (function(){try{return require('jquery')}catch(e){return window.jQuery}})(),
 	GoogleTypeException = require('./exceptions.js').GoogleTypeException;
