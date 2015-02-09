@@ -72,7 +72,14 @@ var root = module.exports = function(yasr){
 			if (svgEl.length == 0) return null;
 			
 			return {
-				getContent: function(){return svgEl[0].outerHTML;},
+				getContent: function(){
+					if (svgEl[0].outerHTML) {
+						return svgEl[0].outerHTML;
+					} else {
+						//outerHTML not supported. use workaround
+						return $('<div>').append(svgEl.clone()).html();
+					}
+				},
 				filename: "queryResults.svg",
 				contentType: "image/svg+xml",
 				buttonTitle: "Download SVG Image"
@@ -87,9 +94,14 @@ var root = module.exports = function(yasr){
 				.css('height', '').css('width','');
 			if (svgEl.length == 0) return null;
 			
+			var htmlString = svgEl[0].outerHTML;
+			if (!htmlString) {
+				//outerHTML not supported. use workaround
+				htmlString = $('<div>').append(svgEl.clone()).html();
+			}
 			//wrap in div, so users can more easily tune width/height
 			//don't use jquery, so we can easily influence indentation
-			return '<div style="width: 800px; height: 600px;">\n' + svgEl[0].outerHTML + '\n</div>';
+			return '<div style="width: 800px; height: 600px;">\n' + htmlString + '\n</div>';
 		},
 		draw: function(){
 			var doDraw = function () {
