@@ -53,6 +53,7 @@ var root = module.exports = function(yasr){
 				yUtils.storage.set(persistencyIdChartConfig, yasr.options.gchart.chartConfig);
 				chartWrapper.setDataTable(tmp);
 				chartWrapper.draw();
+				yasr.updateHeader();
 			});
 			if (callback) callback();
 	};
