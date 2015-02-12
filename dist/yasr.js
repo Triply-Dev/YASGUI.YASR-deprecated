@@ -3689,31 +3689,6 @@ window.console = window.console || {"log":function(){}};//make sure any console 
 module.exports = {
 	storage: require("./storage.js"),
 	svg: require("./svg.js"),
-	escapeHtmlEntities : function(unescapedString) {
-		var tagsToReplace = {
-			'&' : '&amp;',
-			'<' : '&lt;',
-			'>' : '&gt;'
-		};
-
-		var replaceTag = function(tag) {
-			return tagsToReplace[tag] || tag;
-		}
-
-		return unescapedString.replace(/[&<>]/g, replaceTag);
-	},
-	nestedExists: function(obj /*, level1, level2, ... levelN*/) {
-		//taken from http://stackoverflow.com/a/2631198/1052020
-	  var args = Array.prototype.slice.call(arguments, 1);
-
-	  for (var i = 0; i < args.length; i++) {
-	    if (!obj || !obj.hasOwnProperty(args[i])) {
-	      return false;
-	    }
-	    obj = obj[args[i]];
-	  }
-	  return true;
-	},
 	version: {
 		"yasgui-utils" : require("../package.json").version,
 	}
@@ -3804,7 +3779,7 @@ module.exports = {
 module.exports={
   "name": "yasgui-yasr",
   "description": "Yet Another SPARQL Resultset GUI",
-  "version": "2.4.9",
+  "version": "2.4.10",
   "main": "src/main.js",
   "licenses": [
     {
@@ -4358,6 +4333,7 @@ module.exports = new loader();
 
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
+
 },{"events":4,"jquery":undefined}],26:[function(require,module,exports){
 (function (global){
 'use strict';
@@ -4660,6 +4636,7 @@ function deepEq$(x, y, type){
   }
 }
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
+
 },{"./exceptions.js":24,"./gChartLoader.js":25,"./utils.js":40,"jquery":undefined,"yasgui-utils":16}],27:[function(require,module,exports){
 'use strict';
 module.exports = {
