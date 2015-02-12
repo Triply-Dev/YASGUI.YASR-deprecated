@@ -30,7 +30,7 @@ gulp.task('push', function (done) {
 });
 
 gulp.task('commitDist', function() {
-	  return gulp.src(['./' + paths.docDir + '/*', './' + paths.bundleDir + '/*'])
+	  return gulp.src(['./' + paths.docDir + '/*', './index.html', './' + paths.bundleDir + '/*'])
 	    .pipe(git.add({args: '-f'}))
 	    .pipe(git.commit("Updated dist/docs"));
 });
