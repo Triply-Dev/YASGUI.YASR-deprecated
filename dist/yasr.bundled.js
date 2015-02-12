@@ -49980,7 +49980,7 @@ module.exports = {
 module.exports={
   "name": "yasgui-yasr",
   "description": "Yet Another SPARQL Resultset GUI",
-  "version": "2.4.10",
+  "version": "2.4.11",
   "main": "src/main.js",
   "licenses": [
     {
@@ -50001,7 +50001,7 @@ module.exports={
     "gulp-git": "^0.5.2",
     "gulp-jsvalidate": "^0.2.0",
     "gulp-livereload": "^1.3.1",
-    "gulp-minify-css": "^0.3.11",
+    "gulp-minify-css": "0.3.11",
     "gulp-notify": "^2.0.1",
     "gulp-rename": "^1.2.0",
     "gulp-streamify": "0.0.5",
