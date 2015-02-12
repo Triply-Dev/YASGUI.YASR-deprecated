@@ -340,18 +340,14 @@
     .yasr .dataTables_wrapper .dataTables_info, .yasr .dataTables_wrapper .dataTables_paginate {
       float: none;
       text-align: center; }
-
     .yasr .dataTables_wrapper .dataTables_paginate {
-      margin-top: 0.5em; }
- }
+      margin-top: 0.5em; } }
   @media screen and (max-width: 640px) {
     .yasr .dataTables_wrapper .dataTables_length, .yasr .dataTables_wrapper .dataTables_filter {
       float: none;
       text-align: center; }
-
     .yasr .dataTables_wrapper .dataTables_filter {
-      margin-top: 0.5em; }
- }
+      margin-top: 0.5em; } }
   .yasr table.pvtTable {
     font-family: arial;
     font-size: 8pt;
@@ -675,7 +671,7 @@
   .yasr .CodeMirror span {
     *vertical-align: text-bottom; }
   .yasr .cm-force-border {
-    padding-right: 0.1px; }
+    padding-right: .1px; }
   @media print {
     .yasr {
       /* Hide the cursor when printing */ }
@@ -689,10 +685,10 @@
     color: blue;
     text-shadow: #b9f 1px 1px 2px, #b9f -1px -1px 2px, #b9f 1px -1px 2px, #b9f -1px 1px 2px;
     font-family: arial;
-    line-height: 0.3;
+    line-height: .3;
     cursor: pointer; }
   .yasr .CodeMirror-foldgutter {
-    width: 0.7em; }
+    width: .7em; }
   .yasr .CodeMirror-foldgutter-open, .yasr .CodeMirror-foldgutter-folded {
     cursor: pointer; }
   .yasr .CodeMirror-foldgutter-open:after {
@@ -759,7 +755,7 @@
       padding: 4px 8px; }
     .yasr .yasr_btn[disabled], .yasr .yasr_btn.disabled {
       cursor: default;
-      opacity: 0.5;
+      opacity: .5;
       filter: alpha(opacity=50);
       -webkit-box-shadow: none;
       box-shadow: none; }
@@ -830,7 +826,7 @@
       line-height: 1;
       color: #000;
       text-shadow: 0 1px 0 #fff;
-      opacity: 0.2;
+      opacity: .2;
       position: relative;
       top: -2px;
       right: -21px;
@@ -839,7 +835,7 @@
         color: #000;
         cursor: pointer;
         filter: alpha(opacity=50);
-        opacity: 0.5; }
+        opacity: .5; }
   .yasr .booleanResult {
     width: 70px;
     margin: 0 auto;
@@ -857,7 +853,7 @@
         padding-bottom: 3px; }
       .yasr .errorResult .errorHeader span.exception {
         display: inline;
-        padding: 0.2em 0.6em 0.3em;
+        padding: .2em .6em .3em;
         font-size: 75%;
         font-weight: 700;
         line-height: 1;
@@ -865,7 +861,7 @@
         text-align: center;
         white-space: nowrap;
         vertical-align: baseline;
-        border-radius: 0.25em;
+        border-radius: .25em;
         background-color: #d9534f; }
     .yasr .errorResult pre {
       display: block;
