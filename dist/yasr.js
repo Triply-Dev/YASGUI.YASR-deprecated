@@ -3779,7 +3779,7 @@ module.exports = {
 module.exports={
   "name": "yasgui-yasr",
   "description": "Yet Another SPARQL Resultset GUI",
-  "version": "2.4.11",
+  "version": "2.4.12",
   "main": "src/main.js",
   "licenses": [
     {
@@ -5974,7 +5974,7 @@ var root = module.exports = function(yasr) {
 		return rows;
 	};
 	
-	var eventId = yasr.getPersistencyId('eventId') || '';
+	var eventId = yasr.getPersistencyId('eventId') || "yasr_" + $(yasr.container).closest('[id]').attr('id');
 	var addEvents = function() {
 		table.on( 'order.dt', function () {
 		    drawSvgIcons();
