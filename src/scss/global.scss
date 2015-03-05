@@ -4,4 +4,7 @@
 	z-index: $zIndex-global;
 	width: auto;
 	margin: inherit;
+	.charts-flat-menu-button {
+		box-sizing: content-box;
+	}
 }
