@@ -70,7 +70,6 @@ var root = module.exports = function(yasr){
 			if (!yasr.results) return null;
 			var svgEl = yasr.resultsContainer.find('svg');
 			if (svgEl.length > 0) {
-			
 				return {
 					getContent: function(){
 						if (svgEl[0].outerHTML) {
@@ -186,7 +185,7 @@ var root = module.exports = function(yasr){
 				wrapper.setOption("width", options.width);
 				wrapper.setOption("height", options.height);
 				wrapper.draw();
-				yasr.updateHeader();
+				google.visualization.events.addListener(wrapper, 'ready', yasr.updateHeader);
 			}
 			
 			if (!require('google') || !require('google').visualization || !editor) {
