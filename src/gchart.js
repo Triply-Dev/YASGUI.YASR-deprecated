@@ -52,6 +52,8 @@ var root = module.exports = function(yasr){
 				
 				yUtils.storage.set(persistencyIdChartConfig, yasr.options.gchart.chartConfig);
 				chartWrapper.setDataTable(tmp);
+				chartWrapper.setOption("width", options.width);
+				chartWrapper.setOption("height", options.height);
 				chartWrapper.draw();
 				yasr.updateHeader();
 			});
@@ -207,7 +209,7 @@ var root = module.exports = function(yasr){
 	};
 };
 root.defaults = {
-	height: "600px",
+	height: "100%",
 	width: "100%",
 	persistencyId: 'gchart',
 };
