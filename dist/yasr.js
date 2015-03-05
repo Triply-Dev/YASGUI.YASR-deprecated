@@ -3654,7 +3654,7 @@ if (!CodeMirror.mimeModes.hasOwnProperty("text/html"))
 },{}],15:[function(require,module,exports){
 module.exports={
   "name": "yasgui-utils",
-  "version": "1.5.0",
+  "version": "1.5.2",
   "description": "Utils for YASGUI libs",
   "main": "src/main.js",
   "repository": {
@@ -3691,6 +3691,17 @@ module.exports = {
 	svg: require("./svg.js"),
 	version: {
 		"yasgui-utils" : require("../package.json").version,
+	},
+	nestedExists : function(obj) {
+		var args = Array.prototype.slice.call(arguments, 1);
+
+		for (var i = 0; i < args.length; i++) {
+			if (!obj || !obj.hasOwnProperty(args[i])) {
+				return false;
+			}
+			obj = obj[args[i]];
+		}
+		return true;
 	}
 };
 
@@ -3711,7 +3722,7 @@ var times = {
 var root = module.exports = {
 	set : function(key, val, exp) {
     if (!store.enabled) return;//this is probably in private mode. Don't run, as we might get Js errors
-		if (key && val) {
+		if (key && val !== undefined) {
 			if (typeof exp == "string") {
 				exp = times[exp]();
 			}
@@ -3779,7 +3790,7 @@ module.exports = {
 module.exports={
   "name": "yasgui-yasr",
   "description": "Yet Another SPARQL Resultset GUI",
-  "version": "2.4.12",
+  "version": "2.4.13",
   "main": "src/main.js",
   "licenses": [
     {
@@ -4408,7 +4419,6 @@ var root = module.exports = function(yasr){
 			if (!yasr.results) return null;
 			var svgEl = yasr.resultsContainer.find('svg');
 			if (svgEl.length > 0) {
-			
 				return {
 					getContent: function(){
 						if (svgEl[0].outerHTML) {
@@ -4524,7 +4534,7 @@ var root = module.exports = function(yasr){
 				wrapper.setOption("width", options.width);
 				wrapper.setOption("height", options.height);
 				wrapper.draw();
-				yasr.updateHeader();
+				google.visualization.events.addListener(wrapper, 'ready', yasr.updateHeader);
 			}
 			
 			if (!(typeof window !== "undefined" ? window.google : typeof global !== "undefined" ? global.google : null) || !(typeof window !== "undefined" ? window.google : typeof global !== "undefined" ? global.google : null).visualization || !editor) {
