@@ -3790,7 +3790,7 @@ module.exports = {
 module.exports={
   "name": "yasgui-yasr",
   "description": "Yet Another SPARQL Resultset GUI",
-  "version": "2.4.13",
+  "version": "2.4.14",
   "main": "src/main.js",
   "licenses": [
     {
@@ -4401,6 +4401,8 @@ var root = module.exports = function(yasr){
 				
 				yUtils.storage.set(persistencyIdChartConfig, yasr.options.gchart.chartConfig);
 				chartWrapper.setDataTable(tmp);
+				chartWrapper.setOption("width", options.width);
+				chartWrapper.setOption("height", options.height);
 				chartWrapper.draw();
 				yasr.updateHeader();
 			});
@@ -4411,6 +4413,9 @@ var root = module.exports = function(yasr){
 		name: "Google Chart",
 		hideFromSelection: false,
 		priority: 7,
+		getPersistentSettings: function() {
+			return yasr.options.gchart.chartConfig;
+		},
 		canHandleResults: function(yasr){
 			var results, variables;
 			return (results = yasr.results) != null && (variables = results.getVariables()) && variables.length > 0;
@@ -4556,7 +4561,7 @@ var root = module.exports = function(yasr){
 	};
 };
 root.defaults = {
-	height: "600px",
+	height: "100%",
 	width: "100%",
 	persistencyId: 'gchart',
 };
@@ -5584,6 +5589,7 @@ var $ = (function(){try{return require('jquery')}catch(e){return window.jQuery}}
 
 if (!$.fn.pivotUI) throw new Error("Pivot lib not loaded");
 var root = module.exports = function(yasr) {
+	var persistentSettings = null;
 	var plugin = {};
 	var options = $.extend(true, {}, root.defaults);
 	
@@ -5676,14 +5682,14 @@ var root = module.exports = function(yasr) {
 		var doDraw = function() {
 			var onRefresh = function(pivotObj) {
 				if (persistencyId) {
-					var storeSettings = {
+					persistentSettings = {
 						cols: pivotObj.cols,
 						rows: pivotObj.rows,
 						rendererName: pivotObj.rendererName,
 						aggregatorName: pivotObj.aggregatorName,
 						vals: pivotObj.vals,
 					}
-					yUtils.storage.set(persistencyId, storeSettings, "month");
+					yUtils.storage.set(persistencyId, persistentSettings, "month");
 				}
 				if (pivotObj.rendererName.toLowerCase().indexOf(' chart') >= 0) {
 					openGchartBtn.show();
@@ -5812,6 +5818,9 @@ var root = module.exports = function(yasr) {
 		return '<div style="width: 800px; height: 600px;">\n' + htmlString + '\n</div>';
 	};
 	return {
+		getPersistentSettings: function() {
+			return persistentSettings;
+		},
 		getDownloadInfo: getDownloadInfo,
 		getEmbedHtml: getEmbedHtml,
 		options: options,

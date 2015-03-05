@@ -977,3 +977,5 @@
   z-index: 11;
   width: auto;
   margin: inherit; }
+  .modal-dialog.google-visualization-charteditor-dialog .charts-flat-menu-button {
+    box-sizing: content-box; }
