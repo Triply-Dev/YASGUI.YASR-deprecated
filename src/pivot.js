@@ -8,6 +8,7 @@ require('pivottable');
 
 if (!$.fn.pivotUI) throw new Error("Pivot lib not loaded");
 var root = module.exports = function(yasr) {
+	var persistentSettings = null;
 	var plugin = {};
 	var options = $.extend(true, {}, root.defaults);
 	
@@ -100,14 +101,14 @@ var root = module.exports = function(yasr) {
 		var doDraw = function() {
 			var onRefresh = function(pivotObj) {
 				if (persistencyId) {
-					var storeSettings = {
+					persistentSettings = {
 						cols: pivotObj.cols,
 						rows: pivotObj.rows,
 						rendererName: pivotObj.rendererName,
 						aggregatorName: pivotObj.aggregatorName,
 						vals: pivotObj.vals,
 					}
-					yUtils.storage.set(persistencyId, storeSettings, "month");
+					yUtils.storage.set(persistencyId, persistentSettings, "month");
 				}
 				if (pivotObj.rendererName.toLowerCase().indexOf(' chart') >= 0) {
 					openGchartBtn.show();
@@ -236,6 +237,9 @@ var root = module.exports = function(yasr) {
 		return '<div style="width: 800px; height: 600px;">\n' + htmlString + '\n</div>';
 	};
 	return {
+		getPersistentSettings: function() {
+			return persistentSettings;
+		},
 		getDownloadInfo: getDownloadInfo,
 		getEmbedHtml: getEmbedHtml,
 		options: options,

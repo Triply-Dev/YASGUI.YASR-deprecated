@@ -64,6 +64,9 @@ var root = module.exports = function(yasr){
 		name: "Google Chart",
 		hideFromSelection: false,
 		priority: 7,
+		getPersistentSettings: function() {
+			return yasr.options.gchart.chartConfig;
+		},
 		canHandleResults: function(yasr){
 			var results, variables;
 			return (results = yasr.results) != null && (variables = results.getVariables()) && variables.length > 0;
