@@ -79,9 +79,21 @@
         Check whether a result has been drawn
         </p>
 			</div>
+		<div class="doc" >
+			<code>store: function()</code>
+			<p>
+			Store persistent settings in local storage (if enabled via persistency setting in configuration)
+			</p>
+		</div>
+		<div class="doc" >
+			<code>load: function()</code>
+			<p>
+			Load persistent settings from local storage
+			</p>
+		</div>
 			
-			
-			<h2 id="config">Configuration</h2>
+		
+		<h2 id="config">Configuration</h2>
 			<p>
 			This configuration object is accessible/changeable via <code>YASR.defaults</code> and <code>yasr.options</code>, and you can pass these along when initializing YASR as well. 
 			Output visualizations are <a href="#outputPlugins">defined separately</a>.			
@@ -121,7 +133,6 @@
 			
 			<div class="doc" >
 				<code>persistency: object</code>
-<!-- 				<p></p> -->
 			</div>
 			<div class="doc" style="margin-left: 30px">
 				<code>prefix</code>
@@ -133,16 +144,8 @@
 				</p>
 			</div>
 			<div class="doc" style="margin-left: 30px;">
-				<code>outputSelector: string|function (default: 'output')</code>
-				<p>Make the output selection persistent (set to null or false to disable)</p>
-			</div>
-			<div class="doc" style="margin-left: 30px;">
 				<code>results: object</code>
 <!-- 				<p>Persistency setting for query results.</p> -->
-			</div>
-			<div class="doc" style="margin-left: 60px;">
-				<code style="text-decoration:line-through">id: string|function (default: function)</code><small>deprecated</small>
-				<p>Make the query results persistent (set to null or false to disable)</p>
 			</div>
 			<div class="doc" style="margin-left: 60px;">
 				<code>key: string|function (default: 'results')</code>
@@ -157,6 +160,7 @@
 					function conservatively. (especially when using multiple YASR
 					instances on one page)</p>
 			</div>
+
 
 		<h2 id="outputPlugins"> Plugins</h2>
 		<h3 id="outputTable">Table</h3>
@@ -240,14 +244,14 @@
 			<code>pivottable: object</code>
 			<p>Any additional PivotTable related settings. See the <a href="https://github.com/nicolaskruchten/pivottable/wiki/Parameters" target="_blank">PivotTable manual</a> for more information.</p>
 			</div>
-			<div class="doc" style="margin-left: 30px">
-			<code>YASR.plugins.pivot.persistency: string|function(yasr:doc) → string (default: 'pivot')</code>
-			<p>Make certain settings and values of the pivot table persistent. Setting
-					a key to null, will disable persistancy: nothing is stored between
-					browser sessions. Setting the values to a string (or a function
-					which returns a string), will store the values in localstorage using
-					the specified string. </p>
-			</div>
+<!-- 			<div class="doc" style="margin-left: 30px"> -->
+<!-- 			<code>YASR.plugins.pivot.persistency: string|function(yasr:doc) → string (default: 'pivot')</code> -->
+<!-- 			<p>Make certain settings and values of the pivot table persistent. Setting -->
+<!-- 					a key to null, will disable persistancy: nothing is stored between -->
+<!-- 					browser sessions. Setting the values to a string (or a function -->
+<!-- 					which returns a string), will store the values in localstorage using -->
+<!-- 					the specified string. </p> -->
+<!-- 			</div> -->
 			<div class="doc" style="margin-left: 30px">
 			<code>useGoogleCharts: boolean (default: true)</code>
 			<p>Enable the use of <a href="https://developers.google.com/chart/" target="_blank">google charts</a> for visualizing the pivot data</p>
@@ -342,14 +346,20 @@
         Returning <code>null</code> will disable the download button for the current result.
         </p>
 			</div>
-      <div class="doc" style="margin-left: 30px">
+		      <div class="doc" style="margin-left: 30px">
 				<code>getEmbedHtml: function() → string</code><span class="label label-default">Optional</span>
 				<p>Enables the embed button. Function should return an html string usable to embed the current output in other web pages.
           Returning <code>null</code> will disable the embed button for the current result. </p>
 			</div>
-		
-	
-		
+      <div class="doc" style="margin-left: 30px">
+				<code>getPersistentSettings: function() → object</code><span class="label label-default">Optional</span>
+				<p>If persistency is enabled, use this function to return those settings that you'd like to be persistent.
+				Use to <code>yasr.store()</code> function to actually save these settings</p>
+			</div>
+      <div class="doc" style="margin-left: 30px">
+				<code>setPersistentSettings: function(settings: object)</code><span class="label label-default">Optional</span>
+				<p>If persistency is enabled, use this function to modify the plugin based on its previous state.</p>
+			</div>
 	</div><!-- col -->
 	<div class="col-md-3" id="sidebarmenu">
 		<div class="bs-docs-sidebar hidden-xs hidden-sm" data-spy="affix" data-offset-top="60">
