@@ -36,7 +36,7 @@ var root = module.exports = function(parent, options, queryResults) {
 				prefix = false;
 			}
 		}
-		if (prefix && postfix) {
+		if (prefix && postfix != null) {
 			return prefix + (typeof postfix == 'string'? postfix : postfix(yasr));
 		} else {
 			return null;

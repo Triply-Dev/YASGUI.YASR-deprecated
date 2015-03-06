@@ -232,10 +232,13 @@ var root = module.exports = function(yasr) {
 	};
 	return {
 		getPersistentSettings: function() {
-			return options.pivotTable;
+			return {pivotTable: options.pivotTable};
 		},
 		setPersistentSettings: function(newSettings) {
-			options.pivotTable = validatePivotTableOptions(newSettings);
+			if (newSettings.pivotTable) {
+				options.pivotTable = validatePivotTableOptions(newSettings.pivotTable);
+			}
+			
 		},
 		getDownloadInfo: getDownloadInfo,
 		getEmbedHtml: getEmbedHtml,
