@@ -49991,7 +49991,7 @@ module.exports = {
 module.exports={
   "name": "yasgui-yasr",
   "description": "Yet Another SPARQL Resultset GUI",
-  "version": "2.4.14",
+  "version": "2.4.15",
   "main": "src/main.js",
   "licenses": [
     {
@@ -50558,20 +50558,9 @@ var $ = require('jquery'),
 	yUtils = require('yasgui-utils');
 
 var root = module.exports = function(yasr){
+	
 	var options = $.extend(true, {}, root.defaults);
 	var id = yasr.container.closest('[id]').attr('id');
-	if (yasr.options.gchart == null) {
-		yasr.options.gchart = {};
-	}
-	var persistencyIdMotionChart = yasr.getPersistencyId('motionchart');
-	var persistencyIdChartConfig = yasr.getPersistencyId('chartConfig');
-	if (yasr.options.gchart.motionChartState == null) {
-		yasr.options.gchart.motionChartState = yUtils.storage.get(persistencyIdMotionChart);
-	}
-	if (yasr.options.gchart.chartConfig == null) {
-		yasr.options.gchart.chartConfig = yUtils.storage.get(persistencyIdChartConfig);
-	}
-	
 	
 	var editor = null;
 	
@@ -50581,26 +50570,11 @@ var root = module.exports = function(yasr){
 		google.visualization.events.addListener(editor, 'ok', function(){
 				var chartWrapper, tmp;
 				chartWrapper = editor.getChartWrapper();
-				if (!deepEq$(chartWrapper.getChartType, "MotionChart", '===')) {
-					yasr.options.gchart.motionChartState = chartWrapper.n;
-
-					yUtils.storage.set(persistencyIdMotionChart, yasr.options.gchart.motionChartState);
-					chartWrapper.setOption("state", yasr.options.gchart.motionChartState);
-					
-					google.visualization.events.addListener(chartWrapper, 'ready', function(){
-						var motionChart;
-						motionChart = chartWrapper.getChart();
-						google.visualization.events.addListener(motionChart, 'statechange', function(){
-							yasr.options.gchart.motionChartState = motionChart.getState();
-							yUtils.storage.set(persistencyIdMotionChart, yasr.options.gchart.motionChartState);
-						});
-					});
-				}
 				tmp = chartWrapper.getDataTable();
 				chartWrapper.setDataTable(null);
-				yasr.options.gchart.chartConfig = chartWrapper.toJSON();
-				
-				yUtils.storage.set(persistencyIdChartConfig, yasr.options.gchart.chartConfig);
+				//ugly: need to parse json string to json obj again, as google chart does not provide access to object directly
+				options.chartConfig = JSON.parse(chartWrapper.toJSON());
+				yasr.store();
 				chartWrapper.setDataTable(tmp);
 				chartWrapper.setOption("width", options.width);
 				chartWrapper.setOption("height", options.height);
@@ -50614,8 +50588,21 @@ var root = module.exports = function(yasr){
 		name: "Google Chart",
 		hideFromSelection: false,
 		priority: 7,
+		options: options,
 		getPersistentSettings: function() {
-			return yasr.options.gchart.chartConfig;
+			console.log('get persistent',  {
+				chartConfig: options.chartConfig,
+				motionChartState: options.motionChartState
+			});
+			return {
+				chartConfig: options.chartConfig,
+				motionChartState: options.motionChartState
+			}
+		},
+		setPersistentSettings: function(persSettings) {
+			console.log('set persistent', persSettings);
+			if (persSettings['chartConfig']) options.chartConfig = persSettings['chartConfig'];
+			if (persSettings['motionChartState']) options.chartConfig = persSettings['motionChartState'];
 		},
 		canHandleResults: function(yasr){
 			var results, variables;
@@ -50714,18 +50701,16 @@ var root = module.exports = function(yasr){
 					dataTable.addRow(row);
 				});
 
-				if (yasr.options.gchart.chartConfig) {
-
-					wrapper = new google.visualization.ChartWrapper(yasr.options.gchart.chartConfig);
-					
-					if (wrapper.getChartType() === "MotionChart" && yasr.options.gchart.motionChartState != null) {
-						wrapper.setOption("state", yasr.options.gchart.motionChartState);
+				if (options.chartConfig && options.chartConfig.chartType) {
+					wrapper = new google.visualization.ChartWrapper(options.chartConfig);
+					if (wrapper.getChartType() === "MotionChart" && options.motionChartState) {
+						wrapper.setOption("state", options.motionChartState);
 						google.visualization.events.addListener(wrapper, 'ready', function(){
 							var motionChart;
 							motionChart = wrapper.getChart();
 							google.visualization.events.addListener(motionChart, 'statechange', function(){
-								yasr.options.gchart.motionChartState = motionChart.getState();
-								yUtils.storage.set(persistencyIdMotionChart, yasr.options.gchart.motionChartState);
+								options.motionChartState = motionChart.getState();
+								yasr.store();
 							});
 						});
 					}
@@ -50750,7 +50735,6 @@ var root = module.exports = function(yasr){
 						doDraw();
 					})
 					.on('error', function() {
-						console.log('errorrr');
 						//TODO: disable or something?
 					})
 					.googleLoad();
@@ -50765,6 +50749,8 @@ root.defaults = {
 	height: "100%",
 	width: "100%",
 	persistencyId: 'gchart',
+	chartConfig: null,
+	motionChartState: null
 };
 
 function deepEq$(x, y, type){
@@ -51083,16 +51069,20 @@ var root = module.exports = function(parent, options, queryResults) {
 			}
 		}
 		disableOutputs(unsupportedOutputs);
+		var outputToDraw = null;
 		if (output in yasr.plugins && yasr.plugins[output].canHandleResults(yasr)) {
-			$(yasr.resultsContainer).empty();
-			yasr.plugins[output].draw();
-			return true;
+			outputToDraw = output;
 		} else if (selectedOutput) {
-			$(yasr.resultsContainer).empty();
-			yasr.plugins[selectedOutput].draw();
-			return true;
+			outputToDraw = selectedOutput;
 		}
-		return false;
+		
+		if (outputToDraw) {
+			$(yasr.resultsContainer).empty();
+			yasr.plugins[outputToDraw].draw();
+			return true;
+		} else {
+			return false;
+		}
 	};
 	
 	var disableOutputs = function(outputs) {
@@ -51179,10 +51169,7 @@ var root = module.exports = function(parent, options, queryResults) {
 					yasr.options.output = pluginName;
 					
 					//store if needed
-					var selectorId = yasr.getPersistencyId(yasr.options.persistency.outputSelector);
-					if (selectorId) {
-						utils.storage.set(selectorId, yasr.options.output, "month");
-					}
+					yasr.store();
 					
 					//close warning if there is any
 					if ($toggableWarning) $toggableWarning.hide(400);
@@ -51288,17 +51275,50 @@ var root = module.exports = function(parent, options, queryResults) {
 		drawEmbedButton();
 	};
 	
+	var persistentId = null;
+	//store persistent options (not results though. store these separately, as they are too large)
+	yasr.store = function() {
+		if (!persistentId)persistentId = yasr.getPersistencyId('main');
+		if (persistentId) {
+			utils.storage.set(persistentId, yasr.getPersistentSettings());
+		}
+	};
 	
+	
+	yasr.load = function() {
+		if (!persistentId) persistentId = yasr.getPersistencyId('main');
+		yasr.setPersistentSettings(utils.storage.get(persistentId));
+	};
+	
+	
+	yasr.setPersistentSettings = function(settings) {
+		if (settings) {
+			if (settings.output) {
+				yasr.options.output = settings.output;
+			}
+			for (var pluginName in settings.plugins) {
+				if (yasr.plugins[pluginName] && yasr.plugins[pluginName].setPersistentSettings) {
+					yasr.plugins[pluginName].setPersistentSettings(settings.plugins[pluginName]);
+				}
+			}
+		}
+	}
+	
+	yasr.getPersistentSettings = function() {
+		var settings = {output: yasr.options.output, plugins:{}};
+		for (var pluginName in yasr.plugins) {
+			if (yasr.plugins[pluginName].getPersistentSettings) {
+				settings.plugins[pluginName] = yasr.plugins[pluginName].getPersistentSettings();
+			}
+		}
+		return settings;
+	}
 	
 
 	/**
 	 * postprocess
 	 */
-	var selectorId = yasr.getPersistencyId(yasr.options.persistency.outputSelector)
-	if (selectorId) {
-		var selection = utils.storage.get(selectorId);
-		if (selection) yasr.options.output = selection;
-	}
+	yasr.load();
 	drawHeader(yasr);
 	if (!queryResults && yasr.options.persistency && yasr.options.persistency.results) {
 		var resultsId = yasr.getPersistencyId(yasr.options.persistency.results.key)
@@ -51331,6 +51351,8 @@ var root = module.exports = function(parent, options, queryResults) {
 		yasr.setResponse(queryResults);
 	} 
 	yasr.updateHeader();
+	
+	
 	return yasr;
 };
 
@@ -51790,7 +51812,6 @@ require('pivottable');
 
 if (!$.fn.pivotUI) throw new Error("Pivot lib not loaded");
 var root = module.exports = function(yasr) {
-	var persistentSettings = null;
 	var plugin = {};
 	var options = $.extend(true, {}, root.defaults);
 	
@@ -51853,45 +51874,42 @@ var root = module.exports = function(yasr) {
 		});
 	} 
 	
-	var persistencyId = yasr.getPersistencyId(options.persistencyId);
 	
-	var getStoredSettings = function() {
-		var settings = yUtils.storage.get(persistencyId);
+	var validatePivotTableOptions = function(pivotOptions) {
 		//validate settings. we may have different variables, or renderers might be gone
-		if (settings) {
-			var vars = yasr.results.getVariables();
-			var keepColsAndRows = true;
-			settings.cols.forEach(function(variable) {
-				if (vars.indexOf(variable) < 0) keepColsAndRows = false; 
-			});
-			if (keepColsAndRows) {
-				settings.rows.forEach(function(variable) {
+		if (pivotOptions) {
+			if (yasr.results) {
+				var vars = yasr.results.getVariables();
+				var keepColsAndRows = true;
+				pivotOptions.cols.forEach(function(variable) {
 					if (vars.indexOf(variable) < 0) keepColsAndRows = false; 
 				});
+				if (keepColsAndRows) {
+					pivotOptionse.rows.forEach(function(variable) {
+						if (vars.indexOf(variable) < 0) keepColsAndRows = false; 
+					});
+				}
+				if (!keepColsAndRows) {
+					pivotOptions.cols = [];
+					pivotOptions.rows = [];
+				}
+				if (! $.pivotUtilities.renderers[settings.rendererName]) delete pivotOptions.rendererName;
 			}
-			if (!keepColsAndRows) {
-				settings.cols = [];
-				settings.rows = [];
-			}
-			if (! $.pivotUtilities.renderers[settings.rendererName]) delete settings.rendererName;
 		} else {
-			settings = {};
+			pivotOptions = {};
 		}
-		return settings;
+		return pivotOptions;
 	};
 	var draw = function() {
 		var doDraw = function() {
 			var onRefresh = function(pivotObj) {
-				if (persistencyId) {
-					persistentSettings = {
-						cols: pivotObj.cols,
-						rows: pivotObj.rows,
-						rendererName: pivotObj.rendererName,
-						aggregatorName: pivotObj.aggregatorName,
-						vals: pivotObj.vals,
-					}
-					yUtils.storage.set(persistencyId, persistentSettings, "month");
-				}
+				options.pivotTable.cols = pivotObj.cols;
+				options.pivotTable.rows = pivotObj.rows;
+				options.pivotTable.rendererName = pivotObj.rendererName;
+				options.pivotTable.aggregatorName = pivotObj.aggregatorName;
+				options.pivotTable.vals = pivotObj.vals;
+				yasr.store();
+
 				if (pivotObj.rendererName.toLowerCase().indexOf(' chart') >= 0) {
 					openGchartBtn.show();
 				} else {
@@ -51908,17 +51926,15 @@ var root = module.exports = function(yasr) {
 			}).appendTo(yasr.resultsContainer);
 			$pivotWrapper = $('<div>', {class: 'pivotTable'}).appendTo($(yasr.resultsContainer));
 			
-			var settings = $.extend(true, {}, getStoredSettings(), root.defaults.pivotTable);
-			
-			settings.onRefresh = (function() {
-			    var originalRefresh = settings.onRefresh;
+			options.pivotTable.onRefresh = (function() {
+			    var originalRefresh = options.pivotTable.onRefresh;
 			    return function(pivotObj) {
 			    	onRefresh(pivotObj);
 			    	if (originalRefresh) originalRefresh(pivotObj);
 			    };
 			})();
 			
-			window.pivot = $pivotWrapper.pivotUI(formatForPivot, settings);
+			window.pivot = $pivotWrapper.pivotUI(formatForPivot, options.pivotTable);
 	
 			/**
 			 * post process
@@ -52020,7 +52036,10 @@ var root = module.exports = function(yasr) {
 	};
 	return {
 		getPersistentSettings: function() {
-			return persistentSettings;
+			return options.pivotTable;
+		},
+		setPersistentSettings: function(newSettings) {
+			options.pivotTable = validatePivotTableOptions(newSettings);
 		},
 		getDownloadInfo: getDownloadInfo,
 		getEmbedHtml: getEmbedHtml,
