@@ -24,6 +24,8 @@ var root = module.exports = function(yasr){
 				chartWrapper.setDataTable(null);
 				//ugly: need to parse json string to json obj again, as google chart does not provide access to object directly
 				options.chartConfig = JSON.parse(chartWrapper.toJSON());
+				//remove container ID though, for portability
+				if (options.chartConfig.containerId) delete options.chartConfig['containerId'];console.log(options.chartConfig);
 				yasr.store();
 				chartWrapper.setDataTable(tmp);
 				chartWrapper.setOption("width", options.width);
@@ -40,19 +42,14 @@ var root = module.exports = function(yasr){
 		priority: 7,
 		options: options,
 		getPersistentSettings: function() {
-			console.log('get persistent',  {
-				chartConfig: options.chartConfig,
-				motionChartState: options.motionChartState
-			});
 			return {
 				chartConfig: options.chartConfig,
 				motionChartState: options.motionChartState
 			}
 		},
 		setPersistentSettings: function(persSettings) {
-			console.log('set persistent', persSettings);
 			if (persSettings['chartConfig']) options.chartConfig = persSettings['chartConfig'];
-			if (persSettings['motionChartState']) options.chartConfig = persSettings['motionChartState'];
+			if (persSettings['motionChartState']) options.motionChartState = persSettings['motionChartState'];
 		},
 		canHandleResults: function(yasr){
 			var results, variables;
@@ -152,6 +149,7 @@ var root = module.exports = function(yasr){
 				});
 
 				if (options.chartConfig && options.chartConfig.chartType) {
+					options.chartConfig.containerId = wrapperId;
 					wrapper = new google.visualization.ChartWrapper(options.chartConfig);
 					if (wrapper.getChartType() === "MotionChart" && options.motionChartState) {
 						wrapper.setOption("state", options.motionChartState);
