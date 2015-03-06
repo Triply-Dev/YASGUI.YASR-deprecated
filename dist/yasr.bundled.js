@@ -49855,7 +49855,7 @@ return jQuery;
 },{}],24:[function(require,module,exports){
 module.exports={
   "name": "yasgui-utils",
-  "version": "1.5.2",
+  "version": "1.6.0",
   "description": "Utils for YASGUI libs",
   "main": "src/main.js",
   "repository": {
@@ -49937,8 +49937,16 @@ var root = module.exports = {
 		}
 	},
 	remove: function(key) {
-    if (!store.enabled) return;//this is probably in private mode. Don't run, as we might get Js errors
+		if (!store.enabled) return;//this is probably in private mode. Don't run, as we might get Js errors
 		if (key) store.remove(key)
+	},
+	removeAll: function(filter) {
+		if (!store.enabled) return;//this is probably in private mode. Don't run, as we might get Js errors
+		if (typeof filter === 'function') {
+			for (var key in store.getAll()) {
+				if (filter(key, root.get(key))) root.remove(key);
+			}
+		}
 	},
 	get : function(key) {
     if (!store.enabled) return null;//this is probably in private mode. Don't run, as we might get Js errors
@@ -49991,7 +49999,7 @@ module.exports = {
 module.exports={
   "name": "yasgui-yasr",
   "description": "Yet Another SPARQL Resultset GUI",
-  "version": "2.5.0",
+  "version": "2.5.1",
   "main": "src/main.js",
   "licenses": [
     {
@@ -50575,7 +50583,7 @@ var root = module.exports = function(yasr){
 				//ugly: need to parse json string to json obj again, as google chart does not provide access to object directly
 				options.chartConfig = JSON.parse(chartWrapper.toJSON());
 				//remove container ID though, for portability
-				if (options.chartConfig.containerId) delete options.chartConfig['containerId'];console.log(options.chartConfig);
+				if (options.chartConfig.containerId) delete options.chartConfig['containerId'];
 				yasr.store();
 				chartWrapper.setDataTable(tmp);
 				chartWrapper.setOption("width", options.width);
@@ -50991,7 +50999,7 @@ var root = module.exports = function(parent, options, queryResults) {
 				prefix = false;
 			}
 		}
-		if (prefix && postfix) {
+		if (prefix && postfix != null) {
 			return prefix + (typeof postfix == 'string'? postfix : postfix(yasr));
 		} else {
 			return null;
@@ -52034,10 +52042,13 @@ var root = module.exports = function(yasr) {
 	};
 	return {
 		getPersistentSettings: function() {
-			return options.pivotTable;
+			return {pivotTable: options.pivotTable};
 		},
 		setPersistentSettings: function(newSettings) {
-			options.pivotTable = validatePivotTableOptions(newSettings);
+			if (newSettings.pivotTable) {
+				options.pivotTable = validatePivotTableOptions(newSettings.pivotTable);
+			}
+			
 		},
 		getDownloadInfo: getDownloadInfo,
 		getEmbedHtml: getEmbedHtml,
