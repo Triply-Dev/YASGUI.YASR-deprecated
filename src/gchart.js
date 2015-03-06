@@ -25,7 +25,7 @@ var root = module.exports = function(yasr){
 				//ugly: need to parse json string to json obj again, as google chart does not provide access to object directly
 				options.chartConfig = JSON.parse(chartWrapper.toJSON());
 				//remove container ID though, for portability
-				if (options.chartConfig.containerId) delete options.chartConfig['containerId'];console.log(options.chartConfig);
+				if (options.chartConfig.containerId) delete options.chartConfig['containerId'];
 				yasr.store();
 				chartWrapper.setDataTable(tmp);
 				chartWrapper.setOption("width", options.width);
