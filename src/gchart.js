@@ -8,20 +8,9 @@ var $ = require('jquery'),
 	yUtils = require('yasgui-utils');
 
 var root = module.exports = function(yasr){
+	
 	var options = $.extend(true, {}, root.defaults);
 	var id = yasr.container.closest('[id]').attr('id');
-	if (yasr.options.gchart == null) {
-		yasr.options.gchart = {};
-	}
-	var persistencyIdMotionChart = yasr.getPersistencyId('motionchart');
-	var persistencyIdChartConfig = yasr.getPersistencyId('chartConfig');
-	if (yasr.options.gchart.motionChartState == null) {
-		yasr.options.gchart.motionChartState = yUtils.storage.get(persistencyIdMotionChart);
-	}
-	if (yasr.options.gchart.chartConfig == null) {
-		yasr.options.gchart.chartConfig = yUtils.storage.get(persistencyIdChartConfig);
-	}
-	
 	
 	var editor = null;
 	
@@ -31,26 +20,11 @@ var root = module.exports = function(yasr){
 		google.visualization.events.addListener(editor, 'ok', function(){
 				var chartWrapper, tmp;
 				chartWrapper = editor.getChartWrapper();
-				if (!deepEq$(chartWrapper.getChartType, "MotionChart", '===')) {
-					yasr.options.gchart.motionChartState = chartWrapper.n;
-
-					yUtils.storage.set(persistencyIdMotionChart, yasr.options.gchart.motionChartState);
-					chartWrapper.setOption("state", yasr.options.gchart.motionChartState);
-					
-					google.visualization.events.addListener(chartWrapper, 'ready', function(){
-						var motionChart;
-						motionChart = chartWrapper.getChart();
-						google.visualization.events.addListener(motionChart, 'statechange', function(){
-							yasr.options.gchart.motionChartState = motionChart.getState();
-							yUtils.storage.set(persistencyIdMotionChart, yasr.options.gchart.motionChartState);
-						});
-					});
-				}
 				tmp = chartWrapper.getDataTable();
 				chartWrapper.setDataTable(null);
-				yasr.options.gchart.chartConfig = chartWrapper.toJSON();
-				
-				yUtils.storage.set(persistencyIdChartConfig, yasr.options.gchart.chartConfig);
+				//ugly: need to parse json string to json obj again, as google chart does not provide access to object directly
+				options.chartConfig = JSON.parse(chartWrapper.toJSON());
+				yasr.store();
 				chartWrapper.setDataTable(tmp);
 				chartWrapper.setOption("width", options.width);
 				chartWrapper.setOption("height", options.height);
@@ -64,8 +38,21 @@ var root = module.exports = function(yasr){
 		name: "Google Chart",
 		hideFromSelection: false,
 		priority: 7,
+		options: options,
 		getPersistentSettings: function() {
-			return yasr.options.gchart.chartConfig;
+			console.log('get persistent',  {
+				chartConfig: options.chartConfig,
+				motionChartState: options.motionChartState
+			});
+			return {
+				chartConfig: options.chartConfig,
+				motionChartState: options.motionChartState
+			}
+		},
+		setPersistentSettings: function(persSettings) {
+			console.log('set persistent', persSettings);
+			if (persSettings['chartConfig']) options.chartConfig = persSettings['chartConfig'];
+			if (persSettings['motionChartState']) options.chartConfig = persSettings['motionChartState'];
 		},
 		canHandleResults: function(yasr){
 			var results, variables;
@@ -164,18 +151,16 @@ var root = module.exports = function(yasr){
 					dataTable.addRow(row);
 				});
 
-				if (yasr.options.gchart.chartConfig) {
-
-					wrapper = new google.visualization.ChartWrapper(yasr.options.gchart.chartConfig);
-					
-					if (wrapper.getChartType() === "MotionChart" && yasr.options.gchart.motionChartState != null) {
-						wrapper.setOption("state", yasr.options.gchart.motionChartState);
+				if (options.chartConfig && options.chartConfig.chartType) {
+					wrapper = new google.visualization.ChartWrapper(options.chartConfig);
+					if (wrapper.getChartType() === "MotionChart" && options.motionChartState) {
+						wrapper.setOption("state", options.motionChartState);
 						google.visualization.events.addListener(wrapper, 'ready', function(){
 							var motionChart;
 							motionChart = wrapper.getChart();
 							google.visualization.events.addListener(motionChart, 'statechange', function(){
-								yasr.options.gchart.motionChartState = motionChart.getState();
-								yUtils.storage.set(persistencyIdMotionChart, yasr.options.gchart.motionChartState);
+								options.motionChartState = motionChart.getState();
+								yasr.store();
 							});
 						});
 					}
@@ -200,7 +185,6 @@ var root = module.exports = function(yasr){
 						doDraw();
 					})
 					.on('error', function() {
-						console.log('errorrr');
 						//TODO: disable or something?
 					})
 					.googleLoad();
@@ -215,6 +199,8 @@ root.defaults = {
 	height: "100%",
 	width: "100%",
 	persistencyId: 'gchart',
+	chartConfig: null,
+	motionChartState: null
 };
 
 function deepEq$(x, y, type){

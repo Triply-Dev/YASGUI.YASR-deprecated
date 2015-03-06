@@ -8,7 +8,6 @@ require('pivottable');
 
 if (!$.fn.pivotUI) throw new Error("Pivot lib not loaded");
 var root = module.exports = function(yasr) {
-	var persistentSettings = null;
 	var plugin = {};
 	var options = $.extend(true, {}, root.defaults);
 	
@@ -71,45 +70,42 @@ var root = module.exports = function(yasr) {
 		});
 	} 
 	
-	var persistencyId = yasr.getPersistencyId(options.persistencyId);
 	
-	var getStoredSettings = function() {
-		var settings = yUtils.storage.get(persistencyId);
+	var validatePivotTableOptions = function(pivotOptions) {
 		//validate settings. we may have different variables, or renderers might be gone
-		if (settings) {
-			var vars = yasr.results.getVariables();
-			var keepColsAndRows = true;
-			settings.cols.forEach(function(variable) {
-				if (vars.indexOf(variable) < 0) keepColsAndRows = false; 
-			});
-			if (keepColsAndRows) {
-				settings.rows.forEach(function(variable) {
+		if (pivotOptions) {
+			if (yasr.results) {
+				var vars = yasr.results.getVariables();
+				var keepColsAndRows = true;
+				pivotOptions.cols.forEach(function(variable) {
 					if (vars.indexOf(variable) < 0) keepColsAndRows = false; 
 				});
+				if (keepColsAndRows) {
+					pivotOptionse.rows.forEach(function(variable) {
+						if (vars.indexOf(variable) < 0) keepColsAndRows = false; 
+					});
+				}
+				if (!keepColsAndRows) {
+					pivotOptions.cols = [];
+					pivotOptions.rows = [];
+				}
+				if (! $.pivotUtilities.renderers[settings.rendererName]) delete pivotOptions.rendererName;
 			}
-			if (!keepColsAndRows) {
-				settings.cols = [];
-				settings.rows = [];
-			}
-			if (! $.pivotUtilities.renderers[settings.rendererName]) delete settings.rendererName;
 		} else {
-			settings = {};
+			pivotOptions = {};
 		}
-		return settings;
+		return pivotOptions;
 	};
 	var draw = function() {
 		var doDraw = function() {
 			var onRefresh = function(pivotObj) {
-				if (persistencyId) {
-					persistentSettings = {
-						cols: pivotObj.cols,
-						rows: pivotObj.rows,
-						rendererName: pivotObj.rendererName,
-						aggregatorName: pivotObj.aggregatorName,
-						vals: pivotObj.vals,
-					}
-					yUtils.storage.set(persistencyId, persistentSettings, "month");
-				}
+				options.pivotTable.cols = pivotObj.cols;
+				options.pivotTable.rows = pivotObj.rows;
+				options.pivotTable.rendererName = pivotObj.rendererName;
+				options.pivotTable.aggregatorName = pivotObj.aggregatorName;
+				options.pivotTable.vals = pivotObj.vals;
+				yasr.store();
+
 				if (pivotObj.rendererName.toLowerCase().indexOf(' chart') >= 0) {
 					openGchartBtn.show();
 				} else {
@@ -126,17 +122,15 @@ var root = module.exports = function(yasr) {
 			}).appendTo(yasr.resultsContainer);
 			$pivotWrapper = $('<div>', {class: 'pivotTable'}).appendTo($(yasr.resultsContainer));
 			
-			var settings = $.extend(true, {}, getStoredSettings(), root.defaults.pivotTable);
-			
-			settings.onRefresh = (function() {
-			    var originalRefresh = settings.onRefresh;
+			options.pivotTable.onRefresh = (function() {
+			    var originalRefresh = options.pivotTable.onRefresh;
 			    return function(pivotObj) {
 			    	onRefresh(pivotObj);
 			    	if (originalRefresh) originalRefresh(pivotObj);
 			    };
 			})();
 			
-			window.pivot = $pivotWrapper.pivotUI(formatForPivot, settings);
+			window.pivot = $pivotWrapper.pivotUI(formatForPivot, options.pivotTable);
 	
 			/**
 			 * post process
@@ -238,7 +232,10 @@ var root = module.exports = function(yasr) {
 	};
 	return {
 		getPersistentSettings: function() {
-			return persistentSettings;
+			return options.pivotTable;
+		},
+		setPersistentSettings: function(newSettings) {
+			options.pivotTable = validatePivotTableOptions(newSettings);
 		},
 		getDownloadInfo: getDownloadInfo,
 		getEmbedHtml: getEmbedHtml,

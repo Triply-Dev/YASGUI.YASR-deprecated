@@ -112,16 +112,20 @@ var root = module.exports = function(parent, options, queryResults) {
 			}
 		}
 		disableOutputs(unsupportedOutputs);
+		var outputToDraw = null;
 		if (output in yasr.plugins && yasr.plugins[output].canHandleResults(yasr)) {
-			$(yasr.resultsContainer).empty();
-			yasr.plugins[output].draw();
-			return true;
+			outputToDraw = output;
 		} else if (selectedOutput) {
-			$(yasr.resultsContainer).empty();
-			yasr.plugins[selectedOutput].draw();
-			return true;
+			outputToDraw = selectedOutput;
 		}
-		return false;
+		
+		if (outputToDraw) {
+			$(yasr.resultsContainer).empty();
+			yasr.plugins[outputToDraw].draw();
+			return true;
+		} else {
+			return false;
+		}
 	};
 	
 	var disableOutputs = function(outputs) {
@@ -208,10 +212,7 @@ var root = module.exports = function(parent, options, queryResults) {
 					yasr.options.output = pluginName;
 					
 					//store if needed
-					var selectorId = yasr.getPersistencyId(yasr.options.persistency.outputSelector);
-					if (selectorId) {
-						utils.storage.set(selectorId, yasr.options.output, "month");
-					}
+					yasr.store();
 					
 					//close warning if there is any
 					if ($toggableWarning) $toggableWarning.hide(400);
@@ -317,17 +318,50 @@ var root = module.exports = function(parent, options, queryResults) {
 		drawEmbedButton();
 	};
 	
+	var persistentId = null;
+	//store persistent options (not results though. store these separately, as they are too large)
+	yasr.store = function() {
+		if (!persistentId)persistentId = yasr.getPersistencyId('main');
+		if (persistentId) {
+			utils.storage.set(persistentId, yasr.getPersistentSettings());
+		}
+	};
 	
+	
+	yasr.load = function() {
+		if (!persistentId) persistentId = yasr.getPersistencyId('main');
+		yasr.setPersistentSettings(utils.storage.get(persistentId));
+	};
+	
+	
+	yasr.setPersistentSettings = function(settings) {
+		if (settings) {
+			if (settings.output) {
+				yasr.options.output = settings.output;
+			}
+			for (var pluginName in settings.plugins) {
+				if (yasr.plugins[pluginName] && yasr.plugins[pluginName].setPersistentSettings) {
+					yasr.plugins[pluginName].setPersistentSettings(settings.plugins[pluginName]);
+				}
+			}
+		}
+	}
+	
+	yasr.getPersistentSettings = function() {
+		var settings = {output: yasr.options.output, plugins:{}};
+		for (var pluginName in yasr.plugins) {
+			if (yasr.plugins[pluginName].getPersistentSettings) {
+				settings.plugins[pluginName] = yasr.plugins[pluginName].getPersistentSettings();
+			}
+		}
+		return settings;
+	}
 	
 
 	/**
 	 * postprocess
 	 */
-	var selectorId = yasr.getPersistencyId(yasr.options.persistency.outputSelector)
-	if (selectorId) {
-		var selection = utils.storage.get(selectorId);
-		if (selection) yasr.options.output = selection;
-	}
+	yasr.load();
 	drawHeader(yasr);
 	if (!queryResults && yasr.options.persistency && yasr.options.persistency.results) {
 		var resultsId = yasr.getPersistencyId(yasr.options.persistency.results.key)
@@ -360,6 +394,8 @@ var root = module.exports = function(parent, options, queryResults) {
 		yasr.setResponse(queryResults);
 	} 
 	yasr.updateHeader();
+	
+	
 	return yasr;
 };
 
