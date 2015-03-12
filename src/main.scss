@@ -20,6 +20,7 @@ button.btn_smallscreen div, button.btn_fullscreen div {
 		display: none;
 	}
 	position: fixed;
+	overflow: auto;
 	top: 0;
 	bottom:0;
 	left:0;
