@@ -707,6 +707,7 @@
   .yasr.yasr_fullscreen {
     z-index: 10;
     position: fixed;
+    overflow: auto;
     top: 0;
     bottom: 0;
     left: 0;
