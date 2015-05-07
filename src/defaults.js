@@ -9,8 +9,7 @@ module.exports = {
 	 */
 	output: "table",
 	useGoogleCharts: true, 
-	outputPlugins: ["table", "error", "boolean", "rawResponse"],
-	
+	outputPlugins: ["table", "error", "boolean", "rawResponse", "pivot", "gchart"],
 	
 	/**
 	 * Draw the output selector widget

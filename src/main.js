@@ -198,7 +198,10 @@ var root = module.exports = function(parent, options, queryResults) {
 	var drawHeader = function(yasr) {
 		var drawOutputSelector = function() {
 			var btnGroup = $('<div class="yasr_btnGroup"></div>');
-			$.each(yasr.plugins, function(pluginName, plugin) {
+			$.each(yasr.options.outputPlugins, function(i, pluginName) {
+				var plugin = yasr.plugins[pluginName];
+				if (!plugin) return;//plugin not loaded
+				
 				if (plugin.hideFromSelection) return;
 				var name = plugin.name || pluginName;
 				var button = $("<button class='yasr_btn'></button>")
