@@ -1,4 +1,5 @@
 .dataTables_wrapper {
+	margin-top: 10px;
 	.dataTables_length {
 		float:right;
 		margin-left: 10px;
@@ -39,4 +40,10 @@ table.dataTable td div {
 	width: 8px;
 	height: 13px;
 	margin-right: 10px;
+}
+.dtTopHeader {
+	.dataTables_info {
+		padding-top: 0px;
+		margin: 0px 10px;
+	}
 }
