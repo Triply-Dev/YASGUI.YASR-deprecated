@@ -887,11 +887,13 @@
     border: 1px solid #d1d1d1;
     margin-top: 5px;
     height: 100%; }
-  .yasr .dataTables_wrapper .dataTables_length {
-    float: right;
-    margin-left: 10px; }
-    .yasr .dataTables_wrapper .dataTables_length label, .yasr .dataTables_wrapper .dataTables_length select {
-      vertical-align: middle; }
+  .yasr .dataTables_wrapper {
+    margin-top: 10px; }
+    .yasr .dataTables_wrapper .dataTables_length {
+      float: right;
+      margin-left: 10px; }
+      .yasr .dataTables_wrapper .dataTables_length label, .yasr .dataTables_wrapper .dataTables_length select {
+        vertical-align: middle; }
   .yasr table.dataTable thead th {
     background: none !important;
     border-right: 1px dotted gray;
@@ -915,6 +917,9 @@
     width: 8px;
     height: 13px;
     margin-right: 10px; }
+  .yasr .dtTopHeader .dataTables_info {
+    padding-top: 0px;
+    margin: 0px 10px; }
   .yasr .pivotTable {
     margin-top: 5px; }
     .yasr .pivotTable > table {

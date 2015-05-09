@@ -49999,7 +49999,7 @@ module.exports = {
 module.exports={
   "name": "yasgui-yasr",
   "description": "Yet Another SPARQL Resultset GUI",
-  "version": "2.5.4",
+  "version": "2.5.5",
   "main": "src/main.js",
   "licenses": [
     {
@@ -52257,11 +52257,6 @@ var root = module.exports = function(yasr) {
 				
 			}
 		});
-		
-		
-		$(window).off('resize.' + eventId);//remove previously attached handlers
-		$(window).on('resize.' + eventId, hideOrShowDatatablesControls);
-		hideOrShowDatatablesControls();
 	};
 	
 	plugin.draw = function() {
@@ -52287,23 +52282,6 @@ var root = module.exports = function(yasr) {
 		
 		//finally, make the columns dragable:
 		table.colResizable();
-		//and: make sure the height of the resize handlers matches the height of the table header
-		var thHeight = table.find('thead').outerHeight();
-		$(yasr.resultsContainer).find('.JCLRgrip').height(table.find('thead').outerHeight());
-		
-		//move the table upward, so the table options nicely aligns with the yasr header
-		var headerHeight = yasr.header.outerHeight() - 5; //add some space of 5 px between table and yasr header
-		if (headerHeight > 0) {
-			yasr.resultsContainer.find(".dataTables_wrapper")
-				.css("position", "relative")
-				.css("top", "-" + headerHeight + "px")
-				.css("margin-bottom", "-" + headerHeight + "px");
-			
-			//and: make sure the height of the resize handlers matches the height of the table header
-			$(yasr.resultsContainer).find('.JCLRgrip').css('marginTop', headerHeight + 'px');
-		}
-		
-		
 	};
 	
 	var drawSvgIcons = function() {
@@ -52341,27 +52319,6 @@ var root = module.exports = function(yasr) {
 		};
 	};
 	
-	var hideOrShowDatatablesControls = function() {
-		var show = true;
-		var downloadIcon = yasr.container.find('.yasr_downloadIcon');
-		var dataTablesFilter = yasr.container.find('.dataTables_filter');
-		var downloadPosLeft = downloadIcon.offset().left;
-		if (downloadPosLeft > 0) {
-			var downloadPosRight = downloadPosLeft + downloadIcon.outerWidth();
-			
-			var filterPosLeft = dataTablesFilter.offset().left;
-			if (filterPosLeft > 0 && filterPosLeft < downloadPosRight) {
-				//overlapping! hide
-				show = false;
-			}
-		}
-		if (show) {
-			dataTablesFilter.css("visibility", "visible");
-		} else {
-			dataTablesFilter.css("visibility", "hidden");
-		}
-		
-	}
 	
 	return plugin;
 };
@@ -52540,6 +52497,7 @@ root.defaults = {
 	 */
 	datatable: {
 		"autoWidth": false,
+		"dom": '<"dtTopHeader"ilf>rtip',
 		"order": [],//disable initial sorting
 		"pageLength": 50,//default page length
     	"lengthMenu": [[10, 50, 100, 1000, -1], [10, 50, 100, 1000, "All"]],//possible page lengths
