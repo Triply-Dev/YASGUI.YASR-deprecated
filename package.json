@@ -64,6 +64,7 @@
   },
   "dependencies": {
     "jquery": "~ 1.11.0",
+    "datatables": "^1.10.7",
     "codemirror": "^4.7.0",
     "yasgui-utils": "^1.4.1",
     "pivottable": "^1.2.2",
@@ -90,10 +91,6 @@
     "../../lib/codemirror": {
       "require": "codemirror",
       "global": "CodeMirror"
-    },
-    "../lib/DataTables/media/js/jquery.dataTables.js": {
-      "require": "datatables",
-      "global": "jQuery"
     },
     "datatables": {
       "require": "datatables",
