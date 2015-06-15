@@ -8,7 +8,7 @@ require('./jquery/extendJquery.js');
 
 /**
  * Main YASR constructor
- * 
+ *
  * @constructor
  * @param {DOM-Element} parent element to append editor to.
  * @param {object} settings
@@ -17,15 +17,15 @@ require('./jquery/extendJquery.js');
  */
 var root = module.exports = function(parent, options, queryResults) {
 
-	
+
 	var yasr = {};
 	yasr.options = $.extend(true, {}, root.defaults, options);
-	
+
 	yasr.container = $("<div class='yasr'></div>").appendTo(parent);
 	yasr.header = $("<div class='yasr_header'></div>").appendTo(yasr.container);
 	yasr.resultsContainer = $("<div class='yasr_results'></div>").appendTo(yasr.container);
 	yasr.storage = utils.storage;
-	
+
 	var prefix = null;
 	yasr.getPersistencyId = function(postfix) {
 		if (prefix === null) {
@@ -42,29 +42,29 @@ var root = module.exports = function(parent, options, queryResults) {
 			return null;
 		}
 	};
-	
+
 	if (yasr.options.useGoogleCharts) {
 		//pre-load google-loader
 		require('./gChartLoader.js')
 			.once('initError', function(){yasr.options.useGoogleCharts = false})
 			.init();
 	}
-	
+
 	//first initialize plugins
 	yasr.plugins = {};
 	for (var pluginName in root.plugins) {
-		if (!yasr.options.useGoogleCharts && pluginName == "gchart") continue; 
+		if (!yasr.options.useGoogleCharts && pluginName == "gchart") continue;
 		yasr.plugins[pluginName] = new root.plugins[pluginName](yasr);
 	}
-	
-	
+
+
 	yasr.updateHeader = function() {
 		var downloadIcon = yasr.header.find(".yasr_downloadIcon")
 				.removeAttr("title");//and remove previous titles
 		var embedButton = yasr.header.find(".yasr_embedBtn");
 		var outputPlugin = yasr.plugins[yasr.options.output];
 		if (outputPlugin) {
-			
+
 			//Manage download link
 			var info = (outputPlugin.getDownloadInfo? outputPlugin.getDownloadInfo(): null);
 			if (info) {
@@ -79,7 +79,7 @@ var root = module.exports = function(parent, options, queryResults) {
 					this.style.fill = "gray";
 				});
 			}
-			
+
 			//Manage embed button
 			var link = null;
 			if (outputPlugin.getEmbedHtml) link = outputPlugin.getEmbedHtml();
@@ -93,8 +93,8 @@ var root = module.exports = function(parent, options, queryResults) {
 	yasr.draw = function(output) {
 		if (!yasr.results) return false;
 		if (!output) output = yasr.options.output;
-		
-		
+
+
 		//ah, our default output does not take our current results. Try to autodetect
 		var selectedOutput = null;
 		var selectedOutputPriority = -1;
@@ -118,26 +118,28 @@ var root = module.exports = function(parent, options, queryResults) {
 		} else if (selectedOutput) {
 			outputToDraw = selectedOutput;
 		}
-		
+
 		if (outputToDraw) {
 			$(yasr.resultsContainer).empty();
 			yasr.plugins[outputToDraw].draw();
+			yasr.updateHeader();
 			return true;
 		} else {
+			yasr.updateHeader();
 			return false;
 		}
 	};
-	
+
 	var disableOutputs = function(outputs) {
 		//first enable everything.
 		yasr.header.find('.yasr_btnGroup .yasr_btn').removeClass('disabled');
-		
-		
+
+
 		//now disable the outputs passed as param
 		outputs.forEach(function(outputName) {
 			yasr.header.find('.yasr_btnGroup .select_' + outputName).addClass('disabled');
 		});
-		
+
 	};
 	yasr.somethingDrawn = function() {
 		return !yasr.resultsContainer.is(":empty");
@@ -150,7 +152,7 @@ var root = module.exports = function(parent, options, queryResults) {
 			yasr.results = {getException: function(){return exception}};
 		}
 		yasr.draw();
-		
+
 		//store if needed
 		var resultsId = yasr.getPersistencyId(yasr.options.persistency.results.key);
 		if (resultsId) {
@@ -185,7 +187,7 @@ var root = module.exports = function(parent, options, queryResults) {
 		}
 		$toggableWarning.show(400);
 	};
-	
+
 	var blobDownloadSupported = null;
 	var checkBlobDownloadSupported = function() {
 		if (blobDownloadSupported === null) {
@@ -201,7 +203,7 @@ var root = module.exports = function(parent, options, queryResults) {
 			$.each(yasr.options.outputPlugins, function(i, pluginName) {
 				var plugin = yasr.plugins[pluginName];
 				if (!plugin) return;//plugin not loaded
-				
+
 				if (plugin.hideFromSelection) return;
 				var name = plugin.name || pluginName;
 				var button = $("<button class='yasr_btn'></button>")
@@ -213,20 +215,19 @@ var root = module.exports = function(parent, options, queryResults) {
 					$(this).addClass("selected");
 					//set and draw output
 					yasr.options.output = pluginName;
-					
+
 					//store if needed
 					yasr.store();
-					
+
 					//close warning if there is any
 					if ($toggableWarning) $toggableWarning.hide(400);
-					
+
 					yasr.draw();
-					yasr.updateHeader();
 				})
 				.appendTo(btnGroup);
 				if (yasr.options.output == pluginName) button.addClass("selected");
 			});
-			
+
 			if (btnGroup.children().length > 1) yasr.header.append(btnGroup);
 		};
 		var drawDownloadIcon = function() {
@@ -280,7 +281,7 @@ var root = module.exports = function(parent, options, queryResults) {
 				var currentPlugin = yasr.plugins[yasr.options.output];
 				if (currentPlugin && currentPlugin.getEmbedHtml) {
 					var embedLink = currentPlugin.getEmbedHtml();
-					
+
 					event.stopPropagation();
 					var popup = $("<div class='yasr_embedPopup'></div>").appendTo(yasr.header);
 					$('html').click(function() {
@@ -303,14 +304,14 @@ var root = module.exports = function(parent, options, queryResults) {
 					        return false;
 					    });
 					});
-					
+
 					popup.empty().append(prePopup);
 					var positions = embedBtn.position();
 					var top = (positions.top + embedBtn.outerHeight()) + 'px';
 					var left = Math.max(((positions.left + embedBtn.outerWidth()) - popup.outerWidth()), 0) + 'px';
-					
+
 					popup.css("top",top).css("left", left);
-					
+
 				}
 			})
 			yasr.header.append(embedBtn);
@@ -320,7 +321,7 @@ var root = module.exports = function(parent, options, queryResults) {
 		if (yasr.options.drawDownloadIcon && checkBlobDownloadSupported()) drawDownloadIcon();//only draw when it's supported
 		drawEmbedButton();
 	};
-	
+
 	var persistentId = null;
 	//store persistent options (not results though. store these separately, as they are too large)
 	yasr.store = function() {
@@ -329,14 +330,14 @@ var root = module.exports = function(parent, options, queryResults) {
 			utils.storage.set(persistentId, yasr.getPersistentSettings());
 		}
 	};
-	
-	
+
+
 	yasr.load = function() {
 		if (!persistentId) persistentId = yasr.getPersistencyId('main');
 		yasr.setPersistentSettings(utils.storage.get(persistentId));
 	};
-	
-	
+
+
 	yasr.setPersistentSettings = function(settings) {
 		if (settings) {
 			if (settings.output) {
@@ -349,7 +350,7 @@ var root = module.exports = function(parent, options, queryResults) {
 			}
 		}
 	}
-	
+
 	yasr.getPersistentSettings = function() {
 		var settings = {output: yasr.options.output, plugins:{}};
 		for (var pluginName in yasr.plugins) {
@@ -359,7 +360,7 @@ var root = module.exports = function(parent, options, queryResults) {
 		}
 		return settings;
 	}
-	
+
 
 	/**
 	 * postprocess
@@ -372,8 +373,8 @@ var root = module.exports = function(parent, options, queryResults) {
 		if (resultsId) {
 			fromStorage = utils.storage.get(resultsId);
 		}
-		
-		
+
+
 		if (!fromStorage && yasr.options.persistency.results.id) {
 			//deprecated! But keep for backwards compatability
 			//if results are stored under old ID. Fetch the results, and delete that key (results can be large, and clutter space)
@@ -392,13 +393,13 @@ var root = module.exports = function(parent, options, queryResults) {
 			}
 		}
 	}
-	
+
 	if (queryResults) {
 		yasr.setResponse(queryResults);
-	} 
+	}
 	yasr.updateHeader();
-	
-	
+
+
 	return yasr;
 };
 
@@ -415,7 +416,7 @@ root.registerOutput = function(name, constructor) {
 /**
  * The default options of YASR. Either change the default options by setting YASR.defaults, or by
  * passing your own options as second argument to the YASR constructor
- * 
+ *
  * @attribute YASR.defaults
  */
 root.defaults = require('./defaults.js');
