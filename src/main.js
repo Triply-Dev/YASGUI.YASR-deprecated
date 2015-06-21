@@ -1,6 +1,7 @@
 'use strict';
-var $ = require("jquery");
-var utils = require("yasgui-utils");
+var $ = require("jquery"),
+	EventEmitter = require('events').EventEmitter,
+	utils = require("yasgui-utils");
 console = console || {
 	"log": function() {}
 }; //make sure any console statements don't break in IE
@@ -17,11 +18,14 @@ require('./jquery/extendJquery.js');
  * @class YASR
  * @return {doc} YASR document
  */
-var root = module.exports = function(parent, options, queryResults) {
+var YASR = function(parent, options, queryResults) {
+	EventEmitter.call(this);
+	var yasr = this;
+	// console.log(EventEmitter.call(this));
 
-
-	var yasr = {};
-	yasr.options = $.extend(true, {}, root.defaults, options);
+	// var yasr = {};
+	// EventEmitter.call(yasr);
+	yasr.options = $.extend(true, {}, module.exports.defaults, options);
 
 	yasr.container = $("<div class='yasr'></div>").appendTo(parent);
 	yasr.header = $("<div class='yasr_header'></div>").appendTo(yasr.container);
@@ -56,9 +60,9 @@ var root = module.exports = function(parent, options, queryResults) {
 
 	//first initialize plugins
 	yasr.plugins = {};
-	for (var pluginName in root.plugins) {
+	for (var pluginName in module.exports.plugins) {
 		if (!yasr.options.useGoogleCharts && pluginName == "gchart") continue;
-		yasr.plugins[pluginName] = new root.plugins[pluginName](yasr);
+		yasr.plugins[pluginName] = new module.exports.plugins[pluginName](yasr);
 	}
 
 
@@ -425,11 +429,15 @@ var root = module.exports = function(parent, options, queryResults) {
 	return yasr;
 };
 
+YASR.prototype = new EventEmitter;
+module.exports = function(parent, options, queryResults) {
+	return new YASR(parent, options, queryResults);
+}
 
 
-root.plugins = {};
-root.registerOutput = function(name, constructor) {
-	root.plugins[name] = constructor;
+module.exports.plugins = {};
+module.exports.registerOutput = function(name, constructor) {
+	module.exports.plugins[name] = constructor;
 };
 
 
@@ -441,32 +449,32 @@ root.registerOutput = function(name, constructor) {
  *
  * @attribute YASR.defaults
  */
-root.defaults = require('./defaults.js');
-root.version = {
+module.exports.defaults = require('./defaults.js');
+module.exports.version = {
 	"YASR": require("../package.json").version,
 	"jquery": $.fn.jquery,
 	"yasgui-utils": require("yasgui-utils").version
 };
-root.$ = $;
+module.exports.$ = $;
 
 
 
 //put these in a try-catch. When using the unbundled version, and when some dependencies are missing, then YASR as a whole will still function
 try {
-	root.registerOutput('boolean', require("./boolean.js"))
+	module.exports.registerOutput('boolean', require("./boolean.js"))
 } catch (e) {};
 try {
-	root.registerOutput('rawResponse', require("./rawResponse.js"))
+	module.exports.registerOutput('rawResponse', require("./rawResponse.js"))
 } catch (e) {};
 try {
-	root.registerOutput('table', require("./table.js"))
+	module.exports.registerOutput('table', require("./table.js"))
 } catch (e) {};
 try {
-	root.registerOutput('error', require("./error.js"))
+	module.exports.registerOutput('error', require("./error.js"))
 } catch (e) {};
 try {
-	root.registerOutput('pivot', require("./pivot.js"))
+	module.exports.registerOutput('pivot', require("./pivot.js"))
 } catch (e) {};
 try {
-	root.registerOutput('gchart', require("./gchart.js"))
+	module.exports.registerOutput('gchart', require("./gchart.js"))
 } catch (e) {};
