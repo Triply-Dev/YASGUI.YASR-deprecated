@@ -23,9 +23,9 @@ var root = module.exports = function(dataOrJqXhr, textStatus, jqXhrOrErrorString
 	var contentType = null;
 	var origResponse = null;
 	var json = null;
-	var type = null;//json, xml, csv, or tsv
+	var type = null; //json, xml, csv, or tsv
 	var exception = null;
-	
+
 	var init = function() {
 		if (typeof dataOrJqXhr == "object") {
 			/**
@@ -36,12 +36,14 @@ var root = module.exports = function(dataOrJqXhr, textStatus, jqXhrOrErrorString
 				exception = dataOrJqXhr.exception;
 			} else if (dataOrJqXhr.status != undefined && (dataOrJqXhr.status >= 300 || dataOrJqXhr.status === 0)) {
 				//this is an exception, and jquery response
-				exception = {status: dataOrJqXhr.status};
+				exception = {
+					status: dataOrJqXhr.status
+				};
 				if (typeof jqXhrOrErrorString == "string") exception.errorString = jqXhrOrErrorString;
 				if (dataOrJqXhr.responseText) exception.responseText = dataOrJqXhr.responseText;
 				if (dataOrJqXhr.statusText) exception.statusText = dataOrJqXhr.statusText;
 			}
-			
+
 			/**
 			 * Extract content type info (if there is any)
 			 */
@@ -52,7 +54,7 @@ var root = module.exports = function(dataOrJqXhr, textStatus, jqXhrOrErrorString
 				var ct = dataOrJqXhr.getResponseHeader("content-type").trim().toLowerCase();
 				if (ct.length > 0) contentType = ct;
 			}
-			
+
 			/**
 			 * extract original response
 			 */
@@ -79,7 +81,7 @@ var root = module.exports = function(dataOrJqXhr, textStatus, jqXhrOrErrorString
 
 	var getAsJson = function() {
 		if (json) return json;
-		if (json === false || exception) return false;//already tried parsing this, and failed. do not try again... 
+		if (json === false || exception) return false; //already tried parsing this, and failed. do not try again... 
 		var getParserFromContentType = function() {
 			if (contentType) {
 				if (contentType.indexOf("json") > -1) {
@@ -113,26 +115,26 @@ var root = module.exports = function(dataOrJqXhr, textStatus, jqXhrOrErrorString
 				}
 			}
 		};
-		
+
 
 		var doLuckyGuess = function() {
 			json = parsers.json(origResponse);
-			if (json)  {
+			if (json) {
 				type = "json";
 			} else {
 				try {
 					json = parsers.xml(origResponse);
-					if (json) type="xml";
-				} catch(err){};
+					if (json) type = "xml";
+				} catch (err) {};
 			}
 		};
 
-		
+
 		getParserFromContentType();
 		if (!json) {
 			doLuckyGuess();
 		}
-		if (!json) json = false;//explicitly set to false, so we don't try to parse this thing again..
+		if (!json) json = false; //explicitly set to false, so we don't try to parse this thing again..
 		return json;
 	};
 
@@ -171,7 +173,7 @@ var root = module.exports = function(dataOrJqXhr, textStatus, jqXhrOrErrorString
 		if (typeof origResponse == "string") {
 			responseString = origResponse;
 		} else if (type == "json") {
-			responseString = JSON.stringify(origResponse, undefined, 2);//prettifies as well
+			responseString = JSON.stringify(origResponse, undefined, 2); //prettifies as well
 		} else if (type == "xml") {
 			responseString = new XMLSerializer().serializeToString(origResponse);
 		}
@@ -181,10 +183,10 @@ var root = module.exports = function(dataOrJqXhr, textStatus, jqXhrOrErrorString
 		return exception;
 	};
 	var getType = function() {
-		if (type == null) getAsJson();//detects type as well
+		if (type == null) getAsJson(); //detects type as well
 		return type;
 	};
-	
+
 	//process the input parameters in such a way that we can store it in local storage (i.e., no function)
 	//and, make sure we can easily pass it on back to this wrapper function when loading it again from storage
 	var getAsStoreObject = function() {
@@ -195,31 +197,33 @@ var root = module.exports = function(dataOrJqXhr, textStatus, jqXhrOrErrorString
 			arg1.status = dataOrJqXhr.status;
 			arg1.responseText = dataOrJqXhr.responseText;
 			arg1.statusText = dataOrJqXhr.statusText;
-			arg1.contentType = contentType;//this is a function in a jqXhr object (problem for storing). but this wrapper will read it as string as well
+			arg1.contentType = contentType; //this is a function in a jqXhr object (problem for storing). but this wrapper will read it as string as well
 		} else {
 			//the other instances of this param (whether it is a json, xml, or exception object), we can normally store
 			arg1 = dataOrJqXhr;
 		}
-		
-		
+
+
 		var arg2 = textStatus;
 		var arg3 = undefined;
 		if (typeof jqXhrOrErrorString == "string") arg3 = jqXhrOrErrorString;
-		
+
 		return [arg1, arg2, arg3];
 	};
-	
-	
-	
+
+
+
 	init();
 	json = getAsJson();
-	
+
 	return {
 		getAsStoreObject: getAsStoreObject,
 		getAsJson: getAsJson,
 		getOriginalResponse: getOriginalResponse,
 		getOriginalResponseAsString: getOriginalResponseAsString,
-		getOriginalContentType: function(){return contentType;},
+		getOriginalContentType: function() {
+			return contentType;
+		},
 		getVariables: getVariables,
 		getBindings: getBindings,
 		getBoolean: getBoolean,
@@ -227,6 +231,3 @@ var root = module.exports = function(dataOrJqXhr, textStatus, jqXhrOrErrorString
 		getException: getException
 	};
 };
-
-
-

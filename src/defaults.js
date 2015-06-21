@@ -8,9 +8,9 @@ module.exports = {
 	 * @default "table"
 	 */
 	output: "table",
-	useGoogleCharts: true, 
+	useGoogleCharts: true,
 	outputPlugins: ["table", "error", "boolean", "rawResponse", "pivot", "gchart"],
-	
+
 	/**
 	 * Draw the output selector widget
 	 * 
@@ -19,7 +19,7 @@ module.exports = {
 	 * @default true
 	 */
 	drawOutputSelector: true,
-	
+
 	/**
 	 * Draw download icon. This issues html5 download functionality to 'download' files created on the client-side.
 	 *  This allows the user to download results already queried for, such as a CSV when a table is shown, or the original response when the raw response output is selected
@@ -29,8 +29,8 @@ module.exports = {
 	 * @default true
 	 */
 	drawDownloadIcon: true,
-	
-	
+
+
 	getUsedPrefixes: null,
 	/**
 	 * Make certain settings and values of YASR persistent. Setting a key
@@ -71,8 +71,8 @@ module.exports = {
 			 * @type string|function
 			 * @default function (determine unique id)
 			 */
-			id: function(yasr){
-				return "results_" +  $(yasr.container).closest('[id]').attr('id');
+			id: function(yasr) {
+				return "results_" + $(yasr.container).closest('[id]').attr('id');
 			},
 			key: 'results',
 			/**
@@ -87,8 +87,8 @@ module.exports = {
 			 */
 			maxSize: 100000 //char count
 		}
-		
+
 	},
-	
-	
+
+
 };

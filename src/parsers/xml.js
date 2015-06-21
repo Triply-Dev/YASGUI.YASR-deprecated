@@ -2,8 +2,8 @@
 var $ = require("jquery");
 var root = module.exports = function(xml) {
 
-	
-	
+
+
 	/**
 	 * head
 	 */
@@ -18,14 +18,14 @@ var root = module.exports = function(xml) {
 			}
 		}
 	};
-	
+
 	var parseResults = function(node) {
 		json.results = {};
 		json.results.bindings = [];
 		for (var resultIt = 0; resultIt < node.childNodes.length; resultIt++) {
 			var resultNode = node.childNodes[resultIt];
 			var jsonResult = null;
-			
+
 			for (var bindingIt = 0; bindingIt < resultNode.childNodes.length; bindingIt++) {
 				var bindingNode = resultNode.childNodes[bindingIt];
 				if (bindingNode.nodeName == "binding") {
@@ -35,13 +35,13 @@ var root = module.exports = function(xml) {
 						jsonResult[varName] = {};
 						for (var bindingInfIt = 0; bindingInfIt < bindingNode.childNodes.length; bindingInfIt++) {
 							var bindingInf = bindingNode.childNodes[bindingInfIt];
- 							var type = bindingInf.nodeName;
+							var type = bindingInf.nodeName;
 							if (type == "#text") continue;
 							jsonResult[varName].type = type;
 							jsonResult[varName].value = bindingInf.innerHTML;
 							var dataType = bindingInf.getAttribute("datatype");
 							if (dataType) jsonResult[varName].datatype = dataType;
-							
+
 						}
 					}
 				}
@@ -49,7 +49,7 @@ var root = module.exports = function(xml) {
 			if (jsonResult) json.results.bindings.push(jsonResult);
 		}
 	};
-	
+
 	var parseBoolean = function(node) {
 		if (node.innerHTML == "true") {
 			json.boolean = true;
@@ -71,14 +71,14 @@ var root = module.exports = function(xml) {
 		return null;
 	}
 	var json = {};
-	
-	
-    for(var i = 0; i < xml.childNodes.length; i++) {
-    	var node = xml.childNodes[i];
-    	if (node.nodeName == "head") parseHead(node);
-    	if (node.nodeName == "results") parseResults(node);
-    	if (node.nodeName == "boolean") parseBoolean(node);
-    }
-    
+
+
+	for (var i = 0; i < xml.childNodes.length; i++) {
+		var node = xml.childNodes[i];
+		if (node.nodeName == "head") parseHead(node);
+		if (node.nodeName == "results") parseResults(node);
+		if (node.nodeName == "boolean") parseBoolean(node);
+	}
+
 	return json;
 };

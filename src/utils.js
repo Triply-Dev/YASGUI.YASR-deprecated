@@ -5,7 +5,7 @@ var $ = require('jquery'),
 module.exports = {
 	escapeHtmlEntities: function(unescaped) {
 		//taken from http://stackoverflow.com/questions/5499078/fastest-method-to-escape-html-tags-as-html-entities
-		return unescaped.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;') ;
+		return unescaped.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 	},
 	uriToPrefixed: function(prefixes, uri) {
 		if (prefixes) {
@@ -49,7 +49,7 @@ module.exports = {
 	getGoogleTypeForBindings: function(bindings, varName) {
 		var types = {};
 		var typeCount = 0;
-		bindings.forEach(function(binding){
+		bindings.forEach(function(binding) {
 			var type = module.exports.getGoogleTypeForBinding(binding[varName]);
 			if (type != null) {
 				if (!(type in types)) {
@@ -63,19 +63,19 @@ module.exports = {
 			return 'string';
 		} else if (typeCount == 1) {
 			for (var type in types) {
-				return type;//just return this one
+				return type; //just return this one
 			}
 		} else {
 			//we have conflicting types. Throw error
 			throw new GoogleTypeException(types, varName);
 		}
 	},
-	
+
 	castGoogleType: function(binding, prefixes, googleType) {
 		if (binding == null) {
 			return null;
 		}
-		
+
 		if (googleType != 'string' && binding.type != null && (binding.type === 'typed-literal' || binding.type === 'literal')) {
 			switch (binding.datatype) {
 				case 'http://www.w3.org/2001/XMLSchema#float':
@@ -109,7 +109,7 @@ module.exports = {
 			}
 		}
 	},
-	fireClick : function($els) {
+	fireClick: function($els) {
 		if (!$els)
 			return;
 		$els.each(function(i, el) {
@@ -117,7 +117,7 @@ module.exports = {
 			if (document.dispatchEvent) { // W3C
 				var oEvent = document.createEvent("MouseEvents");
 				oEvent.initMouseEvent("click", true, true, window, 1, 1, 1, 1, 1,
-						false, false, false, false, 0, $el[0]);
+					false, false, false, false, 0, $el[0]);
 				$el[0].dispatchEvent(oEvent);
 			} else if (document.fireEvent) { // IE
 				$el[0].click();

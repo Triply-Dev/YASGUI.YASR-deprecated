@@ -25,7 +25,7 @@ var root = module.exports = function(yasr) {
 		getPriority: 10,
 	};
 	var options = plugin.options = $.extend(true, {}, root.defaults);
-	var tableLengthPersistencyId = (options.persistency? yasr.getPersistencyId(options.persistency.tableLength): null);
+	var tableLengthPersistencyId = (options.persistency ? yasr.getPersistencyId(options.persistency.tableLength) : null);
 
 	var getRows = function() {
 		var rows = [];
@@ -33,17 +33,21 @@ var root = module.exports = function(yasr) {
 		var vars = yasr.results.getVariables();
 		var usedPrefixes = null;
 		if (yasr.options.getUsedPrefixes) {
-			usedPrefixes = (typeof yasr.options.getUsedPrefixes == "function"? yasr.options.getUsedPrefixes(yasr):  yasr.options.getUsedPrefixes);
+			usedPrefixes = (typeof yasr.options.getUsedPrefixes == "function" ? yasr.options.getUsedPrefixes(yasr) : yasr.options.getUsedPrefixes);
 		}
 		for (var rowId = 0; rowId < bindings.length; rowId++) {
 			var row = [];
-			row.push("");//row numbers
+			row.push(""); //row numbers
 			var binding = bindings[rowId];
 			for (var colId = 0; colId < vars.length; colId++) {
 				var sparqlVar = vars[colId];
 				if (sparqlVar in binding) {
 					if (options.getCellContent) {
-						row.push(options.getCellContent(yasr, plugin, binding, sparqlVar, {'rowId': rowId, 'colId': colId, 'usedPrefixes': usedPrefixes}));
+						row.push(options.getCellContent(yasr, plugin, binding, sparqlVar, {
+							'rowId': rowId,
+							'colId': colId,
+							'usedPrefixes': usedPrefixes
+						}));
 					} else {
 						row.push("");
 					}
@@ -55,11 +59,11 @@ var root = module.exports = function(yasr) {
 		}
 		return rows;
 	};
-	
+
 	var eventId = yasr.getPersistencyId('eventId') || "yasr_" + $(yasr.container).closest('[id]').attr('id');
 	var addEvents = function() {
-		table.on( 'order.dt', function () {
-		    drawSvgIcons();
+		table.on('order.dt', function() {
+			drawSvgIcons();
 		});
 		if (tableLengthPersistencyId) {
 			table.on('length.dt', function(e, settings, len) {
@@ -72,24 +76,22 @@ var root = module.exports = function(yasr) {
 				var result = options.callbacks.onCellClick(this, event);
 				if (result === false) return false;
 			}
-		}).delegate("td",'mouseenter', function(event) {
+		}).delegate("td", 'mouseenter', function(event) {
 			if (options.callbacks && options.callbacks.onCellMouseEnter) {
 				options.callbacks.onCellMouseEnter(this, event);
 			}
 			var tdEl = $(this);
-			if (options.fetchTitlesFromPreflabel 
-					&& tdEl.attr("title") === undefined
-					&& tdEl.text().trim().indexOf("http") == 0) {
+			if (options.fetchTitlesFromPreflabel && tdEl.attr("title") === undefined && tdEl.text().trim().indexOf("http") == 0) {
 				addPrefLabel(tdEl);
 			}
-		}).delegate("td",'mouseleave', function(event) {
+		}).delegate("td", 'mouseleave', function(event) {
 			if (options.callbacks && options.callbacks.onCellMouseLeave) {
 				options.callbacks.onCellMouseLeave(this, event);
-				
+
 			}
 		});
 	};
-	
+
 	plugin.draw = function() {
 		table = $('<table cellpadding="0" cellspacing="0" border="0" class="resultsTable"></table>');
 		$(yasr.resultsContainer).html(table);
@@ -97,24 +99,24 @@ var root = module.exports = function(yasr) {
 		var dataTableConfig = options.datatable;
 		dataTableConfig.data = getRows();
 		dataTableConfig.columns = options.getColumns(yasr, plugin);
-		
+
 		//fetch stored datatables length value
 		var pLength = yutils.storage.get(tableLengthPersistencyId);
 		if (pLength) dataTableConfig.pageLength = pLength;
-		
-		
-		
-		table.DataTable($.extend(true, {}, dataTableConfig));//make copy. datatables adds properties for backwards compatability reasons, and don't want this cluttering our own 
-		
-		
+
+
+
+		table.DataTable($.extend(true, {}, dataTableConfig)); //make copy. datatables adds properties for backwards compatability reasons, and don't want this cluttering our own 
+
+
 		drawSvgIcons();
-		
+
 		addEvents();
-		
+
 		//finally, make the columns dragable:
 		table.colResizable();
 	};
-	
+
 	var drawSvgIcons = function() {
 		var sortings = {
 			"sorting": "unsorted",
@@ -135,22 +137,24 @@ var root = module.exports = function(yasr) {
 	 * @type function
 	 * @default If resultset contains variables in the resultset, return true
 	 */
-	plugin.canHandleResults = function(){
+	plugin.canHandleResults = function() {
 		return yasr.results && yasr.results.getVariables && yasr.results.getVariables() && yasr.results.getVariables().length > 0;
 	};
 
-	
+
 	plugin.getDownloadInfo = function() {
 		if (!yasr.results) return null;
 		return {
-			getContent: function(){return require("./bindingsToCsv.js")(yasr.results.getAsJson());},
+			getContent: function() {
+				return require("./bindingsToCsv.js")(yasr.results.getAsJson());
+			},
 			filename: "queryResults.csv",
 			contentType: "text/csv",
 			buttonTitle: "Download as CSV"
 		};
 	};
-	
-	
+
+
 	return plugin;
 };
 
@@ -167,7 +171,7 @@ var formatLiteral = function(yasr, plugin, literalBinding) {
 		} else {
 			dataType = "&lt;" + dataType + "&gt;";
 		}
-		
+
 		stringRepresentation = '"' + stringRepresentation + '"<sup>^^' + dataType + '</sup>';
 	}
 	return stringRepresentation;
@@ -178,7 +182,7 @@ var getCellContent = function(yasr, plugin, bindings, sparqlVar, context) {
 	if (binding.type == "uri") {
 		var title = null;
 		var href = binding.value;
-		var visibleString = href;  
+		var visibleString = href;
 		if (context.usedPrefixes) {
 			for (var prefix in context.usedPrefixes) {
 				if (visibleString.indexOf(context.usedPrefixes[prefix]) == 0) {
@@ -188,13 +192,13 @@ var getCellContent = function(yasr, plugin, bindings, sparqlVar, context) {
 			}
 		}
 		if (plugin.options.mergeLabelsWithUris) {
-			var postFix = (typeof plugin.options.mergeLabelsWithUris == "string"? plugin.options.mergeLabelsWithUris: "Label");
+			var postFix = (typeof plugin.options.mergeLabelsWithUris == "string" ? plugin.options.mergeLabelsWithUris : "Label");
 			if (bindings[sparqlVar + postFix]) {
 				visibleString = formatLiteral(yasr, plugin, bindings[sparqlVar + postFix]);
 				title = href;
 			}
 		}
-		value = "<a " + (title? "title='" + href + "' ": "") + "class='uri' target='_blank' href='" + href + "'>" + visibleString + "</a>";
+		value = "<a " + (title ? "title='" + href + "' " : "") + "class='uri' target='_blank' href='" + href + "'>" + visibleString + "</a>";
 	} else {
 		value = "<span class='nonUri'>" + formatLiteral(yasr, plugin, binding) + "</span>";
 	}
@@ -208,18 +212,18 @@ var getCellContent = function(yasr, plugin, bindings, sparqlVar, context) {
 
 var addPrefLabel = function(td) {
 	var addEmptyTitle = function() {
-		td.attr("title","");//this avoids trying to fetch the label again on next hover
+		td.attr("title", ""); //this avoids trying to fetch the label again on next hover
 	};
 	$.get("http://preflabel.org/api/v1/label/" + encodeURIComponent(td.text()) + "?silent=true")
 		.success(function(data) {
 			if (typeof data == "object" && data.label) {
 				td.attr("title", data.label);
-			} else if (typeof data == "string" && data.length > 0 ) {
+			} else if (typeof data == "string" && data.length > 0) {
 				td.attr("title", data);
 			} else {
 				addEmptyTitle();
 			}
-			
+
 		})
 		.fail(addEmptyTitle);
 };
@@ -237,7 +241,7 @@ var openCellUriInNewWindow = function(cell) {
  * @attribute YASR.plugins.table.defaults
  */
 root.defaults = {
-	
+
 	/**
 	 * Draw the cell content, from a given binding
 	 * 
@@ -248,15 +252,15 @@ root.defaults = {
 	 * @default YASR.plugins.table.getFormattedValueFromBinding
 	 */
 	getCellContent: getCellContent,
-	
+
 	persistency: {
 		tableLength: "tableLength",
 	},
-	
+
 	getColumns: function(yasr, plugin) {
 		var includeVariable = function(variableToCheck) {
 			if (!plugin.options.mergeLabelsWithUris) return true;
-			var postFix = (typeof plugin.options.mergeLabelsWithUris == "string"? plugin.options.mergeLabelsWithUris: "Label");
+			var postFix = (typeof plugin.options.mergeLabelsWithUris == "string" ? plugin.options.mergeLabelsWithUris : "Label");
 			if (variableToCheck.indexOf(postFix, variableToCheck.length - postFix.length) !== -1) {
 				//this one ends with a postfix
 				if (yasr.results.getVariables().indexOf(variableToCheck.substring(0, variableToCheck.length - postFix.length)) >= 0) {
@@ -266,11 +270,16 @@ root.defaults = {
 			}
 			return true;
 		};
-		
+
 		var cols = [];
-		cols.push({"title": ""});//row numbers column
+		cols.push({
+			"title": ""
+		}); //row numbers column
 		yasr.results.getVariables().forEach(function(variable) {
-			cols.push({"title": "<span>" + variable + "</span>", "visible": includeVariable(variable)});
+			cols.push({
+				"title": "<span>" + variable + "</span>",
+				"visible": includeVariable(variable)
+			});
 		});
 		return cols;
 	},
@@ -282,7 +291,7 @@ root.defaults = {
 	 * @default true
 	 */
 	fetchTitlesFromPreflabel: true,
-	
+
 	mergeLabelsWithUris: false,
 	/**
 	 * Set a number of handlers for the table
@@ -329,38 +338,44 @@ root.defaults = {
 	datatable: {
 		"autoWidth": false,
 		"dom": '<"dtTopHeader"ilf>rtip',
-		"order": [],//disable initial sorting
-		"pageLength": 50,//default page length
-    	"lengthMenu": [[10, 50, 100, 1000, -1], [10, 50, 100, 1000, "All"]],//possible page lengths
-    	"lengthChange": true,//allow changing page length
-    	"pagingType": "full_numbers",//how to show the pagination options
-        "drawCallback": function ( oSettings ) {
-        	//trick to show row numbers
-        	for ( var i = 0; i < oSettings.aiDisplay.length; i++) {
-				$('td:eq(0)',oSettings.aoData[oSettings.aiDisplay[i]].nTr).html(i + 1);
+		"order": [], //disable initial sorting
+		"pageLength": 50, //default page length
+		"lengthMenu": [
+			[10, 50, 100, 1000, -1],
+			[10, 50, 100, 1000, "All"]
+		], //possible page lengths
+		"lengthChange": true, //allow changing page length
+		"pagingType": "full_numbers", //how to show the pagination options
+		"drawCallback": function(oSettings) {
+			//trick to show row numbers
+			for (var i = 0; i < oSettings.aiDisplay.length; i++) {
+				$('td:eq(0)', oSettings.aoData[oSettings.aiDisplay[i]].nTr).html(i + 1);
 			}
-        	
-        	//Hide pagination when we have a single page
-        	var activePaginateButton = false;
-        	$(oSettings.nTableWrapper).find(".paginate_button").each(function() {
-        		if ($(this).attr("class").indexOf("current") == -1 && $(this).attr("class").indexOf("disabled") == -1) {
-        			activePaginateButton = true;
-        		}
-        	});
-        	if (activePaginateButton) {
-        		$(oSettings.nTableWrapper).find(".dataTables_paginate").show();
-        	} else {
-        		$(oSettings.nTableWrapper).find(".dataTables_paginate").hide();
-        	}
+
+			//Hide pagination when we have a single page
+			var activePaginateButton = false;
+			$(oSettings.nTableWrapper).find(".paginate_button").each(function() {
+				if ($(this).attr("class").indexOf("current") == -1 && $(this).attr("class").indexOf("disabled") == -1) {
+					activePaginateButton = true;
+				}
+			});
+			if (activePaginateButton) {
+				$(oSettings.nTableWrapper).find(".dataTables_paginate").show();
+			} else {
+				$(oSettings.nTableWrapper).find(".dataTables_paginate").hide();
+			}
 		},
-		"columnDefs": [
-			{ "width": "32px", "orderable": false, "targets": 0  }//disable row sorting for first col
+		"columnDefs": [{
+				"width": "32px",
+				"orderable": false,
+				"targets": 0
+			} //disable row sorting for first col
 		],
 	},
 };
 
 root.version = {
-	"YASR-table" : require("../package.json").version,
+	"YASR-table": require("../package.json").version,
 	"jquery": $.fn.jquery,
 	"jquery-datatables": $.fn.DataTable.version
 };

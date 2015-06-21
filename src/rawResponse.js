@@ -18,17 +18,20 @@ var root = module.exports = function(yasr) {
 	var draw = function() {
 		var cmOptions = options.CodeMirror;
 		cmOptions.value = yasr.results.getOriginalResponseAsString();
-		
+
 		var mode = yasr.results.getType();
 		if (mode) {
 			if (mode == "json") {
-				mode = {name: "javascript", json: true};
+				mode = {
+					name: "javascript",
+					json: true
+				};
 			}
 			cmOptions.mode = mode;
 		}
-		
+
 		cm = CodeMirror(yasr.resultsContainer.get()[0], cmOptions);
-		
+
 		//CM has some issues with folding and unfolding (blank parts in the codemirror area, which are only filled after clicking it)
 		//so, refresh cm after folding/unfolding
 		cm.on('fold', function() {
@@ -37,35 +40,37 @@ var root = module.exports = function(yasr) {
 		cm.on('unfold', function() {
 			cm.refresh();
 		});
-		
+
 	};
-	var canHandleResults = function(){
+	var canHandleResults = function() {
 		if (!yasr.results) return false;
 		if (!yasr.results.getOriginalResponseAsString) return false;
 		var response = yasr.results.getOriginalResponseAsString();
-		if ((!response || response.length == 0) && yasr.results.getException()) return false;//in this case, show exception instead, as we have nothing to show anyway
+		if ((!response || response.length == 0) && yasr.results.getException()) return false; //in this case, show exception instead, as we have nothing to show anyway
 		return true;
 	};
-	
+
 	var getDownloadInfo = function() {
 		if (!yasr.results) return null;
 		var contentType = yasr.results.getOriginalContentType();
 		var type = yasr.results.getType();
 		return {
-			getContent: function() {return yasr.results.getOriginalResponse();},
-			filename: "queryResults" + (type? "." + type: ""),
-			contentType: (contentType? contentType: "text/plain"),
+			getContent: function() {
+				return yasr.results.getOriginalResponse();
+			},
+			filename: "queryResults" + (type ? "." + type : ""),
+			contentType: (contentType ? contentType : "text/plain"),
 			buttonTitle: "Download raw response"
 		};
 	};
-	
+
 	return {
 		draw: draw,
 		name: "Raw Response",
 		canHandleResults: canHandleResults,
 		getPriority: 2,
 		getDownloadInfo: getDownloadInfo,
-		
+
 	}
 };
 
@@ -75,14 +80,14 @@ root.defaults = {
 	CodeMirror: {
 		readOnly: true,
 		lineNumbers: true,
-	    lineWrapping: true,
-	    foldGutter: true,
-	    gutters: ["CodeMirror-linenumbers", "CodeMirror-foldgutter"]
+		lineWrapping: true,
+		foldGutter: true,
+		gutters: ["CodeMirror-linenumbers", "CodeMirror-foldgutter"]
 	}
 };
 
 root.version = {
-	"YASR-rawResponse" : require("../package.json").version,
+	"YASR-rawResponse": require("../package.json").version,
 	"jquery": $.fn.jquery,
-	"CodeMirror" : CodeMirror.version
+	"CodeMirror": CodeMirror.version
 };

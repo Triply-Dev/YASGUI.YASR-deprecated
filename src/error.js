@@ -14,12 +14,14 @@ var $ = require("jquery");
 var root = module.exports = function(yasr) {
 	var $container = $("<div class='errorResult'></div>");
 	var options = $.extend(true, {}, root.defaults);
-	
-	var getTryBtn = function(){
+
+	var getTryBtn = function() {
 		var $tryBtn = null;
 		if (options.tryQueryLink) {
 			var link = options.tryQueryLink();
-			$tryBtn = $('<button>', {class: 'yasr_btn yasr_tryQuery'})
+			$tryBtn = $('<button>', {
+					class: 'yasr_btn yasr_tryQuery'
+				})
 				.text('Try query in new browser window')
 				.click(function() {
 					window.open(link, '_blank');
@@ -28,12 +30,14 @@ var root = module.exports = function(yasr) {
 		}
 		return $tryBtn;
 	}
-	
+
 	var draw = function() {
 		var error = yasr.results.getException();
 		$container.empty().appendTo(yasr.resultsContainer);
-		var $header = $("<div>", {class:'errorHeader'}).appendTo($container);
-		
+		var $header = $("<div>", {
+			class: 'errorHeader'
+		}).appendTo($container);
+
 		if (error.status !== 0) {
 			var statusText = 'Error';
 			if (error.statusText && error.statusText.length < 100) {
@@ -41,14 +45,16 @@ var root = module.exports = function(yasr) {
 				statusText = error.statusText;
 			}
 			statusText += ' (#' + error.status + ')';
-			
+
 			$header
 				.append(
-					$("<span>", {class:'exception'})
+					$("<span>", {
+						class: 'exception'
+					})
 					.text(statusText)
 				)
 				.append(getTryBtn());
-			
+
 			var responseText = null;
 			if (error.responseText) {
 				responseText = error.responseText;
@@ -62,18 +68,22 @@ var root = module.exports = function(yasr) {
 			//cors disabled, wrong url, or endpoint down
 			$container
 				.append(
-				$('<div>', {class: 'corsMessage'})
+					$('<div>', {
+						class: 'corsMessage'
+					})
 					.append(options.corsMessage)
-			);
+				);
 		}
-		
+
 	};
-	
-	
-	var  canHandleResults = function(yasr){return yasr.results.getException() || false;};
-	
+
+
+	var canHandleResults = function(yasr) {
+		return yasr.results.getException() || false;
+	};
+
 	return {
-		name: null,//don't need to set this: we don't show it in the selection widget anyway, so don't need a human-friendly name
+		name: null, //don't need to set this: we don't show it in the selection widget anyway, so don't need a human-friendly name
 		draw: draw,
 		getPriority: 20,
 		hideFromSelection: true,
