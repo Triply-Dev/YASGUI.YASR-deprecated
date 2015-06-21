@@ -3,7 +3,7 @@ var $ = require("jquery"),
 	yutils = require("yasgui-utils"),
 	utils = require('./utils.js'),
 	imgs = require('./imgs.js');
-require("../lib/DataTables/media/js/jquery.dataTables.js");
+require("datatables");
 require("../lib/colResizable-1.4.js");
 
 

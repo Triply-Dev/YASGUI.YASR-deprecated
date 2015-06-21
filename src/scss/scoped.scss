@@ -9,7 +9,7 @@
 /* 	position:relative; */
 	@import "../../node_modules/bootstrap-sass/assets/stylesheets/bootstrap/_variables.scss";
 	
-	@import "../../lib/DataTables/media/css/jquery.dataTables.css";
+	@import "../../node_modules/datatables/media/css/jquery.dataTables.css";
 	@import "../../node_modules/pivottable/dist/pivot.css";
 	@import "../../node_modules/codemirror/lib/codemirror.css"; 
 	@import "../../node_modules/codemirror/addon/fold/foldgutter.css"; 
