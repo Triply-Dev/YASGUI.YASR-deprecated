@@ -9,7 +9,7 @@
   <link href="doc.min.css" rel="stylesheet" type="text/css" />
   </head>
   <body data-spy="scroll" data-target="#sidebarmenu">
-  
+
   <a href="https://github.com/YASGUI/YASR" target="_blank"><img style="z-index: 11111; position: absolute; top: 0; right: 0; border: 0;" src="https://s3.amazonaws.com/github/ribbons/forkme_right_gray_6d6d6d.png" alt="Fork me on GitHub"></a>
     <div class="navbar navbar-inverse navbar-static-top" role="navigation">
       <div class="container">
@@ -30,7 +30,7 @@
 			YASR is an extendable library which helps you present SPARQL results. The main class of YASR is responsible for gluing the different output plugins together, and providing utilities such as SPARQL results parsers.
 			<h2 id="gettingStarted">Getting Started</h2>
 			<p>Initialize YASQE via its constructor, which returns an instance (from now on referred to as <code>yasr</code> (lowercase).
-			
+
 			<div class="doc">
 				<code>YASR(parent: DOM-Element, settings: object, queryResponse: string|object) → YASR document: yasr</code>
 				<p>Main YASR constructor. The first argument, the DOM element to which to append YASR, is required.
@@ -39,14 +39,14 @@
 			</div>
 	     	<h3 id="gists">Examples</h3>
 		   	<div id="gistContainer">
-		   		
+
 		   	</div>
-			
+
 			<h2 id="api">API</h2>
 			<div class="doc">
 			<code>yasr.setresponse(response: string|object)</code>
 			<p>
-			Set and draw a SPARQL response. 
+			Set and draw a SPARQL response.
 			The parameter is either a plain response string, a jQuery response object, or it is an object with the following keys:
 			</p>
 				<ul>
@@ -91,12 +91,23 @@
 			Load persistent settings from local storage
 			</p>
 		</div>
-			
-		
+
+		<h2 id="events">Events</h2>
+		YASR emits several events. For information on the possibilities of our event handler, see the <a href="https://nodejs.org/api/events.html" target="_blank">EventEmitter implementation documentation</a> of NodeJS
+		<div class="doc">
+			<code>draw (instance: yasr, outputPlugin: outputPlugin)</code>
+			<p>Fires just before a plugins draws the results</p>
+		</div>
+		<div class="doc">
+			<code>draw (instance: yasr, outputPlugin: outputPlugin)</code>
+			<p>Fires when a plugin finished drawing the results</p>
+		</div>
+
+
 		<h2 id="config">Configuration</h2>
 			<p>
-			This configuration object is accessible/changeable via <code>YASR.defaults</code> and <code>yasr.options</code>, and you can pass these along when initializing YASR as well. 
-			Output visualizations are <a href="#outputPlugins">defined separately</a>.			
+			This configuration object is accessible/changeable via <code>YASR.defaults</code> and <code>yasr.options</code>, and you can pass these along when initializing YASR as well.
+			Output visualizations are <a href="#outputPlugins">defined separately</a>.
 			</p>
 			<div class="doc" >
 				<code>outputPlugins: array (default: ["error", "boolean", "rawResponse", "table", "pivot"])</code>
@@ -110,7 +121,7 @@
 				<code>useGoogleCharts: true</code>
 				<p>Enable the use of Google Charts output. Google Charts is used in the Pivot plugin, as well as the Google Charts plugin.
 				As Google Charts cannot be packaged fully in YASR, it poses an external dependency.
-				<small>(in case the Google API is not accessible, the Google Charts visualizations are disabled automatically)</small> 
+				<small>(in case the Google API is not accessible, the Google Charts visualizations are disabled automatically)</small>
 			</div>
 			<div class="doc" >
 				<code>drawOutputSelector: boolean (default: true)</code>
@@ -130,7 +141,7 @@
 				Get the used prefixes. Plugins may use this to create more human-readable URIs. Return object should be in the form <code>{"rdf" : "http://www.w3.org/1999/02/22-rdf-syntax-ns#"}</code>
 				</p>
 			</div>
-			
+
 			<div class="doc" >
 				<code>persistency: object</code>
 			</div>
@@ -181,14 +192,14 @@
 				<p>Merge bindings together, by using one value as the label, and the other as the hyperlink. When setting this to <code>true</code>, every projection variable ending with 'Label' will be used as text for the corresponding projection variable without that label. I.e., <code>?carLabel</code> is used as text for the <code>?car</code> projection variable (as long as <code>?car</code> is a URI).
 				If you'd like to specify your own postfix to trigger this behaviour, set your postfix as value, instead true.
 				</p>.
-				
+
 			</div>
 			<div class="doc" style="margin-left: 30px;">yasr, plugin, binding, sparqlVar, {'rowId': rowId, 'colId': colId, 'usedPrefixes': usedPrefixes})
 				<code style="display: inline-block; white-space:normal;">getCellContent: function (yasr: doc, plugin: doc, bindings: object, var: string, context:object) → string </code>
 				<p>Draw the cell content, for a given binding</p>
 			</div>
-			
-			
+
+
 			<div class="doc" style="margin-left: 30px;">
 				<code >getColumns: function(yasr: doc, plugin: doc) → array</code>
 				<p>Return the columns you'd like to draw. The output array should be in a format supports by DataTables (for more info see <a href="https://datatables.net/reference/option/columns.data" target="_blank">this</a>)</p>
@@ -213,8 +224,8 @@
 				<code>datatable: object</code>
 				<p>Any additional DataTables-related settings. See the <a href="http://datatables.net/reference/option/">DataTables manual</a> for more information</p>
 			</div>
-			
-			
+
+
 			<h3 id="outputRawResponse">Raw Response</h3>
 			A plugin which uses <a href="http://codemirror.net/" target="_blank">CodeMirror</a> to present the SPARQL results as-is.
 			<div class="doc">
@@ -229,7 +240,7 @@
 			<code>CodeMirror: object</code>
 			<p>Any additional CodeMirror related settings. See the <a href="http://codemirror.net/doc/manual.html" target="_blank">CodeMirror manual</a> for more information.</p>
 			</div>
-			
+
 			<h3 id="outputPivot">Pivot Table</h3>
 			A plugin which uses the <a href="https://github.com/nicolaskruchten/pivottable" target="_blank">Pivot Table plugin</a>.
 			<div class="doc">
@@ -266,7 +277,7 @@
 				If you'd like to specify your own postfix to trigger this behaviour, set your postfix as value, instead of true.
 				</p>.
 			</div>
-			
+
 			<h3 id="outputGchart">Google Charts</h3>
 			A plugin which uses the <a href="https://developers.google.com/chart/interactive/docs/reference" target="_blank">Google Visualizations API</a>.
 			<div class="doc">
@@ -277,8 +288,8 @@
 			<code>YASR.plugins.gchart.defaults</code>
 			<p>Settings object</p>
 			</div>
-			
-			
+
+
 			<h3 id="outputBoolean">Boolean results</h3>
 			<div class="doc">
 				<code>YASR.plugins.boolean(yasr: Object) → yasr-boolean (doc): </code>
@@ -295,21 +306,21 @@
 			</div>
 			<div class="doc" style="margin-left: 30px">
 			<code>corsMessage: string (default: 'Unable to get response from endpoint')</code>
-			<p>The message to show when no response was returned. I.e., a DNS or TCP error. 
-      Depending on how you use YASR, there might be several reasons for this missing response, such as 
+			<p>The message to show when no response was returned. I.e., a DNS or TCP error.
+      Depending on how you use YASR, there might be several reasons for this missing response, such as
       a CORS-disabled endpoint, the user being offline (where the endpoint is online), an endpoint under maintenance, or simply a wrong URL.</p>
-      
+
 			</div>
       <div class="doc" style="margin-left: 30px">
 			<code>tryQueryLink: function → string  (default: null)</code>
-			<p>Set this function to present the user with a button to try the same query via a regular browser window. 
+			<p>Set this function to present the user with a button to try the same query via a regular browser window.
       This function simply returns the http link to open the browser window for.</p>
 			</div>
-			
+
 
 		<h2 id="addingPlugin">Writing a plugin</h2>
 		<p>
-		To register an autocompletion, one needs to execute the YASQE.registerAutocompleter function. 
+		To register an autocompletion, one needs to execute the YASQE.registerAutocompleter function.
 			To register a plugin, add it to YASR by running <code>YASR.registerOutput(pluginName: string, plugin: constructor)</code>.
 			Below, we describe the autocompletion function in more detail, and the object it should return.
 			</p>
@@ -318,7 +329,7 @@
 				<p>
 			The constructor should return an object with the following keys:</p>
 			</div>
-			
+
 			<div class="doc" style="margin-left: 30px">
 				<code>draw: function()</code><span class="label label-primary">Required</span>
 				<p>Draw the results. Use the <code>yasr</code> object to retrieve the SPARQL response</p>
@@ -380,7 +391,7 @@
 						<li><a href="#outputBoolean">Boolean</a></li>
 						<li><a href="#outputException">Exception</a></li>
 					</ul>
-				
+
 				</li>
 				<li><a href="#addingPlugin">Writing a plugin</a></li>
 			</ul>
@@ -395,9 +406,3 @@
 <script src="doc.min.js"></script>
   </body>
 </html>
-
-
-
-
-
-

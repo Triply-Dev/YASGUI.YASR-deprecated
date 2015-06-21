@@ -129,7 +129,9 @@ var YASR = function(parent, options, queryResults) {
 
 		if (outputToDraw) {
 			$(yasr.resultsContainer).empty();
+			yasr.emit('draw', yasr, yasr.plugins[outputToDraw]);
 			yasr.plugins[outputToDraw].draw();
+			yasr.emit('drawn', yasr, yasr.plugins[outputToDraw]);
 			yasr.updateHeader();
 			return true;
 		} else {
