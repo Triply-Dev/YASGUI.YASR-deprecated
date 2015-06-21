@@ -3798,14 +3798,9 @@ module.exports = {
 module.exports={
   "name": "yasgui-yasr",
   "description": "Yet Another SPARQL Resultset GUI",
-  "version": "2.5.5",
+  "version": "2.6.0",
   "main": "src/main.js",
-  "licenses": [
-    {
-      "type": "MIT",
-      "url": "http://yasr.yasgui.org/license.txt"
-    }
-  ],
+  "license": "MIT",
   "author": "Laurens Rietveld",
   "homepage": "http://yasr.yasgui.org",
   "devDependencies": {
@@ -3833,7 +3828,7 @@ module.exports={
     "gulp-sourcemaps": "^1.2.8",
     "exorcist": "^0.1.6",
     "vinyl-transform": "0.0.1",
-    "gulp-sass": "^1.2.2",
+    "gulp-sass": "^2.0.1",
     "bootstrap-sass": "^3.3.1",
     "browserify-transform-tools": "^1.2.1",
     "gulp-cssimport": "^1.3.1",
@@ -3916,32 +3911,32 @@ module.exports={
 module.exports = function(result) {
 	var quote = "\"";
 	var delimiter = ",";
-	var lineBreak= "\n";
-	
+	var lineBreak = "\n";
+
 	var variables = result.head.vars;
-	
-	var querySolutions= result.results.bindings;
-	
-	
-	
+
+	var querySolutions = result.results.bindings;
+
+
+
 	var createHeader = function() {
 		for (var i = 0; i < variables.length; i++) {
 			addValueToString(variables[i]);
 		}
 		csvString += lineBreak;
 	};
-	
+
 	var createBody = function() {
 		for (var i = 0; i < querySolutions.length; i++) {
 			addQuerySolutionToString(querySolutions[i]);
 			csvString += lineBreak;
 		}
 	};
-	
+
 	var addQuerySolutionToString = function(querySolution) {
 		for (var i = 0; i < variables.length; i++) {
 			var variable = variables[i];
-			if(querySolution.hasOwnProperty(variable)){
+			if (querySolution.hasOwnProperty(variable)) {
 				addValueToString(querySolution[variable]["value"]);
 			} else {
 				addValueToString("");
@@ -3956,16 +3951,16 @@ module.exports = function(result) {
 		}
 		csvString += " " + value + " " + delimiter;
 	};
-	
+
 	var needToQuoteString = function(value) {
 		//quote when it contains whitespace or the delimiter
 		var needQuoting = false;
-		if (value.match("[\\w|"+ delimiter + "|" + quote + "]")) {
+		if (value.match("[\\w|" + delimiter + "|" + quote + "]")) {
 			needQuoting = true;
 		}
 		return needQuoting;
 	};
-	
+
 	var csvString = "";
 	createHeader();
 	createBody();
@@ -3990,7 +3985,7 @@ var root = module.exports = function(yasr) {
 	var draw = function() {
 		container.empty().appendTo(yasr.resultsContainer);
 		var booleanVal = yasr.results.getBoolean();
-		
+
 		var imgId = null;
 		var textVal = null;
 		if (booleanVal === true) {
@@ -4003,20 +3998,22 @@ var root = module.exports = function(yasr) {
 			container.width("140");
 			textVal = "Could not find boolean value in response";
 		}
-		
+
 		//add icon
 		if (imgId) require("yasgui-utils").svg.draw(container, require('./imgs.js')[imgId]);
-		
+
 		$("<span></span>").text(textVal).appendTo(container);
 	};
-	
 
-	var canHandleResults = function(){return yasr.results.getBoolean && (yasr.results.getBoolean() === true || yasr.results.getBoolean() == false);};
 
-	
-	
+	var canHandleResults = function() {
+		return yasr.results.getBoolean && (yasr.results.getBoolean() === true || yasr.results.getBoolean() == false);
+	};
+
+
+
 	return {
-		name: null,//don't need to set this: we don't show it in the selection widget anyway, so don't need a human-friendly name
+		name: null, //don't need to set this: we don't show it in the selection widget anyway, so don't need a human-friendly name
 		draw: draw,
 		hideFromSelection: true,
 		getPriority: 10,
@@ -4026,11 +4023,9 @@ var root = module.exports = function(yasr) {
 
 
 root.version = {
-	"YASR-boolean" : require("../package.json").version,
+	"YASR-boolean": require("../package.json").version,
 	"jquery": $.fn.jquery,
 };
-
-
 },{"../package.json":19,"./imgs.js":27,"jquery":undefined,"yasgui-utils":16}],22:[function(require,module,exports){
 'use strict';
 var $ = (function(){try{return require('jquery')}catch(e){return window.jQuery}})();
@@ -4042,9 +4037,9 @@ module.exports = {
 	 * @default "table"
 	 */
 	output: "table",
-	useGoogleCharts: true, 
+	useGoogleCharts: true,
 	outputPlugins: ["table", "error", "boolean", "rawResponse", "pivot", "gchart"],
-	
+
 	/**
 	 * Draw the output selector widget
 	 * 
@@ -4053,7 +4048,7 @@ module.exports = {
 	 * @default true
 	 */
 	drawOutputSelector: true,
-	
+
 	/**
 	 * Draw download icon. This issues html5 download functionality to 'download' files created on the client-side.
 	 *  This allows the user to download results already queried for, such as a CSV when a table is shown, or the original response when the raw response output is selected
@@ -4063,8 +4058,8 @@ module.exports = {
 	 * @default true
 	 */
 	drawDownloadIcon: true,
-	
-	
+
+
 	getUsedPrefixes: null,
 	/**
 	 * Make certain settings and values of YASR persistent. Setting a key
@@ -4105,8 +4100,8 @@ module.exports = {
 			 * @type string|function
 			 * @default function (determine unique id)
 			 */
-			id: function(yasr){
-				return "results_" +  $(yasr.container).closest('[id]').attr('id');
+			id: function(yasr) {
+				return "results_" + $(yasr.container).closest('[id]').attr('id');
 			},
 			key: 'results',
 			/**
@@ -4121,10 +4116,10 @@ module.exports = {
 			 */
 			maxSize: 100000 //char count
 		}
-		
+
 	},
-	
-	
+
+
 };
 },{"jquery":undefined}],23:[function(require,module,exports){
 'use strict';
@@ -4143,12 +4138,14 @@ var $ = (function(){try{return require('jquery')}catch(e){return window.jQuery}}
 var root = module.exports = function(yasr) {
 	var $container = $("<div class='errorResult'></div>");
 	var options = $.extend(true, {}, root.defaults);
-	
-	var getTryBtn = function(){
+
+	var getTryBtn = function() {
 		var $tryBtn = null;
 		if (options.tryQueryLink) {
 			var link = options.tryQueryLink();
-			$tryBtn = $('<button>', {class: 'yasr_btn yasr_tryQuery'})
+			$tryBtn = $('<button>', {
+					class: 'yasr_btn yasr_tryQuery'
+				})
 				.text('Try query in new browser window')
 				.click(function() {
 					window.open(link, '_blank');
@@ -4157,12 +4154,14 @@ var root = module.exports = function(yasr) {
 		}
 		return $tryBtn;
 	}
-	
+
 	var draw = function() {
 		var error = yasr.results.getException();
 		$container.empty().appendTo(yasr.resultsContainer);
-		var $header = $("<div>", {class:'errorHeader'}).appendTo($container);
-		
+		var $header = $("<div>", {
+			class: 'errorHeader'
+		}).appendTo($container);
+
 		if (error.status !== 0) {
 			var statusText = 'Error';
 			if (error.statusText && error.statusText.length < 100) {
@@ -4170,14 +4169,16 @@ var root = module.exports = function(yasr) {
 				statusText = error.statusText;
 			}
 			statusText += ' (#' + error.status + ')';
-			
+
 			$header
 				.append(
-					$("<span>", {class:'exception'})
+					$("<span>", {
+						class: 'exception'
+					})
 					.text(statusText)
 				)
 				.append(getTryBtn());
-			
+
 			var responseText = null;
 			if (error.responseText) {
 				responseText = error.responseText;
@@ -4191,18 +4192,22 @@ var root = module.exports = function(yasr) {
 			//cors disabled, wrong url, or endpoint down
 			$container
 				.append(
-				$('<div>', {class: 'corsMessage'})
+					$('<div>', {
+						class: 'corsMessage'
+					})
 					.append(options.corsMessage)
-			);
+				);
 		}
-		
+
 	};
-	
-	
-	var  canHandleResults = function(yasr){return yasr.results.getException() || false;};
-	
+
+
+	var canHandleResults = function(yasr) {
+		return yasr.results.getException() || false;
+	};
+
 	return {
-		name: null,//don't need to set this: we don't show it in the selection widget anyway, so don't need a human-friendly name
+		name: null, //don't need to set this: we don't show it in the selection widget anyway, so don't need a human-friendly name
 		draw: draw,
 		getPriority: 20,
 		hideFromSelection: true,
@@ -4222,22 +4227,22 @@ root.defaults = {
 };
 },{"jquery":undefined}],24:[function(require,module,exports){
 module.exports = {
-	GoogleTypeException:  function(foundTypes, varName) {
-	   this.foundTypes = foundTypes;
-	   this.varName = varName;
-	   this.toString = function() {
-		  var string = 'Conflicting data types found for variable ' + this.varName + '. Assuming all values of this variable are "string".';
-		  string += ' To avoid this issue, cast the values in your SPARQL query to the intended xsd datatype';
-		 
-	      return string;
-	   };
-	   this.toHtml = function() {
-		  var string = 'Conflicting data types found for variable <i>' + this.varName + '</i>. Assuming all values of this variable are "string".';
-		  string += ' As a result, several Google Charts will not render values of this particular variable.';
-		  string += ' To avoid this issue, cast the values in your SPARQL query to the intended xsd datatype';
-		 
-	      return string;
-	   };
+	GoogleTypeException: function(foundTypes, varName) {
+		this.foundTypes = foundTypes;
+		this.varName = varName;
+		this.toString = function() {
+			var string = 'Conflicting data types found for variable ' + this.varName + '. Assuming all values of this variable are "string".';
+			string += ' To avoid this issue, cast the values in your SPARQL query to the intended xsd datatype';
+
+			return string;
+		};
+		this.toHtml = function() {
+			var string = 'Conflicting data types found for variable <i>' + this.varName + '</i>. Assuming all values of this variable are "string".';
+			string += ' As a result, several Google Charts will not render values of this particular variable.';
+			string += ' To avoid this issue, cast the values in your SPARQL query to the intended xsd datatype';
+
+			return string;
+		};
 	}
 }
 },{}],25:[function(require,module,exports){
@@ -4251,20 +4256,20 @@ var loader = function() {
 	EventEmitter.call(this);
 	var mod = this;
 	this.init = function() {
-		if (!loadingFailed && !(typeof window !== "undefined" ? window.google : typeof global !== "undefined" ? global.google : null) && !loadingMain) {//not initiated yet, not currently loading, and has not failed the previous time
+		if (!loadingFailed && !(typeof window !== "undefined" ? window.google : typeof global !== "undefined" ? global.google : null) && !loadingMain) { //not initiated yet, not currently loading, and has not failed the previous time
 			loadingMain = true;
 			/**
 			 * It is extremely difficult to catch script loader errors (see http://www.html5rocks.com/en/tutorials/speed/script-loading/)
 			 * Existing libraries either ignore several browsers (e.g. jquery 2.x), or use ugly hacks (timeouts or something)
 			 * So, we use our own custom ugly hack (yes, timeouts)
 			 */
-			loadScript('http://google.com/jsapi', function(){
+			loadScript('http://google.com/jsapi', function() {
 				loadingMain = false;
 				mod.emit('initDone');
 			});
-			
+
 			var timeout = 100; //ms
-			var maxTimeout = 6000;//so 6 sec max
+			var maxTimeout = 6000; //so 6 sec max
 			var startTime = +new Date();
 			var checkAndWait = function() {
 				if (!(typeof window !== "undefined" ? window.google : typeof global !== "undefined" ? global.google : null)) {
@@ -4273,9 +4278,9 @@ var loader = function() {
 						loadingFailed = true;
 						loadingMain = false;
 						mod.emit('initError');
-						
+
 						//TODO: clear initDone callbacks. they won't fire anymore anyway
-					
+
 					} else {
 						setTimeout(checkAndWait, timeout);
 					}
@@ -4293,31 +4298,33 @@ var loader = function() {
 			} else {
 				//hmmm, should never get here
 			}
-			
+
 		}
 	}
 	this.googleLoad = function() {
-		
+
 		var load = function() {
 			(typeof window !== "undefined" ? window.google : typeof global !== "undefined" ? global.google : null).load("visualization", "1", {
-				packages : ["corechart", "charteditor" ],
-				callback : function(){mod.emit('done')}
+				packages: ["corechart", "charteditor"],
+				callback: function() {
+					mod.emit('done')
+				}
 			})
 		}
 		if (loadingMain) {
 			mod.once('initDone', load);
-			mod.once('initError', function(){
+			mod.once('initError', function() {
 				mod.emit('error', 'Could not load google loader')
 			});
 		} else if ((typeof window !== "undefined" ? window.google : typeof global !== "undefined" ? global.google : null)) {
 			//google loader is there. use it
 			load();
 		} else if (loadingFailed) {
-			mod.emit('error',  'Could not load google loader');
+			mod.emit('error', 'Could not load google loader');
 		} else {
 			//not loading, no loading error, and not loaded. it must not have been initialized yet. Do that
 			mod.once('initDone', load);
-			mod.once('initError', function(){
+			mod.once('initError', function() {
 				mod.emit('error', 'Could not load google loader')
 			});
 		}
@@ -4325,31 +4332,29 @@ var loader = function() {
 }
 
 
-var loadScript = function(url, callback){
-    var script = document.createElement("script")
-    script.type = "text/javascript";
+var loadScript = function(url, callback) {
+	var script = document.createElement("script")
+	script.type = "text/javascript";
 
-    if (script.readyState){  //IE
-        script.onreadystatechange = function(){
-            if (script.readyState == "loaded" ||
-                    script.readyState == "complete"){
-                script.onreadystatechange = null;
-                callback();
-            }
-        };
-    } else {  //Others
-        script.onload = function(){
-            callback();
-        };
-    }
+	if (script.readyState) { //IE
+		script.onreadystatechange = function() {
+			if (script.readyState == "loaded" ||
+				script.readyState == "complete") {
+				script.onreadystatechange = null;
+				callback();
+			}
+		};
+	} else { //Others
+		script.onload = function() {
+			callback();
+		};
+	}
 
-    script.src = url;
-    document.body.appendChild(script);
+	script.src = url;
+	document.body.appendChild(script);
 }
 loader.prototype = new EventEmitter;
 module.exports = new loader();
-
-
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
 
 },{"events":4,"jquery":undefined}],26:[function(require,module,exports){
@@ -4363,34 +4368,34 @@ var $ = (function(){try{return require('jquery')}catch(e){return window.jQuery}}
 	utils = require('./utils.js'),
 	yUtils = require('yasgui-utils');
 
-var root = module.exports = function(yasr){
-	
+var root = module.exports = function(yasr) {
+
 	var options = $.extend(true, {}, root.defaults);
 	var id = yasr.container.closest('[id]').attr('id');
-	
+
 	var chartWrapper = null;
 	var editor = null;
-	
+
 	var initEditor = function(callback) {
 		var google = (typeof window !== "undefined" ? window.google : typeof global !== "undefined" ? global.google : null);
 		editor = new google.visualization.ChartEditor();
-		google.visualization.events.addListener(editor, 'ok', function(){
-				var tmp;
-				chartWrapper = editor.getChartWrapper();
-				tmp = chartWrapper.getDataTable();
-				chartWrapper.setDataTable(null);
-				//ugly: need to parse json string to json obj again, as google chart does not provide access to object directly
-				options.chartConfig = JSON.parse(chartWrapper.toJSON());
-				//remove container ID though, for portability
-				if (options.chartConfig.containerId) delete options.chartConfig['containerId'];
-				yasr.store();
-				chartWrapper.setDataTable(tmp);
-				chartWrapper.setOption("width", options.width);
-				chartWrapper.setOption("height", options.height);
-				chartWrapper.draw();
-				yasr.updateHeader();
-			});
-			if (callback) callback();
+		google.visualization.events.addListener(editor, 'ok', function() {
+			var tmp;
+			chartWrapper = editor.getChartWrapper();
+			tmp = chartWrapper.getDataTable();
+			chartWrapper.setDataTable(null);
+			//ugly: need to parse json string to json obj again, as google chart does not provide access to object directly
+			options.chartConfig = JSON.parse(chartWrapper.toJSON());
+			//remove container ID though, for portability
+			if (options.chartConfig.containerId) delete options.chartConfig['containerId'];
+			yasr.store();
+			chartWrapper.setDataTable(tmp);
+			chartWrapper.setOption("width", options.width);
+			chartWrapper.setOption("height", options.height);
+			chartWrapper.draw();
+			yasr.updateHeader();
+		});
+		if (callback) callback();
 	};
 
 	return {
@@ -4408,7 +4413,7 @@ var root = module.exports = function(yasr){
 			if (persSettings['chartConfig']) options.chartConfig = persSettings['chartConfig'];
 			if (persSettings['motionChartState']) options.motionChartState = persSettings['motionChartState'];
 		},
-		canHandleResults: function(yasr){
+		canHandleResults: function(yasr) {
 			var results, variables;
 			return (results = yasr.results) != null && (variables = results.getVariables()) && variables.length > 0;
 		},
@@ -4417,7 +4422,7 @@ var root = module.exports = function(yasr){
 			var svgEl = yasr.resultsContainer.find('svg');
 			if (svgEl.length > 0) {
 				return {
-					getContent: function(){
+					getContent: function() {
 						if (svgEl[0].outerHTML) {
 							return svgEl[0].outerHTML;
 						} else {
@@ -4434,24 +4439,24 @@ var root = module.exports = function(yasr){
 			var $table = yasr.resultsContainer.find('.google-visualization-table-table');
 			if ($table.length > 0) {
 				return {
-					getContent: function(){
+					getContent: function() {
 						return $table.tableToCsv();
 					},
 					filename: "queryResults.csv",
 					contentType: "text/csv",
 					buttonTitle: "Download as CSV"
 				};
-			} 
+			}
 		},
 		getEmbedHtml: function() {
 			if (!yasr.results) return null;
-			
+
 			var svgEl = yasr.resultsContainer.find('svg')
-				.clone()//create clone, as we'd like to remove height/width attributes
+				.clone() //create clone, as we'd like to remove height/width attributes
 				.removeAttr('height').removeAttr('width')
-				.css('height', '').css('width','');
+				.css('height', '').css('width', '');
 			if (svgEl.length == 0) return null;
-			
+
 			var htmlString = svgEl[0].outerHTML;
 			if (!htmlString) {
 				//outerHTML not supported. use workaround
@@ -4461,29 +4466,34 @@ var root = module.exports = function(yasr){
 			//don't use jquery, so we can easily influence indentation
 			return '<div style="width: 800px; height: 600px;">\n' + htmlString + '\n</div>';
 		},
-		draw: function(){
-			var doDraw = function () {
+		draw: function() {
+			var doDraw = function() {
 				//clear previous results (if any)
 				yasr.resultsContainer.empty();
 				var wrapperId = id + '_gchartWrapper';
 
 				yasr.resultsContainer.append(
-					$('<button>', {class: 'openGchartBtn yasr_btn'})
-						.text('Chart Config')
-						.click(function() {
-							editor.openDialog(chartWrapper);
-						})
+					$('<button>', {
+						class: 'openGchartBtn yasr_btn'
+					})
+					.text('Chart Config')
+					.click(function() {
+						editor.openDialog(chartWrapper);
+					})
 				).append(
-					$('<div>', {id: wrapperId, class: 'gchartWrapper'})
+					$('<div>', {
+						id: wrapperId,
+						class: 'gchartWrapper'
+					})
 				);
 				var dataTable = new google.visualization.DataTable();
 				var jsonResults = yasr.results.getAsJson();
-				
+
 				jsonResults.head.vars.forEach(function(variable) {
 					var type = 'string';
 					try {
 						type = utils.getGoogleTypeForBindings(jsonResults.results.bindings, variable);
-					} catch(e) {
+					} catch (e) {
 						if (e instanceof require('./exceptions.js').GoogleTypeException) {
 							yasr.warn(e.toHtml())
 						} else {
@@ -4494,7 +4504,7 @@ var root = module.exports = function(yasr){
 				});
 				var usedPrefixes = null;
 				if (yasr.options.getUsedPrefixes) {
-					usedPrefixes = (typeof yasr.options.getUsedPrefixes == "function"? yasr.options.getUsedPrefixes(yasr):  yasr.options.getUsedPrefixes);
+					usedPrefixes = (typeof yasr.options.getUsedPrefixes == "function" ? yasr.options.getUsedPrefixes(yasr) : yasr.options.getUsedPrefixes);
 				}
 				jsonResults.results.bindings.forEach(function(binding) {
 					var row = [];
@@ -4509,10 +4519,10 @@ var root = module.exports = function(yasr){
 					chartWrapper = new google.visualization.ChartWrapper(options.chartConfig);
 					if (chartWrapper.getChartType() === "MotionChart" && options.motionChartState) {
 						chartWrapper.setOption("state", options.motionChartState);
-						google.visualization.events.addListener(chartWrapper, 'ready', function(){
+						google.visualization.events.addListener(chartWrapper, 'ready', function() {
 							var motionChart;
 							motionChart = chartWrapper.getChart();
-							google.visualization.events.addListener(motionChart, 'statechange', function(){
+							google.visualization.events.addListener(motionChart, 'statechange', function() {
 								options.motionChartState = motionChart.getState();
 								yasr.store();
 							});
@@ -4531,7 +4541,7 @@ var root = module.exports = function(yasr){
 				chartWrapper.draw();
 				google.visualization.events.addListener(chartWrapper, 'ready', yasr.updateHeader);
 			}
-			
+
 			if (!(typeof window !== "undefined" ? window.google : typeof global !== "undefined" ? global.google : null) || !(typeof window !== "undefined" ? window.google : typeof global !== "undefined" ? global.google : null).visualization || !editor) {
 				require('./gChartLoader.js')
 					.on('done', function() {
@@ -4557,91 +4567,121 @@ root.defaults = {
 	motionChartState: null
 };
 
-function deepEq$(x, y, type){
-	var toString = {}.toString, hasOwnProperty = {}.hasOwnProperty,
-	    has = function (obj, key) { return hasOwnProperty.call(obj, key); };
-  var first = true;
-  return eq(x, y, []);
-  function eq(a, b, stack) {
-    var className, length, size, result, alength, blength, r, key, ref, sizeB;
-    if (a == null || b == null) { return a === b; }
-    if (a.__placeholder__ || b.__placeholder__) { return true; }
-    if (a === b) { return a !== 0 || 1 / a == 1 / b; }
-    className = toString.call(a);
-    if (toString.call(b) != className) { return false; }
-    switch (className) {
-      case '[object String]': return a == String(b);
-      case '[object Number]':
-        return a != +a ? b != +b : (a == 0 ? 1 / a == 1 / b : a == +b);
-      case '[object Date]':
-      case '[object Boolean]':
-        return +a == +b;
-      case '[object RegExp]':
-        return a.source == b.source &&
-               a.global == b.global &&
-               a.multiline == b.multiline &&
-               a.ignoreCase == b.ignoreCase;
-    }
-    if (typeof a != 'object' || typeof b != 'object') { return false; }
-    length = stack.length;
-    while (length--) { if (stack[length] == a) { return true; } }
-    stack.push(a);
-    size = 0;
-    result = true;
-    if (className == '[object Array]') {
-      alength = a.length;
-      blength = b.length;
-      if (first) {
-        switch (type) {
-        case '===': result = alength === blength; break;
-        case '<==': result = alength <= blength; break;
-        case '<<=': result = alength < blength; break;
-        }
-        size = alength;
-        first = false;
-      } else {
-        result = alength === blength;
-        size = alength;
-      }
-      if (result) {
-        while (size--) {
-          if (!(result = size in a == size in b && eq(a[size], b[size], stack))){ break; }
-        }
-      }
-    } else {
-      if ('constructor' in a != 'constructor' in b || a.constructor != b.constructor) {
-        return false;
-      }
-      for (key in a) {
-        if (has(a, key)) {
-          size++;
-          if (!(result = has(b, key) && eq(a[key], b[key], stack))) { break; }
-        }
-      }
-      if (result) {
-        sizeB = 0;
-        for (key in b) {
-          if (has(b, key)) { ++sizeB; }
-        }
-        if (first) {
-          if (type === '<<=') {
-            result = size < sizeB;
-          } else if (type === '<==') {
-            result = size <= sizeB
-          } else {
-            result = size === sizeB;
-          }
-        } else {
-          first = false;
-          result = size === sizeB;
-        }
-      }
-    }
-    stack.pop();
-    return result;
-  }
-}
+function deepEq$(x, y, type) {
+	var toString = {}.toString,
+		hasOwnProperty = {}.hasOwnProperty,
+		has = function(obj, key) {
+			return hasOwnProperty.call(obj, key);
+		};
+	var first = true;
+	return eq(x, y, []);
 
+	function eq(a, b, stack) {
+		var className, length, size, result, alength, blength, r, key, ref, sizeB;
+		if (a == null || b == null) {
+			return a === b;
+		}
+		if (a.__placeholder__ || b.__placeholder__) {
+			return true;
+		}
+		if (a === b) {
+			return a !== 0 || 1 / a == 1 / b;
+		}
+		className = toString.call(a);
+		if (toString.call(b) != className) {
+			return false;
+		}
+		switch (className) {
+			case '[object String]':
+				return a == String(b);
+			case '[object Number]':
+				return a != +a ? b != +b : (a == 0 ? 1 / a == 1 / b : a == +b);
+			case '[object Date]':
+			case '[object Boolean]':
+				return +a == +b;
+			case '[object RegExp]':
+				return a.source == b.source &&
+					a.global == b.global &&
+					a.multiline == b.multiline &&
+					a.ignoreCase == b.ignoreCase;
+		}
+		if (typeof a != 'object' || typeof b != 'object') {
+			return false;
+		}
+		length = stack.length;
+		while (length--) {
+			if (stack[length] == a) {
+				return true;
+			}
+		}
+		stack.push(a);
+		size = 0;
+		result = true;
+		if (className == '[object Array]') {
+			alength = a.length;
+			blength = b.length;
+			if (first) {
+				switch (type) {
+					case '===':
+						result = alength === blength;
+						break;
+					case '<==':
+						result = alength <= blength;
+						break;
+					case '<<=':
+						result = alength < blength;
+						break;
+				}
+				size = alength;
+				first = false;
+			} else {
+				result = alength === blength;
+				size = alength;
+			}
+			if (result) {
+				while (size--) {
+					if (!(result = size in a == size in b && eq(a[size], b[size], stack))) {
+						break;
+					}
+				}
+			}
+		} else {
+			if ('constructor' in a != 'constructor' in b || a.constructor != b.constructor) {
+				return false;
+			}
+			for (key in a) {
+				if (has(a, key)) {
+					size++;
+					if (!(result = has(b, key) && eq(a[key], b[key], stack))) {
+						break;
+					}
+				}
+			}
+			if (result) {
+				sizeB = 0;
+				for (key in b) {
+					if (has(b, key)) {
+						++sizeB;
+					}
+				}
+				if (first) {
+					if (type === '<<=') {
+						result = size < sizeB;
+					} else if (type === '<==') {
+						result = size <= sizeB
+					} else {
+						result = size === sizeB;
+					}
+				} else {
+					first = false;
+					result = size === sizeB;
+				}
+			}
+		}
+		stack.pop();
+		return result;
+	}
+}
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
 
 },{"./exceptions.js":24,"./gChartLoader.js":25,"./utils.js":40,"jquery":undefined,"yasgui-utils":16}],27:[function(require,module,exports){
@@ -4671,14 +4711,14 @@ $.fn.tableToCsv = function(config) {
 		delimiter: ",",
 		lineBreak: "\n",
 	}, config)
-	
-	
-	
-	
+
+
+
+
 	var needToQuoteString = function(value) {
 		//quote when it contains whitespace or the delimiter
 		var needQuoting = false;
-		if (value.match("[\\w|"+ config.delimiter + "|" + config.quote + "]")) {
+		if (value.match("[\\w|" + config.delimiter + "|" + config.quote + "]")) {
 			needQuoting = true;
 		}
 		return needQuoting;
@@ -4691,7 +4731,7 @@ $.fn.tableToCsv = function(config) {
 		}
 		csvString += " " + value + " " + config.delimiter;
 	};
-	
+
 	var addRowToString = function(rowArray) {
 		rowArray.forEach(function(val) {
 			addValueToString(val);
@@ -4702,25 +4742,26 @@ $.fn.tableToCsv = function(config) {
 	var tableArrays = [];
 	var $el = $(this);
 	var rowSpans = {};
-	
-	
-	
-    var colCount = 0;
-    $el.find('tr:first *').each(function () {
-        if ($(this).attr('colspan')) {
-            colCount += +$(this).attr('colspan');
-        } else {
-            colCount++;
-        }
-    });
-	
+
+
+
+	var colCount = 0;
+	$el.find('tr:first *').each(function() {
+		if ($(this).attr('colspan')) {
+			colCount += +$(this).attr('colspan');
+		} else {
+			colCount++;
+		}
+	});
+
 	$el.find('tr').each(function(rowId, tr) {
 		var $tr = $(tr);
 		var rowArray = []
-		
+
 		var skippedCols = 0;
-		for (var colId = 0; (colId + skippedCols) < colCount; colId++) {
-			
+		for (var colId = 0;
+			(colId + skippedCols) < colCount; colId++) {
+
 			//for col Id, do we have a rowspan attr left? Then first add this one to rowArray
 			if (rowSpans[colId]) {
 				rowArray.push(rowSpans[colId].text);
@@ -4728,20 +4769,20 @@ $.fn.tableToCsv = function(config) {
 				if (!rowSpans[colId].rowSpan) delete rowSpans[colId];
 				continue;
 			}
-			
-			var $cell = $tr.find(':nth-child(' + (colId+1) + ')');
+
+			var $cell = $tr.find(':nth-child(' + (colId + 1) + ')');
 			console.log($cell);
-			
+
 			var colspan = $cell.attr('colspan');
 			var rowspan = $cell.attr('rowspan');
 			if (colspan && !isNaN(colspan)) {
 				for (var i = 0; i < colspan; i++) {
 					rowArray.push($cell.text());
 				}
-				skippedCols += (colspan -1);
+				skippedCols += (colspan - 1);
 			} else if (rowspan && !isNaN(rowspan)) {
 				rowSpans[colId + skippedCols] = {
-					rowSpan: rowspan -1,
+					rowSpan: rowspan - 1,
 					text: $cell.text()
 				}
 				rowArray.push($cell.text());
@@ -4751,97 +4792,103 @@ $.fn.tableToCsv = function(config) {
 			}
 		}
 		addRowToString(rowArray);
-		
-		
+
+
 	})
-	
+
 	return csvString;
 }
-
-
 },{"jquery":undefined}],30:[function(require,module,exports){
 'use strict';
-var $ = (function(){try{return require('jquery')}catch(e){return window.jQuery}})();
-var utils = require("yasgui-utils");
-console = console || {"log":function(){}};//make sure any console statements don't break in IE
+var $ = (function(){try{return require('jquery')}catch(e){return window.jQuery}})(),
+	EventEmitter = require('events').EventEmitter,
+	utils = require("yasgui-utils");
+console = console || {
+	"log": function() {}
+}; //make sure any console statements don't break in IE
 
 require('./jquery/extendJquery.js');
 
 
 /**
  * Main YASR constructor
- * 
+ *
  * @constructor
  * @param {DOM-Element} parent element to append editor to.
  * @param {object} settings
  * @class YASR
  * @return {doc} YASR document
  */
-var root = module.exports = function(parent, options, queryResults) {
+var YASR = function(parent, options, queryResults) {
+	EventEmitter.call(this);
+	var yasr = this;
+	// console.log(EventEmitter.call(this));
 
-	
-	var yasr = {};
-	yasr.options = $.extend(true, {}, root.defaults, options);
-	
+	// var yasr = {};
+	// EventEmitter.call(yasr);
+	yasr.options = $.extend(true, {}, module.exports.defaults, options);
+
 	yasr.container = $("<div class='yasr'></div>").appendTo(parent);
 	yasr.header = $("<div class='yasr_header'></div>").appendTo(yasr.container);
 	yasr.resultsContainer = $("<div class='yasr_results'></div>").appendTo(yasr.container);
 	yasr.storage = utils.storage;
-	
+
 	var prefix = null;
 	yasr.getPersistencyId = function(postfix) {
 		if (prefix === null) {
 			//instantiate prefix
 			if (yasr.options.persistency && yasr.options.persistency.prefix) {
-				prefix = (typeof yasr.options.persistency.prefix == 'string'? yasr.options.persistency.prefix : yasr.options.persistency.prefix(yasr));
+				prefix = (typeof yasr.options.persistency.prefix == 'string' ? yasr.options.persistency.prefix : yasr.options.persistency.prefix(yasr));
 			} else {
 				prefix = false;
 			}
 		}
 		if (prefix && postfix != null) {
-			return prefix + (typeof postfix == 'string'? postfix : postfix(yasr));
+			return prefix + (typeof postfix == 'string' ? postfix : postfix(yasr));
 		} else {
 			return null;
 		}
 	};
-	
+
 	if (yasr.options.useGoogleCharts) {
 		//pre-load google-loader
 		require('./gChartLoader.js')
-			.once('initError', function(){yasr.options.useGoogleCharts = false})
+			.once('initError', function() {
+				yasr.options.useGoogleCharts = false
+			})
 			.init();
 	}
-	
+
 	//first initialize plugins
 	yasr.plugins = {};
-	for (var pluginName in root.plugins) {
-		if (!yasr.options.useGoogleCharts && pluginName == "gchart") continue; 
-		yasr.plugins[pluginName] = new root.plugins[pluginName](yasr);
+	for (var pluginName in module.exports.plugins) {
+		if (!yasr.options.useGoogleCharts && pluginName == "gchart") continue;
+		yasr.plugins[pluginName] = new module.exports.plugins[pluginName](yasr);
 	}
-	
-	
+
+
 	yasr.updateHeader = function() {
 		var downloadIcon = yasr.header.find(".yasr_downloadIcon")
-				.removeAttr("title");//and remove previous titles
+			.removeAttr("title"); //and remove previous titles
 		var embedButton = yasr.header.find(".yasr_embedBtn");
 		var outputPlugin = yasr.plugins[yasr.options.output];
 		if (outputPlugin) {
-			
+
 			//Manage download link
-			var info = (outputPlugin.getDownloadInfo? outputPlugin.getDownloadInfo(): null);
+			var info = (outputPlugin.getDownloadInfo ? outputPlugin.getDownloadInfo() : null);
 			if (info) {
 				if (info.buttonTitle) downloadIcon.attr('title', info.buttonTitle);
 				downloadIcon.prop("disabled", false);
-				downloadIcon.find("path").each(function(){
+				downloadIcon.find("path").each(function() {
 					this.style.fill = "black";
 				});
 			} else {
 				downloadIcon.prop("disabled", true).prop("title", "Download not supported for this result representation");
-				downloadIcon.find("path").each(function(){
+				downloadIcon.find("path").each(function() {
 					this.style.fill = "gray";
 				});
 			}
-			
+
 			//Manage embed button
 			var link = null;
 			if (outputPlugin.getEmbedHtml) link = outputPlugin.getEmbedHtml();
@@ -4855,8 +4902,8 @@ var root = module.exports = function(parent, options, queryResults) {
 	yasr.draw = function(output) {
 		if (!yasr.results) return false;
 		if (!output) output = yasr.options.output;
-		
-		
+
+
 		//ah, our default output does not take our current results. Try to autodetect
 		var selectedOutput = null;
 		var selectedOutputPriority = -1;
@@ -4880,26 +4927,30 @@ var root = module.exports = function(parent, options, queryResults) {
 		} else if (selectedOutput) {
 			outputToDraw = selectedOutput;
 		}
-		
+
 		if (outputToDraw) {
 			$(yasr.resultsContainer).empty();
+			yasr.emit('draw', yasr, yasr.plugins[outputToDraw]);
 			yasr.plugins[outputToDraw].draw();
+			yasr.emit('drawn', yasr, yasr.plugins[outputToDraw]);
+			yasr.updateHeader();
 			return true;
 		} else {
+			yasr.updateHeader();
 			return false;
 		}
 	};
-	
+
 	var disableOutputs = function(outputs) {
 		//first enable everything.
 		yasr.header.find('.yasr_btnGroup .yasr_btn').removeClass('disabled');
-		
-		
+
+
 		//now disable the outputs passed as param
 		outputs.forEach(function(outputName) {
 			yasr.header.find('.yasr_btnGroup .select_' + outputName).addClass('disabled');
 		});
-		
+
 	};
 	yasr.somethingDrawn = function() {
 		return !yasr.resultsContainer.is(":empty");
@@ -4908,11 +4959,15 @@ var root = module.exports = function(parent, options, queryResults) {
 	yasr.setResponse = function(dataOrJqXhr, textStatus, jqXhrOrErrorString) {
 		try {
 			yasr.results = require("./parsers/wrapper.js")(dataOrJqXhr, textStatus, jqXhrOrErrorString);
-		} catch(exception) {
-			yasr.results = {getException: function(){return exception}};
+		} catch (exception) {
+			yasr.results = {
+				getException: function() {
+					return exception
+				}
+			};
 		}
 		yasr.draw();
-		
+
 		//store if needed
 		var resultsId = yasr.getPersistencyId(yasr.options.persistency.results.key);
 		if (resultsId) {
@@ -4930,14 +4985,20 @@ var root = module.exports = function(parent, options, queryResults) {
 	yasr.warn = function(warning) {
 		if (!$toggableWarning) {
 			//first time instantiation
-			$toggableWarning = $('<div>', {class: 'toggableWarning'}).prependTo(yasr.container).hide();
-			$toggableWarningClose = $('<span>', {class: 'toggleWarning'})
+			$toggableWarning = $('<div>', {
+				class: 'toggableWarning'
+			}).prependTo(yasr.container).hide();
+			$toggableWarningClose = $('<span>', {
+					class: 'toggleWarning'
+				})
 				.html('&times;')
 				.click(function() {
 					$toggableWarning.hide(400);
 				})
 				.appendTo($toggableWarning);
-			$toggableWarningMsg = $('<span>', {class: 'toggableMsg'}).appendTo($toggableWarning);
+			$toggableWarningMsg = $('<span>', {
+				class: 'toggableMsg'
+			}).appendTo($toggableWarning);
 		}
 		$toggableWarningMsg.empty();
 		if (warning instanceof $) {
@@ -4947,7 +5008,7 @@ var root = module.exports = function(parent, options, queryResults) {
 		}
 		$toggableWarning.show(400);
 	};
-	
+
 	var blobDownloadSupported = null;
 	var checkBlobDownloadSupported = function() {
 		if (blobDownloadSupported === null) {
@@ -4962,33 +5023,32 @@ var root = module.exports = function(parent, options, queryResults) {
 			var btnGroup = $('<div class="yasr_btnGroup"></div>');
 			$.each(yasr.options.outputPlugins, function(i, pluginName) {
 				var plugin = yasr.plugins[pluginName];
-				if (!plugin) return;//plugin not loaded
-				
+				if (!plugin) return; //plugin not loaded
+
 				if (plugin.hideFromSelection) return;
 				var name = plugin.name || pluginName;
 				var button = $("<button class='yasr_btn'></button>")
-				.text(name)
-				.addClass("select_" + pluginName)
-				.click(function() {
-					//update buttons
-					btnGroup.find("button.selected").removeClass("selected");
-					$(this).addClass("selected");
-					//set and draw output
-					yasr.options.output = pluginName;
-					
-					//store if needed
-					yasr.store();
-					
-					//close warning if there is any
-					if ($toggableWarning) $toggableWarning.hide(400);
-					
-					yasr.draw();
-					yasr.updateHeader();
-				})
-				.appendTo(btnGroup);
+					.text(name)
+					.addClass("select_" + pluginName)
+					.click(function() {
+						//update buttons
+						btnGroup.find("button.selected").removeClass("selected");
+						$(this).addClass("selected");
+						//set and draw output
+						yasr.options.output = pluginName;
+
+						//store if needed
+						yasr.store();
+
+						//close warning if there is any
+						if ($toggableWarning) $toggableWarning.hide(400);
+
+						yasr.draw();
+					})
+					.appendTo(btnGroup);
 				if (yasr.options.output == pluginName) button.addClass("selected");
 			});
-			
+
 			if (btnGroup.children().length > 1) yasr.header.append(btnGroup);
 		};
 		var drawDownloadIcon = function() {
@@ -4996,7 +5056,9 @@ var root = module.exports = function(parent, options, queryResults) {
 				var url = null;
 				var windowUrl = window.URL || window.webkitURL || window.mozURL || window.msURL;
 				if (windowUrl && Blob) {
-					var blob = new Blob([string], {type: contentType});
+					var blob = new Blob([string], {
+						type: contentType
+					});
 					url = windowUrl.createObjectURL(blob);
 				}
 				return url;
@@ -5007,14 +5069,13 @@ var root = module.exports = function(parent, options, queryResults) {
 					var currentPlugin = yasr.plugins[yasr.options.output];
 					if (currentPlugin && currentPlugin.getDownloadInfo) {
 						var downloadInfo = currentPlugin.getDownloadInfo();
-						var downloadUrl = stringToUrl(downloadInfo.getContent(), (downloadInfo.contentType? downloadInfo.contentType: "text/plain"));
-						var downloadMockLink = $("<a></a>",
-								{
+						var downloadUrl = stringToUrl(downloadInfo.getContent(), (downloadInfo.contentType ? downloadInfo.contentType : "text/plain"));
+						var downloadMockLink = $("<a></a>", {
 							href: downloadUrl,
 							download: downloadInfo.filename
 						});
 						require('./utils.js').fireClick(downloadMockLink);
-//						downloadMockLink[0].click();
+						//						downloadMockLink[0].click();
 					}
 				});
 			yasr.header.append(button);
@@ -5036,69 +5097,73 @@ var root = module.exports = function(parent, options, queryResults) {
 			yasr.header.append(button);
 		};
 		var drawEmbedButton = function() {
-			embedBtn = $("<button>", {class:'yasr_btn yasr_embedBtn', title: 'Get HTML snippet to embed results on a web page'})
-			.text('</>')
-			.click(function(event) {
-				var currentPlugin = yasr.plugins[yasr.options.output];
-				if (currentPlugin && currentPlugin.getEmbedHtml) {
-					var embedLink = currentPlugin.getEmbedHtml();
-					
-					event.stopPropagation();
-					var popup = $("<div class='yasr_embedPopup'></div>").appendTo(yasr.header);
-					$('html').click(function() {
-						if (popup) popup.remove();
-					});
+			embedBtn = $("<button>", {
+					class: 'yasr_btn yasr_embedBtn',
+					title: 'Get HTML snippet to embed results on a web page'
+				})
+				.text('</>')
+				.click(function(event) {
+					var currentPlugin = yasr.plugins[yasr.options.output];
+					if (currentPlugin && currentPlugin.getEmbedHtml) {
+						var embedLink = currentPlugin.getEmbedHtml();
 
-					popup.click(function(event) {
 						event.stopPropagation();
-						//dont close when clicking on popup
-					});
-					var prePopup = $("<textarea>").val(embedLink);
-					prePopup.focus(function() {
-					    var $this = $(this);
-					    $this.select();
+						var popup = $("<div class='yasr_embedPopup'></div>").appendTo(yasr.header);
+						$('html').click(function() {
+							if (popup) popup.remove();
+						});
 
-					    // Work around Chrome's little problem
-					    $this.mouseup(function() {
-					        // Prevent further mouseup intervention
-					        $this.unbind("mouseup");
-					        return false;
-					    });
-					});
-					
-					popup.empty().append(prePopup);
-					var positions = embedBtn.position();
-					var top = (positions.top + embedBtn.outerHeight()) + 'px';
-					var left = Math.max(((positions.left + embedBtn.outerWidth()) - popup.outerWidth()), 0) + 'px';
-					
-					popup.css("top",top).css("left", left);
-					
-				}
-			})
+						popup.click(function(event) {
+							event.stopPropagation();
+							//dont close when clicking on popup
+						});
+						var prePopup = $("<textarea>").val(embedLink);
+						prePopup.focus(function() {
+							var $this = $(this);
+							$this.select();
+
+							// Work around Chrome's little problem
+							$this.mouseup(function() {
+								// Prevent further mouseup intervention
+								$this.unbind("mouseup");
+								return false;
+							});
+						});
+
+						popup.empty().append(prePopup);
+						var positions = embedBtn.position();
+						var top = (positions.top + embedBtn.outerHeight()) + 'px';
+						var left = Math.max(((positions.left + embedBtn.outerWidth()) - popup.outerWidth()), 0) + 'px';
+
+						popup.css("top", top).css("left", left);
+
+					}
+				})
 			yasr.header.append(embedBtn);
 		};
-		drawFullscreenButton();drawSmallscreenButton();
+		drawFullscreenButton();
+		drawSmallscreenButton();
 		if (yasr.options.drawOutputSelector) drawOutputSelector();
-		if (yasr.options.drawDownloadIcon && checkBlobDownloadSupported()) drawDownloadIcon();//only draw when it's supported
+		if (yasr.options.drawDownloadIcon && checkBlobDownloadSupported()) drawDownloadIcon(); //only draw when it's supported
 		drawEmbedButton();
 	};
-	
+
 	var persistentId = null;
 	//store persistent options (not results though. store these separately, as they are too large)
 	yasr.store = function() {
-		if (!persistentId)persistentId = yasr.getPersistencyId('main');
+		if (!persistentId) persistentId = yasr.getPersistencyId('main');
 		if (persistentId) {
 			utils.storage.set(persistentId, yasr.getPersistentSettings());
 		}
 	};
-	
-	
+
+
 	yasr.load = function() {
 		if (!persistentId) persistentId = yasr.getPersistencyId('main');
 		yasr.setPersistentSettings(utils.storage.get(persistentId));
 	};
-	
-	
+
+
 	yasr.setPersistentSettings = function(settings) {
 		if (settings) {
 			if (settings.output) {
@@ -5111,9 +5176,12 @@ var root = module.exports = function(parent, options, queryResults) {
 			}
 		}
 	}
-	
+
 	yasr.getPersistentSettings = function() {
-		var settings = {output: yasr.options.output, plugins:{}};
+		var settings = {
+			output: yasr.options.output,
+			plugins: {}
+		};
 		for (var pluginName in yasr.plugins) {
 			if (yasr.plugins[pluginName].getPersistentSettings) {
 				settings.plugins[pluginName] = yasr.plugins[pluginName].getPersistentSettings();
@@ -5121,7 +5189,7 @@ var root = module.exports = function(parent, options, queryResults) {
 		}
 		return settings;
 	}
-	
+
 
 	/**
 	 * postprocess
@@ -5134,13 +5202,13 @@ var root = module.exports = function(parent, options, queryResults) {
 		if (resultsId) {
 			fromStorage = utils.storage.get(resultsId);
 		}
-		
-		
+
+
 		if (!fromStorage && yasr.options.persistency.results.id) {
 			//deprecated! But keep for backwards compatability
 			//if results are stored under old ID. Fetch the results, and delete that key (results can be large, and clutter space)
 			//setting the results, will automatically store it under the new key, so we don't have to worry about that here
-			var deprId = (typeof yasr.options.persistency.results.id == "string" ? yasr.options.persistency.results.id: yasr.options.persistency.results.id(yasr));
+			var deprId = (typeof yasr.options.persistency.results.id == "string" ? yasr.options.persistency.results.id : yasr.options.persistency.results.id(yasr));
 			if (deprId) {
 				fromStorage = utils.storage.get(deprId);
 				if (fromStorage) utils.storage.remove(deprId);
@@ -5154,21 +5222,25 @@ var root = module.exports = function(parent, options, queryResults) {
 			}
 		}
 	}
-	
+
 	if (queryResults) {
 		yasr.setResponse(queryResults);
-	} 
+	}
 	yasr.updateHeader();
-	
-	
+
+
 	return yasr;
 };
 
+YASR.prototype = new EventEmitter;
+module.exports = function(parent, options, queryResults) {
+	return new YASR(parent, options, queryResults);
+}
 
 
-root.plugins = {};
-root.registerOutput = function(name, constructor) {
-	root.plugins[name] = constructor;
+module.exports.plugins = {};
+module.exports.registerOutput = function(name, constructor) {
+	module.exports.plugins[name] = constructor;
 };
 
 
@@ -5177,27 +5249,40 @@ root.registerOutput = function(name, constructor) {
 /**
  * The default options of YASR. Either change the default options by setting YASR.defaults, or by
  * passing your own options as second argument to the YASR constructor
- * 
+ *
  * @attribute YASR.defaults
  */
-root.defaults = require('./defaults.js');
-root.version = {
-	"YASR" : require("../package.json").version,
+module.exports.defaults = require('./defaults.js');
+module.exports.version = {
+	"YASR": require("../package.json").version,
 	"jquery": $.fn.jquery,
 	"yasgui-utils": require("yasgui-utils").version
 };
-root.$ = $;
+module.exports.$ = $;
 
 
 
 //put these in a try-catch. When using the unbundled version, and when some dependencies are missing, then YASR as a whole will still function
-try {root.registerOutput('boolean', require("./boolean.js"))} catch(e){};
-try {root.registerOutput('rawResponse', require("./rawResponse.js"))} catch(e){};
-try {root.registerOutput('table', require("./table.js"))} catch(e){};
-try {root.registerOutput('error', require("./error.js"))} catch(e){};
-try {root.registerOutput('pivot', require("./pivot.js"))} catch(e){};
-try {root.registerOutput('gchart', require("./gchart.js"))} catch(e){};
-},{"../package.json":19,"./boolean.js":21,"./defaults.js":22,"./error.js":23,"./gChartLoader.js":25,"./gchart.js":26,"./imgs.js":27,"./jquery/extendJquery.js":28,"./parsers/wrapper.js":35,"./pivot.js":37,"./rawResponse.js":38,"./table.js":39,"./utils.js":40,"jquery":undefined,"yasgui-utils":16}],31:[function(require,module,exports){
+try {
+	module.exports.registerOutput('boolean', require("./boolean.js"))
+} catch (e) {};
+try {
+	module.exports.registerOutput('rawResponse', require("./rawResponse.js"))
+} catch (e) {};
+try {
+	module.exports.registerOutput('table', require("./table.js"))
+} catch (e) {};
+try {
+	module.exports.registerOutput('error', require("./error.js"))
+} catch (e) {};
+try {
+	module.exports.registerOutput('pivot', require("./pivot.js"))
+} catch (e) {};
+try {
+	module.exports.registerOutput('gchart', require("./gchart.js"))
+} catch (e) {};
+
+},{"../package.json":19,"./boolean.js":21,"./defaults.js":22,"./error.js":23,"./gChartLoader.js":25,"./gchart.js":26,"./imgs.js":27,"./jquery/extendJquery.js":28,"./parsers/wrapper.js":35,"./pivot.js":37,"./rawResponse.js":38,"./table.js":39,"./utils.js":40,"events":4,"jquery":undefined,"yasgui-utils":16}],31:[function(require,module,exports){
 'use strict';
 var $ = (function(){try{return require('jquery')}catch(e){return window.jQuery}})();
 var root = module.exports = function(queryResponse) {
@@ -5209,7 +5294,9 @@ var $ = (function(){try{return require('jquery')}catch(e){return window.jQuery}}
 require("../../lib/jquery.csv-0.71.js");
 var root = module.exports = function(queryResponse, separator) {
 	var json = {};
-	var arrays =  $.csv.toArrays(queryResponse, {separator: separator});
+	var arrays = $.csv.toArrays(queryResponse, {
+		separator: separator
+	});
 	var detectType = function(value) {
 		if (value.indexOf("http") == 0) {
 			return "uri";
@@ -5217,27 +5304,30 @@ var root = module.exports = function(queryResponse, separator) {
 			return null;
 		}
 	};
-	
+
 	var getBoolean = function() {
-		if (arrays.length == 2 && arrays[0].length == 1 && arrays[1].length == 1
-				&& arrays[0][0] == "boolean" && (arrays[1][0] == "1" || arrays[1][0] == "0")) {
-			json.boolean = (arrays[1][0] == "1"? true: false);
+		if (arrays.length == 2 && arrays[0].length == 1 && arrays[1].length == 1 && arrays[0][0] == "boolean" && (arrays[1][0] == "1" || arrays[1][0] == "0")) {
+			json.boolean = (arrays[1][0] == "1" ? true : false);
 			return true;
 		}
 		return false;
 	};
-	
+
 	var getVariables = function() {
 		if (arrays.length > 0 && arrays[0].length > 0) {
-			json.head = {vars: arrays[0]};
+			json.head = {
+				vars: arrays[0]
+			};
 			return true;
 		}
 		return false;
 	};
-	
+
 	var getBindings = function() {
 		if (arrays.length > 1) {
-			json.results = {bindings: []};
+			json.results = {
+				bindings: []
+			};
 			for (var rowIt = 1; rowIt < arrays.length; rowIt++) {
 				var binding = {};
 				for (var colIt = 0; colIt < arrays[rowIt].length; colIt++) {
@@ -5245,14 +5335,18 @@ var root = module.exports = function(queryResponse, separator) {
 					if (varName) {
 						var value = arrays[rowIt][colIt];
 						var detectedType = detectType(value);
-						binding[varName] = {value: value};
+						binding[varName] = {
+							value: value
+						};
 						if (detectedType) binding[varName].type = detectedType;
 					}
 				}
-				
+
 				json.results.bindings.push(binding);
 			}
-			json.head = {vars: arrays[0]};
+			json.head = {
+				vars: arrays[0]
+			};
 			return true;
 		}
 		return false;
@@ -5262,26 +5356,26 @@ var root = module.exports = function(queryResponse, separator) {
 		var varsFetched = getVariables();
 		if (varsFetched) getBindings();
 	}
-	
+
 	return json;
 };
 },{"../../lib/jquery.csv-0.71.js":3,"jquery":undefined}],33:[function(require,module,exports){
 'use strict';
 var $ = (function(){try{return require('jquery')}catch(e){return window.jQuery}})();
 var root = module.exports = function(queryResponse) {
-	
+
 	if (typeof queryResponse == "string") {
 		try {
 			return JSON.parse(queryResponse);
-	    } catch (e) {
-	        return false;
-	    }
+		} catch (e) {
+			return false;
+		}
 	}
 	if (typeof queryResponse == "object" && queryResponse.constructor === {}.constructor) {
 		return queryResponse;
 	}
 	return false;
-	
+
 };
 },{"jquery":undefined}],34:[function(require,module,exports){
 'use strict';
@@ -5315,9 +5409,9 @@ var root = module.exports = function(dataOrJqXhr, textStatus, jqXhrOrErrorString
 	var contentType = null;
 	var origResponse = null;
 	var json = null;
-	var type = null;//json, xml, csv, or tsv
+	var type = null; //json, xml, csv, or tsv
 	var exception = null;
-	
+
 	var init = function() {
 		if (typeof dataOrJqXhr == "object") {
 			/**
@@ -5328,12 +5422,14 @@ var root = module.exports = function(dataOrJqXhr, textStatus, jqXhrOrErrorString
 				exception = dataOrJqXhr.exception;
 			} else if (dataOrJqXhr.status != undefined && (dataOrJqXhr.status >= 300 || dataOrJqXhr.status === 0)) {
 				//this is an exception, and jquery response
-				exception = {status: dataOrJqXhr.status};
+				exception = {
+					status: dataOrJqXhr.status
+				};
 				if (typeof jqXhrOrErrorString == "string") exception.errorString = jqXhrOrErrorString;
 				if (dataOrJqXhr.responseText) exception.responseText = dataOrJqXhr.responseText;
 				if (dataOrJqXhr.statusText) exception.statusText = dataOrJqXhr.statusText;
 			}
-			
+
 			/**
 			 * Extract content type info (if there is any)
 			 */
@@ -5344,7 +5440,7 @@ var root = module.exports = function(dataOrJqXhr, textStatus, jqXhrOrErrorString
 				var ct = dataOrJqXhr.getResponseHeader("content-type").trim().toLowerCase();
 				if (ct.length > 0) contentType = ct;
 			}
-			
+
 			/**
 			 * extract original response
 			 */
@@ -5371,7 +5467,7 @@ var root = module.exports = function(dataOrJqXhr, textStatus, jqXhrOrErrorString
 
 	var getAsJson = function() {
 		if (json) return json;
-		if (json === false || exception) return false;//already tried parsing this, and failed. do not try again... 
+		if (json === false || exception) return false; //already tried parsing this, and failed. do not try again... 
 		var getParserFromContentType = function() {
 			if (contentType) {
 				if (contentType.indexOf("json") > -1) {
@@ -5405,26 +5501,26 @@ var root = module.exports = function(dataOrJqXhr, textStatus, jqXhrOrErrorString
 				}
 			}
 		};
-		
+
 
 		var doLuckyGuess = function() {
 			json = parsers.json(origResponse);
-			if (json)  {
+			if (json) {
 				type = "json";
 			} else {
 				try {
 					json = parsers.xml(origResponse);
-					if (json) type="xml";
-				} catch(err){};
+					if (json) type = "xml";
+				} catch (err) {};
 			}
 		};
 
-		
+
 		getParserFromContentType();
 		if (!json) {
 			doLuckyGuess();
 		}
-		if (!json) json = false;//explicitly set to false, so we don't try to parse this thing again..
+		if (!json) json = false; //explicitly set to false, so we don't try to parse this thing again..
 		return json;
 	};
 
@@ -5463,7 +5559,7 @@ var root = module.exports = function(dataOrJqXhr, textStatus, jqXhrOrErrorString
 		if (typeof origResponse == "string") {
 			responseString = origResponse;
 		} else if (type == "json") {
-			responseString = JSON.stringify(origResponse, undefined, 2);//prettifies as well
+			responseString = JSON.stringify(origResponse, undefined, 2); //prettifies as well
 		} else if (type == "xml") {
 			responseString = new XMLSerializer().serializeToString(origResponse);
 		}
@@ -5473,10 +5569,10 @@ var root = module.exports = function(dataOrJqXhr, textStatus, jqXhrOrErrorString
 		return exception;
 	};
 	var getType = function() {
-		if (type == null) getAsJson();//detects type as well
+		if (type == null) getAsJson(); //detects type as well
 		return type;
 	};
-	
+
 	//process the input parameters in such a way that we can store it in local storage (i.e., no function)
 	//and, make sure we can easily pass it on back to this wrapper function when loading it again from storage
 	var getAsStoreObject = function() {
@@ -5487,31 +5583,33 @@ var root = module.exports = function(dataOrJqXhr, textStatus, jqXhrOrErrorString
 			arg1.status = dataOrJqXhr.status;
 			arg1.responseText = dataOrJqXhr.responseText;
 			arg1.statusText = dataOrJqXhr.statusText;
-			arg1.contentType = contentType;//this is a function in a jqXhr object (problem for storing). but this wrapper will read it as string as well
+			arg1.contentType = contentType; //this is a function in a jqXhr object (problem for storing). but this wrapper will read it as string as well
 		} else {
 			//the other instances of this param (whether it is a json, xml, or exception object), we can normally store
 			arg1 = dataOrJqXhr;
 		}
-		
-		
+
+
 		var arg2 = textStatus;
 		var arg3 = undefined;
 		if (typeof jqXhrOrErrorString == "string") arg3 = jqXhrOrErrorString;
-		
+
 		return [arg1, arg2, arg3];
 	};
-	
-	
-	
+
+
+
 	init();
 	json = getAsJson();
-	
+
 	return {
 		getAsStoreObject: getAsStoreObject,
 		getAsJson: getAsJson,
 		getOriginalResponse: getOriginalResponse,
 		getOriginalResponseAsString: getOriginalResponseAsString,
-		getOriginalContentType: function(){return contentType;},
+		getOriginalContentType: function() {
+			return contentType;
+		},
 		getVariables: getVariables,
 		getBindings: getBindings,
 		getBoolean: getBoolean,
@@ -5519,17 +5617,13 @@ var root = module.exports = function(dataOrJqXhr, textStatus, jqXhrOrErrorString
 		getException: getException
 	};
 };
-
-
-
-
 },{"./csv.js":31,"./json.js":33,"./tsv.js":34,"./xml.js":36,"jquery":undefined}],36:[function(require,module,exports){
 'use strict';
 var $ = (function(){try{return require('jquery')}catch(e){return window.jQuery}})();
 var root = module.exports = function(xml) {
 
-	
-	
+
+
 	/**
 	 * head
 	 */
@@ -5544,14 +5638,14 @@ var root = module.exports = function(xml) {
 			}
 		}
 	};
-	
+
 	var parseResults = function(node) {
 		json.results = {};
 		json.results.bindings = [];
 		for (var resultIt = 0; resultIt < node.childNodes.length; resultIt++) {
 			var resultNode = node.childNodes[resultIt];
 			var jsonResult = null;
-			
+
 			for (var bindingIt = 0; bindingIt < resultNode.childNodes.length; bindingIt++) {
 				var bindingNode = resultNode.childNodes[bindingIt];
 				if (bindingNode.nodeName == "binding") {
@@ -5561,13 +5655,13 @@ var root = module.exports = function(xml) {
 						jsonResult[varName] = {};
 						for (var bindingInfIt = 0; bindingInfIt < bindingNode.childNodes.length; bindingInfIt++) {
 							var bindingInf = bindingNode.childNodes[bindingInfIt];
- 							var type = bindingInf.nodeName;
+							var type = bindingInf.nodeName;
 							if (type == "#text") continue;
 							jsonResult[varName].type = type;
 							jsonResult[varName].value = bindingInf.innerHTML;
 							var dataType = bindingInf.getAttribute("datatype");
 							if (dataType) jsonResult[varName].datatype = dataType;
-							
+
 						}
 					}
 				}
@@ -5575,7 +5669,7 @@ var root = module.exports = function(xml) {
 			if (jsonResult) json.results.bindings.push(jsonResult);
 		}
 	};
-	
+
 	var parseBoolean = function(node) {
 		if (node.innerHTML == "true") {
 			json.boolean = true;
@@ -5597,18 +5691,17 @@ var root = module.exports = function(xml) {
 		return null;
 	}
 	var json = {};
-	
-	
-    for(var i = 0; i < xml.childNodes.length; i++) {
-    	var node = xml.childNodes[i];
-    	if (node.nodeName == "head") parseHead(node);
-    	if (node.nodeName == "results") parseResults(node);
-    	if (node.nodeName == "boolean") parseBoolean(node);
-    }
-    
+
+
+	for (var i = 0; i < xml.childNodes.length; i++) {
+		var node = xml.childNodes[i];
+		if (node.nodeName == "head") parseHead(node);
+		if (node.nodeName == "results") parseResults(node);
+		if (node.nodeName == "boolean") parseBoolean(node);
+	}
+
 	return json;
 };
-
 },{"jquery":undefined}],37:[function(require,module,exports){
 'use strict';
 var $ = (function(){try{return require('jquery')}catch(e){return window.jQuery}})(),
@@ -5622,7 +5715,7 @@ if (!$.fn.pivotUI) throw new Error("Pivot lib not loaded");
 var root = module.exports = function(yasr) {
 	var plugin = {};
 	var options = $.extend(true, {}, root.defaults);
-	
+
 	if (options.useD3Chart) {
 		try {
 			var d3 = (function(){try{return require('d3')}catch(e){return window.d3}})();
@@ -5630,20 +5723,20 @@ var root = module.exports = function(yasr) {
 		} catch (e) {
 			//do nothing. just make sure we don't use this renderer
 		}
-		if ($.pivotUtilities.d3_renderers) $.extend(true,  $.pivotUtilities.renderers, $.pivotUtilities.d3_renderers);
+		if ($.pivotUtilities.d3_renderers) $.extend(true, $.pivotUtilities.renderers, $.pivotUtilities.d3_renderers);
 	}
-	
-	
-	
+
+
+
 	var $pivotWrapper;
 	var mergeLabelPostfix = null;
 	var getShownVariables = function() {
 		var variables = yasr.results.getVariables();
 		if (!options.mergeLabelsWithUris) return variables;
 		var shownVariables = [];
-		
-		mergeLabelPostfix = (typeof options.mergeLabelsWithUris == "string"? options.mergeLabelsWithUris: "Label");
-		variables.forEach(function(variable){
+
+		mergeLabelPostfix = (typeof options.mergeLabelsWithUris == "string" ? options.mergeLabelsWithUris : "Label");
+		variables.forEach(function(variable) {
 			if (variable.indexOf(mergeLabelPostfix, variable.length - mergeLabelPostfix.length) !== -1) {
 				//this one ends with a postfix
 				if (variables.indexOf(variable.substring(0, variable.length - mergeLabelPostfix.length)) >= 0) {
@@ -5655,13 +5748,13 @@ var root = module.exports = function(yasr) {
 		});
 		return shownVariables;
 	};
-	
+
 	var formatForPivot = function(callback) {
-		
+
 		var vars = getShownVariables();
 		var usedPrefixes = null;
 		if (yasr.options.getUsedPrefixes) {
-			usedPrefixes = (typeof yasr.options.getUsedPrefixes == "function"? yasr.options.getUsedPrefixes(yasr):  yasr.options.getUsedPrefixes);
+			usedPrefixes = (typeof yasr.options.getUsedPrefixes == "function" ? yasr.options.getUsedPrefixes(yasr) : yasr.options.getUsedPrefixes);
 		}
 		yasr.results.getBindings().forEach(function(binding) {
 			var rowObj = {};
@@ -5680,9 +5773,9 @@ var root = module.exports = function(yasr) {
 			});
 			callback(rowObj);
 		});
-	} 
-	
-	
+	}
+
+
 	var validatePivotTableOptions = function(pivotOptions) {
 		//validate settings. we may have different variables, or renderers might be gone
 		if (pivotOptions) {
@@ -5690,18 +5783,18 @@ var root = module.exports = function(yasr) {
 				var vars = yasr.results.getVariables();
 				var keepColsAndRows = true;
 				pivotOptions.cols.forEach(function(variable) {
-					if (vars.indexOf(variable) < 0) keepColsAndRows = false; 
+					if (vars.indexOf(variable) < 0) keepColsAndRows = false;
 				});
 				if (keepColsAndRows) {
 					pivotOptionse.rows.forEach(function(variable) {
-						if (vars.indexOf(variable) < 0) keepColsAndRows = false; 
+						if (vars.indexOf(variable) < 0) keepColsAndRows = false;
 					});
 				}
 				if (!keepColsAndRows) {
 					pivotOptions.cols = [];
 					pivotOptions.rows = [];
 				}
-				if (! $.pivotUtilities.renderers[settings.rendererName]) delete pivotOptions.rendererName;
+				if (!$.pivotUtilities.renderers[settings.rendererName]) delete pivotOptions.rendererName;
 			}
 		} else {
 			pivotOptions = {};
@@ -5725,49 +5818,61 @@ var root = module.exports = function(yasr) {
 				}
 				yasr.updateHeader();
 			};
-			
-			
-			var openGchartBtn = $('<button>', {class: 'openPivotGchart yasr_btn'})
-			.text('Chart Config')
-			.click(function() {
-				$pivotWrapper.find('div[dir="ltr"]').dblclick();
-			}).appendTo(yasr.resultsContainer);
-			$pivotWrapper = $('<div>', {class: 'pivotTable'}).appendTo($(yasr.resultsContainer));
-			
+
+
+			var openGchartBtn = $('<button>', {
+					class: 'openPivotGchart yasr_btn'
+				})
+				.text('Chart Config')
+				.click(function() {
+					$pivotWrapper.find('div[dir="ltr"]').dblclick();
+				}).appendTo(yasr.resultsContainer);
+			$pivotWrapper = $('<div>', {
+				class: 'pivotTable'
+			}).appendTo($(yasr.resultsContainer));
+
 			options.pivotTable.onRefresh = (function() {
-			    var originalRefresh = options.pivotTable.onRefresh;
-			    return function(pivotObj) {
-			    	onRefresh(pivotObj);
-			    	if (originalRefresh) originalRefresh(pivotObj);
-			    };
+				var originalRefresh = options.pivotTable.onRefresh;
+				return function(pivotObj) {
+					onRefresh(pivotObj);
+					if (originalRefresh) originalRefresh(pivotObj);
+				};
 			})();
-			
+
 			window.pivot = $pivotWrapper.pivotUI(formatForPivot, options.pivotTable);
-	
+
 			/**
 			 * post process
 			 */
 			//use 'move' handler for variables. This removes the 'filter' button though. Might want to re-enable this in the future
 			var icon = $(yUtils.svg.getElement(imgs.move));
 			$pivotWrapper.find('.pvtTriangle').replaceWith(icon);
-			
+
 			//add headers to selector rows
-			$('.pvtCols').prepend($('<div>', {class: 'containerHeader'}).text("Columns"));
-			$('.pvtRows').prepend($('<div>', {class: 'containerHeader'}).text("Rows"));
-			$('.pvtUnused').prepend($('<div>', {class: 'containerHeader'}).text("Available Variables"));
-			$('.pvtVals').prepend($('<div>', {class: 'containerHeader'}).text("Cells"));
-			
+			$('.pvtCols').prepend($('<div>', {
+				class: 'containerHeader'
+			}).text("Columns"));
+			$('.pvtRows').prepend($('<div>', {
+				class: 'containerHeader'
+			}).text("Rows"));
+			$('.pvtUnused').prepend($('<div>', {
+				class: 'containerHeader'
+			}).text("Available Variables"));
+			$('.pvtVals').prepend($('<div>', {
+				class: 'containerHeader'
+			}).text("Cells"));
+
 			//hmmm, directly after the callback finishes (i.e., directly after this line), the svg is draw.
 			//just use a short timeout to update the header
 			setTimeout(yasr.updateHeader, 400);
 		}
-		
+
 		if (yasr.options.useGoogleCharts && options.useGoogleCharts && !$.pivotUtilities.gchart_renderers) {
 			require('./gChartLoader.js')
 				.on('done', function() {
 					try {
 						require('../node_modules/pivottable/dist/gchart_renderers.js');
-						$.extend(true,  $.pivotUtilities.renderers, $.pivotUtilities.gchart_renderers);
+						$.extend(true, $.pivotUtilities.renderers, $.pivotUtilities.gchart_renderers);
 					} catch (e) {
 						//hmm, still something went wrong. forget about it;
 						options.useGoogleCharts = false;
@@ -5785,17 +5890,17 @@ var root = module.exports = function(yasr) {
 			doDraw();
 		}
 	};
-	var canHandleResults = function(){
+	var canHandleResults = function() {
 		return yasr.results && yasr.results.getVariables && yasr.results.getVariables() && yasr.results.getVariables().length > 0;
 	};
-	
-	var getDownloadInfo =  function() {
+
+	var getDownloadInfo = function() {
 		if (!yasr.results) return null;
 		var svgEl = yasr.resultsContainer.find('.pvtRendererArea svg');
 		if (svgEl.length > 0) {
-		
+
 			return {
-				getContent: function(){
+				getContent: function() {
 					if (svgEl[0].outerHTML) {
 						return svgEl[0].outerHTML;
 					} else {
@@ -5803,36 +5908,36 @@ var root = module.exports = function(yasr) {
 						return $('<div>').append(svgEl.clone()).html();
 					}
 				},
-				
+
 				filename: "queryResults.svg",
 				contentType: "image/svg+xml",
 				buttonTitle: "Download SVG Image"
 			};
-		} 
-		
+		}
+
 		//ok, not a svg. is it a table?
 		var $table = yasr.resultsContainer.find('.pvtRendererArea table');
 		if ($table.length > 0) {
 			return {
-				getContent: function(){
+				getContent: function() {
 					return $table.tableToCsv();
 				},
 				filename: "queryResults.csv",
 				contentType: "text/csv",
 				buttonTitle: "Download as CSV"
 			};
-		} 
-		
+		}
+
 	};
 	var getEmbedHtml = function() {
 		if (!yasr.results) return null;
-		
+
 		var svgEl = yasr.resultsContainer.find('.pvtRendererArea svg')
-			.clone()//create clone, as we'd like to remove height/width attributes
+			.clone() //create clone, as we'd like to remove height/width attributes
 			.removeAttr('height').removeAttr('width')
-			.css('height', '').css('width','');
+			.css('height', '').css('width', '');
 		if (svgEl.length == 0) return null;
-		
+
 		var htmlString = svgEl[0].outerHTML;
 		if (!htmlString) {
 			//outerHTML not supported. use workaround
@@ -5844,13 +5949,15 @@ var root = module.exports = function(yasr) {
 	};
 	return {
 		getPersistentSettings: function() {
-			return {pivotTable: options.pivotTable};
+			return {
+				pivotTable: options.pivotTable
+			};
 		},
 		setPersistentSettings: function(newSettings) {
 			if (newSettings.pivotTable) {
 				options.pivotTable = validatePivotTableOptions(newSettings.pivotTable);
 			}
-			
+
 		},
 		getDownloadInfo: getDownloadInfo,
 		getEmbedHtml: getEmbedHtml,
@@ -5873,7 +5980,7 @@ root.defaults = {
 };
 
 root.version = {
-	"YASR-rawResponse" : require("../package.json").version,
+	"YASR-rawResponse": require("../package.json").version,
 	"jquery": $.fn.jquery,
 };
 },{"../node_modules/pivottable/dist/d3_renderers.js":12,"../node_modules/pivottable/dist/gchart_renderers.js":13,"../package.json":19,"./gChartLoader.js":25,"./imgs.js":27,"./utils.js":40,"d3":undefined,"jquery":undefined,"jquery-ui/sortable":undefined,"pivottable":undefined,"yasgui-utils":16}],38:[function(require,module,exports){
@@ -5897,17 +6004,20 @@ var root = module.exports = function(yasr) {
 	var draw = function() {
 		var cmOptions = options.CodeMirror;
 		cmOptions.value = yasr.results.getOriginalResponseAsString();
-		
+
 		var mode = yasr.results.getType();
 		if (mode) {
 			if (mode == "json") {
-				mode = {name: "javascript", json: true};
+				mode = {
+					name: "javascript",
+					json: true
+				};
 			}
 			cmOptions.mode = mode;
 		}
-		
+
 		cm = CodeMirror(yasr.resultsContainer.get()[0], cmOptions);
-		
+
 		//CM has some issues with folding and unfolding (blank parts in the codemirror area, which are only filled after clicking it)
 		//so, refresh cm after folding/unfolding
 		cm.on('fold', function() {
@@ -5916,35 +6026,37 @@ var root = module.exports = function(yasr) {
 		cm.on('unfold', function() {
 			cm.refresh();
 		});
-		
+
 	};
-	var canHandleResults = function(){
+	var canHandleResults = function() {
 		if (!yasr.results) return false;
 		if (!yasr.results.getOriginalResponseAsString) return false;
 		var response = yasr.results.getOriginalResponseAsString();
-		if ((!response || response.length == 0) && yasr.results.getException()) return false;//in this case, show exception instead, as we have nothing to show anyway
+		if ((!response || response.length == 0) && yasr.results.getException()) return false; //in this case, show exception instead, as we have nothing to show anyway
 		return true;
 	};
-	
+
 	var getDownloadInfo = function() {
 		if (!yasr.results) return null;
 		var contentType = yasr.results.getOriginalContentType();
 		var type = yasr.results.getType();
 		return {
-			getContent: function() {return yasr.results.getOriginalResponse();},
-			filename: "queryResults" + (type? "." + type: ""),
-			contentType: (contentType? contentType: "text/plain"),
+			getContent: function() {
+				return yasr.results.getOriginalResponse();
+			},
+			filename: "queryResults" + (type ? "." + type : ""),
+			contentType: (contentType ? contentType : "text/plain"),
 			buttonTitle: "Download raw response"
 		};
 	};
-	
+
 	return {
 		draw: draw,
 		name: "Raw Response",
 		canHandleResults: canHandleResults,
 		getPriority: 2,
 		getDownloadInfo: getDownloadInfo,
-		
+
 	}
 };
 
@@ -5954,16 +6066,16 @@ root.defaults = {
 	CodeMirror: {
 		readOnly: true,
 		lineNumbers: true,
-	    lineWrapping: true,
-	    foldGutter: true,
-	    gutters: ["CodeMirror-linenumbers", "CodeMirror-foldgutter"]
+		lineWrapping: true,
+		foldGutter: true,
+		gutters: ["CodeMirror-linenumbers", "CodeMirror-foldgutter"]
 	}
 };
 
 root.version = {
-	"YASR-rawResponse" : require("../package.json").version,
+	"YASR-rawResponse": require("../package.json").version,
 	"jquery": $.fn.jquery,
-	"CodeMirror" : CodeMirror.version
+	"CodeMirror": CodeMirror.version
 };
 },{"../package.json":19,"codemirror":undefined,"codemirror/addon/edit/matchbrackets.js":5,"codemirror/addon/fold/brace-fold.js":6,"codemirror/addon/fold/foldcode.js":7,"codemirror/addon/fold/foldgutter.js":8,"codemirror/addon/fold/xml-fold.js":9,"codemirror/mode/javascript/javascript.js":10,"codemirror/mode/xml/xml.js":11,"jquery":undefined}],39:[function(require,module,exports){
 'use strict';
@@ -5993,7 +6105,7 @@ var root = module.exports = function(yasr) {
 		getPriority: 10,
 	};
 	var options = plugin.options = $.extend(true, {}, root.defaults);
-	var tableLengthPersistencyId = (options.persistency? yasr.getPersistencyId(options.persistency.tableLength): null);
+	var tableLengthPersistencyId = (options.persistency ? yasr.getPersistencyId(options.persistency.tableLength) : null);
 
 	var getRows = function() {
 		var rows = [];
@@ -6001,17 +6113,21 @@ var root = module.exports = function(yasr) {
 		var vars = yasr.results.getVariables();
 		var usedPrefixes = null;
 		if (yasr.options.getUsedPrefixes) {
-			usedPrefixes = (typeof yasr.options.getUsedPrefixes == "function"? yasr.options.getUsedPrefixes(yasr):  yasr.options.getUsedPrefixes);
+			usedPrefixes = (typeof yasr.options.getUsedPrefixes == "function" ? yasr.options.getUsedPrefixes(yasr) : yasr.options.getUsedPrefixes);
 		}
 		for (var rowId = 0; rowId < bindings.length; rowId++) {
 			var row = [];
-			row.push("");//row numbers
+			row.push(""); //row numbers
 			var binding = bindings[rowId];
 			for (var colId = 0; colId < vars.length; colId++) {
 				var sparqlVar = vars[colId];
 				if (sparqlVar in binding) {
 					if (options.getCellContent) {
-						row.push(options.getCellContent(yasr, plugin, binding, sparqlVar, {'rowId': rowId, 'colId': colId, 'usedPrefixes': usedPrefixes}));
+						row.push(options.getCellContent(yasr, plugin, binding, sparqlVar, {
+							'rowId': rowId,
+							'colId': colId,
+							'usedPrefixes': usedPrefixes
+						}));
 					} else {
 						row.push("");
 					}
@@ -6023,11 +6139,11 @@ var root = module.exports = function(yasr) {
 		}
 		return rows;
 	};
-	
+
 	var eventId = yasr.getPersistencyId('eventId') || "yasr_" + $(yasr.container).closest('[id]').attr('id');
 	var addEvents = function() {
-		table.on( 'order.dt', function () {
-		    drawSvgIcons();
+		table.on('order.dt', function() {
+			drawSvgIcons();
 		});
 		if (tableLengthPersistencyId) {
 			table.on('length.dt', function(e, settings, len) {
@@ -6040,24 +6156,22 @@ var root = module.exports = function(yasr) {
 				var result = options.callbacks.onCellClick(this, event);
 				if (result === false) return false;
 			}
-		}).delegate("td",'mouseenter', function(event) {
+		}).delegate("td", 'mouseenter', function(event) {
 			if (options.callbacks && options.callbacks.onCellMouseEnter) {
 				options.callbacks.onCellMouseEnter(this, event);
 			}
 			var tdEl = $(this);
-			if (options.fetchTitlesFromPreflabel 
-					&& tdEl.attr("title") === undefined
-					&& tdEl.text().trim().indexOf("http") == 0) {
+			if (options.fetchTitlesFromPreflabel && tdEl.attr("title") === undefined && tdEl.text().trim().indexOf("http") == 0) {
 				addPrefLabel(tdEl);
 			}
-		}).delegate("td",'mouseleave', function(event) {
+		}).delegate("td", 'mouseleave', function(event) {
 			if (options.callbacks && options.callbacks.onCellMouseLeave) {
 				options.callbacks.onCellMouseLeave(this, event);
-				
+
 			}
 		});
 	};
-	
+
 	plugin.draw = function() {
 		table = $('<table cellpadding="0" cellspacing="0" border="0" class="resultsTable"></table>');
 		$(yasr.resultsContainer).html(table);
@@ -6065,24 +6179,24 @@ var root = module.exports = function(yasr) {
 		var dataTableConfig = options.datatable;
 		dataTableConfig.data = getRows();
 		dataTableConfig.columns = options.getColumns(yasr, plugin);
-		
+
 		//fetch stored datatables length value
 		var pLength = yutils.storage.get(tableLengthPersistencyId);
 		if (pLength) dataTableConfig.pageLength = pLength;
-		
-		
-		
-		table.DataTable($.extend(true, {}, dataTableConfig));//make copy. datatables adds properties for backwards compatability reasons, and don't want this cluttering our own 
-		
-		
+
+
+
+		table.DataTable($.extend(true, {}, dataTableConfig)); //make copy. datatables adds properties for backwards compatability reasons, and don't want this cluttering our own 
+
+
 		drawSvgIcons();
-		
+
 		addEvents();
-		
+
 		//finally, make the columns dragable:
 		table.colResizable();
 	};
-	
+
 	var drawSvgIcons = function() {
 		var sortings = {
 			"sorting": "unsorted",
@@ -6103,22 +6217,24 @@ var root = module.exports = function(yasr) {
 	 * @type function
 	 * @default If resultset contains variables in the resultset, return true
 	 */
-	plugin.canHandleResults = function(){
+	plugin.canHandleResults = function() {
 		return yasr.results && yasr.results.getVariables && yasr.results.getVariables() && yasr.results.getVariables().length > 0;
 	};
 
-	
+
 	plugin.getDownloadInfo = function() {
 		if (!yasr.results) return null;
 		return {
-			getContent: function(){return require("./bindingsToCsv.js")(yasr.results.getAsJson());},
+			getContent: function() {
+				return require("./bindingsToCsv.js")(yasr.results.getAsJson());
+			},
 			filename: "queryResults.csv",
 			contentType: "text/csv",
 			buttonTitle: "Download as CSV"
 		};
 	};
-	
-	
+
+
 	return plugin;
 };
 
@@ -6135,7 +6251,7 @@ var formatLiteral = function(yasr, plugin, literalBinding) {
 		} else {
 			dataType = "&lt;" + dataType + "&gt;";
 		}
-		
+
 		stringRepresentation = '"' + stringRepresentation + '"<sup>^^' + dataType + '</sup>';
 	}
 	return stringRepresentation;
@@ -6146,7 +6262,7 @@ var getCellContent = function(yasr, plugin, bindings, sparqlVar, context) {
 	if (binding.type == "uri") {
 		var title = null;
 		var href = binding.value;
-		var visibleString = href;  
+		var visibleString = href;
 		if (context.usedPrefixes) {
 			for (var prefix in context.usedPrefixes) {
 				if (visibleString.indexOf(context.usedPrefixes[prefix]) == 0) {
@@ -6156,13 +6272,13 @@ var getCellContent = function(yasr, plugin, bindings, sparqlVar, context) {
 			}
 		}
 		if (plugin.options.mergeLabelsWithUris) {
-			var postFix = (typeof plugin.options.mergeLabelsWithUris == "string"? plugin.options.mergeLabelsWithUris: "Label");
+			var postFix = (typeof plugin.options.mergeLabelsWithUris == "string" ? plugin.options.mergeLabelsWithUris : "Label");
 			if (bindings[sparqlVar + postFix]) {
 				visibleString = formatLiteral(yasr, plugin, bindings[sparqlVar + postFix]);
 				title = href;
 			}
 		}
-		value = "<a " + (title? "title='" + href + "' ": "") + "class='uri' target='_blank' href='" + href + "'>" + visibleString + "</a>";
+		value = "<a " + (title ? "title='" + href + "' " : "") + "class='uri' target='_blank' href='" + href + "'>" + visibleString + "</a>";
 	} else {
 		value = "<span class='nonUri'>" + formatLiteral(yasr, plugin, binding) + "</span>";
 	}
@@ -6176,18 +6292,18 @@ var getCellContent = function(yasr, plugin, bindings, sparqlVar, context) {
 
 var addPrefLabel = function(td) {
 	var addEmptyTitle = function() {
-		td.attr("title","");//this avoids trying to fetch the label again on next hover
+		td.attr("title", ""); //this avoids trying to fetch the label again on next hover
 	};
 	$.get("http://preflabel.org/api/v1/label/" + encodeURIComponent(td.text()) + "?silent=true")
 		.success(function(data) {
 			if (typeof data == "object" && data.label) {
 				td.attr("title", data.label);
-			} else if (typeof data == "string" && data.length > 0 ) {
+			} else if (typeof data == "string" && data.length > 0) {
 				td.attr("title", data);
 			} else {
 				addEmptyTitle();
 			}
-			
+
 		})
 		.fail(addEmptyTitle);
 };
@@ -6205,7 +6321,7 @@ var openCellUriInNewWindow = function(cell) {
  * @attribute YASR.plugins.table.defaults
  */
 root.defaults = {
-	
+
 	/**
 	 * Draw the cell content, from a given binding
 	 * 
@@ -6216,15 +6332,15 @@ root.defaults = {
 	 * @default YASR.plugins.table.getFormattedValueFromBinding
 	 */
 	getCellContent: getCellContent,
-	
+
 	persistency: {
 		tableLength: "tableLength",
 	},
-	
+
 	getColumns: function(yasr, plugin) {
 		var includeVariable = function(variableToCheck) {
 			if (!plugin.options.mergeLabelsWithUris) return true;
-			var postFix = (typeof plugin.options.mergeLabelsWithUris == "string"? plugin.options.mergeLabelsWithUris: "Label");
+			var postFix = (typeof plugin.options.mergeLabelsWithUris == "string" ? plugin.options.mergeLabelsWithUris : "Label");
 			if (variableToCheck.indexOf(postFix, variableToCheck.length - postFix.length) !== -1) {
 				//this one ends with a postfix
 				if (yasr.results.getVariables().indexOf(variableToCheck.substring(0, variableToCheck.length - postFix.length)) >= 0) {
@@ -6234,11 +6350,16 @@ root.defaults = {
 			}
 			return true;
 		};
-		
+
 		var cols = [];
-		cols.push({"title": ""});//row numbers column
+		cols.push({
+			"title": ""
+		}); //row numbers column
 		yasr.results.getVariables().forEach(function(variable) {
-			cols.push({"title": "<span>" + variable + "</span>", "visible": includeVariable(variable)});
+			cols.push({
+				"title": "<span>" + variable + "</span>",
+				"visible": includeVariable(variable)
+			});
 		});
 		return cols;
 	},
@@ -6250,7 +6371,7 @@ root.defaults = {
 	 * @default true
 	 */
 	fetchTitlesFromPreflabel: true,
-	
+
 	mergeLabelsWithUris: false,
 	/**
 	 * Set a number of handlers for the table
@@ -6297,42 +6418,47 @@ root.defaults = {
 	datatable: {
 		"autoWidth": false,
 		"dom": '<"dtTopHeader"ilf>rtip',
-		"order": [],//disable initial sorting
-		"pageLength": 50,//default page length
-    	"lengthMenu": [[10, 50, 100, 1000, -1], [10, 50, 100, 1000, "All"]],//possible page lengths
-    	"lengthChange": true,//allow changing page length
-    	"pagingType": "full_numbers",//how to show the pagination options
-        "drawCallback": function ( oSettings ) {
-        	//trick to show row numbers
-        	for ( var i = 0; i < oSettings.aiDisplay.length; i++) {
-				$('td:eq(0)',oSettings.aoData[oSettings.aiDisplay[i]].nTr).html(i + 1);
+		"order": [], //disable initial sorting
+		"pageLength": 50, //default page length
+		"lengthMenu": [
+			[10, 50, 100, 1000, -1],
+			[10, 50, 100, 1000, "All"]
+		], //possible page lengths
+		"lengthChange": true, //allow changing page length
+		"pagingType": "full_numbers", //how to show the pagination options
+		"drawCallback": function(oSettings) {
+			//trick to show row numbers
+			for (var i = 0; i < oSettings.aiDisplay.length; i++) {
+				$('td:eq(0)', oSettings.aoData[oSettings.aiDisplay[i]].nTr).html(i + 1);
 			}
-        	
-        	//Hide pagination when we have a single page
-        	var activePaginateButton = false;
-        	$(oSettings.nTableWrapper).find(".paginate_button").each(function() {
-        		if ($(this).attr("class").indexOf("current") == -1 && $(this).attr("class").indexOf("disabled") == -1) {
-        			activePaginateButton = true;
-        		}
-        	});
-        	if (activePaginateButton) {
-        		$(oSettings.nTableWrapper).find(".dataTables_paginate").show();
-        	} else {
-        		$(oSettings.nTableWrapper).find(".dataTables_paginate").hide();
-        	}
+
+			//Hide pagination when we have a single page
+			var activePaginateButton = false;
+			$(oSettings.nTableWrapper).find(".paginate_button").each(function() {
+				if ($(this).attr("class").indexOf("current") == -1 && $(this).attr("class").indexOf("disabled") == -1) {
+					activePaginateButton = true;
+				}
+			});
+			if (activePaginateButton) {
+				$(oSettings.nTableWrapper).find(".dataTables_paginate").show();
+			} else {
+				$(oSettings.nTableWrapper).find(".dataTables_paginate").hide();
+			}
 		},
-		"columnDefs": [
-			{ "width": "32px", "orderable": false, "targets": 0  }//disable row sorting for first col
+		"columnDefs": [{
+				"width": "32px",
+				"orderable": false,
+				"targets": 0
+			} //disable row sorting for first col
 		],
 	},
 };
 
 root.version = {
-	"YASR-table" : require("../package.json").version,
+	"YASR-table": require("../package.json").version,
 	"jquery": $.fn.jquery,
 	"jquery-datatables": $.fn.DataTable.version
 };
-
 },{"../lib/colResizable-1.4.js":2,"../package.json":19,"./bindingsToCsv.js":20,"./imgs.js":27,"./utils.js":40,"datatables":undefined,"jquery":undefined,"yasgui-utils":16}],40:[function(require,module,exports){
 'use strict';
 var $ = (function(){try{return require('jquery')}catch(e){return window.jQuery}})(),
@@ -6341,7 +6467,7 @@ var $ = (function(){try{return require('jquery')}catch(e){return window.jQuery}}
 module.exports = {
 	escapeHtmlEntities: function(unescaped) {
 		//taken from http://stackoverflow.com/questions/5499078/fastest-method-to-escape-html-tags-as-html-entities
-		return unescaped.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;') ;
+		return unescaped.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 	},
 	uriToPrefixed: function(prefixes, uri) {
 		if (prefixes) {
@@ -6385,7 +6511,7 @@ module.exports = {
 	getGoogleTypeForBindings: function(bindings, varName) {
 		var types = {};
 		var typeCount = 0;
-		bindings.forEach(function(binding){
+		bindings.forEach(function(binding) {
 			var type = module.exports.getGoogleTypeForBinding(binding[varName]);
 			if (type != null) {
 				if (!(type in types)) {
@@ -6399,19 +6525,19 @@ module.exports = {
 			return 'string';
 		} else if (typeCount == 1) {
 			for (var type in types) {
-				return type;//just return this one
+				return type; //just return this one
 			}
 		} else {
 			//we have conflicting types. Throw error
 			throw new GoogleTypeException(types, varName);
 		}
 	},
-	
+
 	castGoogleType: function(binding, prefixes, googleType) {
 		if (binding == null) {
 			return null;
 		}
-		
+
 		if (googleType != 'string' && binding.type != null && (binding.type === 'typed-literal' || binding.type === 'literal')) {
 			switch (binding.datatype) {
 				case 'http://www.w3.org/2001/XMLSchema#float':
@@ -6445,7 +6571,7 @@ module.exports = {
 			}
 		}
 	},
-	fireClick : function($els) {
+	fireClick: function($els) {
 		if (!$els)
 			return;
 		$els.each(function(i, el) {
@@ -6453,7 +6579,7 @@ module.exports = {
 			if (document.dispatchEvent) { // W3C
 				var oEvent = document.createEvent("MouseEvents");
 				oEvent.initMouseEvent("click", true, true, window, 1, 1, 1, 1, 1,
-						false, false, false, false, 0, $el[0]);
+					false, false, false, false, 0, $el[0]);
 				$el[0].dispatchEvent(oEvent);
 			} else if (document.fireEvent) { // IE
 				$el[0].click();

@@ -3,7 +3,7 @@
   background-color: white;
   font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
   font-size: 14px;
-  line-height: 1.42857;
+  line-height: 1.428571429;
   color: #333333;
   /* 	position:relative; */
   /*
@@ -17,36 +17,6 @@
   /* GUTTER */
   /* CURSOR */
   /* Shown when moving in bi-directional text */
-  @-moz-keyframes blink {
-    0% {
-      background: #7e7; }
-
-    50% {
-      background: none; }
-
-    100% {
-      background: #7e7; } }
-
-  @-webkit-keyframes blink {
-    0% {
-      background: #7e7; }
-
-    50% {
-      background: none; }
-
-    100% {
-      background: #7e7; } }
-
-  @keyframes blink {
-    0% {
-      background: #7e7; }
-
-    50% {
-      background: none; }
-
-    100% {
-      background: #7e7; } }
-
   /* Can style cursor different in overwrite (non-insert) mode */
   /* DEFAULT THEME */
   /* Default styles for common addons */
@@ -72,17 +42,23 @@
     /*
    * Body styles
    */ }
-  .yasr table.dataTable thead th, .yasr table.dataTable tfoot th {
+  .yasr table.dataTable thead th,
+  .yasr table.dataTable tfoot th {
     font-weight: bold; }
-  .yasr table.dataTable thead th, .yasr table.dataTable thead td {
+  .yasr table.dataTable thead th,
+  .yasr table.dataTable thead td {
     padding: 10px 18px;
     border-bottom: 1px solid #111111; }
-  .yasr table.dataTable thead th:active, .yasr table.dataTable thead td:active {
+  .yasr table.dataTable thead th:active,
+  .yasr table.dataTable thead td:active {
     outline: none; }
-  .yasr table.dataTable tfoot th, .yasr table.dataTable tfoot td {
+  .yasr table.dataTable tfoot th,
+  .yasr table.dataTable tfoot td {
     padding: 10px 18px 6px 18px;
     border-top: 1px solid #111111; }
-  .yasr table.dataTable thead .sorting_asc, .yasr table.dataTable thead .sorting_desc, .yasr table.dataTable thead .sorting {
+  .yasr table.dataTable thead .sorting_asc,
+  .yasr table.dataTable thead .sorting_desc,
+  .yasr table.dataTable thead .sorting {
     cursor: pointer;
     *cursor: hand; }
   .yasr table.dataTable thead .sorting {
@@ -99,30 +75,51 @@
     background-color: white; }
   .yasr table.dataTable tbody tr.selected {
     background-color: #b0bed9; }
-  .yasr table.dataTable tbody th, .yasr table.dataTable tbody td {
+  .yasr table.dataTable tbody th,
+  .yasr table.dataTable tbody td {
     padding: 8px 10px; }
   .yasr table.dataTable.row-border tbody th, .yasr table.dataTable.row-border tbody td, .yasr table.dataTable.display tbody th, .yasr table.dataTable.display tbody td {
     border-top: 1px solid #dddddd; }
-  .yasr table.dataTable.row-border tbody tr:first-child th, .yasr table.dataTable.row-border tbody tr:first-child td, .yasr table.dataTable.display tbody tr:first-child th, .yasr table.dataTable.display tbody tr:first-child td {
+  .yasr table.dataTable.row-border tbody tr:first-child th,
+  .yasr table.dataTable.row-border tbody tr:first-child td, .yasr table.dataTable.display tbody tr:first-child th,
+  .yasr table.dataTable.display tbody tr:first-child td {
     border-top: none; }
   .yasr table.dataTable.cell-border tbody th, .yasr table.dataTable.cell-border tbody td {
     border-top: 1px solid #dddddd;
     border-right: 1px solid #dddddd; }
-  .yasr table.dataTable.cell-border tbody tr th:first-child, .yasr table.dataTable.cell-border tbody tr td:first-child {
+  .yasr table.dataTable.cell-border tbody tr th:first-child,
+  .yasr table.dataTable.cell-border tbody tr td:first-child {
     border-left: 1px solid #dddddd; }
-  .yasr table.dataTable.cell-border tbody tr:first-child th, .yasr table.dataTable.cell-border tbody tr:first-child td {
+  .yasr table.dataTable.cell-border tbody tr:first-child th,
+  .yasr table.dataTable.cell-border tbody tr:first-child td {
     border-top: none; }
   .yasr table.dataTable.stripe tbody tr.odd, .yasr table.dataTable.display tbody tr.odd {
     background-color: #f9f9f9; }
   .yasr table.dataTable.stripe tbody tr.odd.selected, .yasr table.dataTable.display tbody tr.odd.selected {
     background-color: #abb9d3; }
-  .yasr table.dataTable.hover tbody tr:hover, .yasr table.dataTable.hover tbody tr.odd:hover, .yasr table.dataTable.hover tbody tr.even:hover, .yasr table.dataTable.display tbody tr:hover, .yasr table.dataTable.display tbody tr.odd:hover, .yasr table.dataTable.display tbody tr.even:hover {
+  .yasr table.dataTable.hover tbody tr:hover,
+  .yasr table.dataTable.hover tbody tr.odd:hover,
+  .yasr table.dataTable.hover tbody tr.even:hover, .yasr table.dataTable.display tbody tr:hover,
+  .yasr table.dataTable.display tbody tr.odd:hover,
+  .yasr table.dataTable.display tbody tr.even:hover {
     background-color: whitesmoke; }
-  .yasr table.dataTable.hover tbody tr:hover.selected, .yasr table.dataTable.hover tbody tr.odd:hover.selected, .yasr table.dataTable.hover tbody tr.even:hover.selected, .yasr table.dataTable.display tbody tr:hover.selected, .yasr table.dataTable.display tbody tr.odd:hover.selected, .yasr table.dataTable.display tbody tr.even:hover.selected {
+  .yasr table.dataTable.hover tbody tr:hover.selected,
+  .yasr table.dataTable.hover tbody tr.odd:hover.selected,
+  .yasr table.dataTable.hover tbody tr.even:hover.selected, .yasr table.dataTable.display tbody tr:hover.selected,
+  .yasr table.dataTable.display tbody tr.odd:hover.selected,
+  .yasr table.dataTable.display tbody tr.even:hover.selected {
     background-color: #a9b7d1; }
-  .yasr table.dataTable.order-column tbody tr > .sorting_1, .yasr table.dataTable.order-column tbody tr > .sorting_2, .yasr table.dataTable.order-column tbody tr > .sorting_3, .yasr table.dataTable.display tbody tr > .sorting_1, .yasr table.dataTable.display tbody tr > .sorting_2, .yasr table.dataTable.display tbody tr > .sorting_3 {
+  .yasr table.dataTable.order-column tbody tr > .sorting_1,
+  .yasr table.dataTable.order-column tbody tr > .sorting_2,
+  .yasr table.dataTable.order-column tbody tr > .sorting_3, .yasr table.dataTable.display tbody tr > .sorting_1,
+  .yasr table.dataTable.display tbody tr > .sorting_2,
+  .yasr table.dataTable.display tbody tr > .sorting_3 {
     background-color: #f9f9f9; }
-  .yasr table.dataTable.order-column tbody tr.selected > .sorting_1, .yasr table.dataTable.order-column tbody tr.selected > .sorting_2, .yasr table.dataTable.order-column tbody tr.selected > .sorting_3, .yasr table.dataTable.display tbody tr.selected > .sorting_1, .yasr table.dataTable.display tbody tr.selected > .sorting_2, .yasr table.dataTable.display tbody tr.selected > .sorting_3 {
+  .yasr table.dataTable.order-column tbody tr.selected > .sorting_1,
+  .yasr table.dataTable.order-column tbody tr.selected > .sorting_2,
+  .yasr table.dataTable.order-column tbody tr.selected > .sorting_3, .yasr table.dataTable.display tbody tr.selected > .sorting_1,
+  .yasr table.dataTable.display tbody tr.selected > .sorting_2,
+  .yasr table.dataTable.display tbody tr.selected > .sorting_3 {
     background-color: #acbad4; }
   .yasr table.dataTable.display tbody tr.odd > .sorting_1, .yasr table.dataTable.order-column.stripe tbody tr.odd > .sorting_1 {
     background-color: #f1f1f1; }
@@ -148,59 +145,114 @@
     background-color: #adbbd6; }
   .yasr table.dataTable.display tbody tr.even.selected > .sorting_3, .yasr table.dataTable.order-column.stripe tbody tr.even.selected > .sorting_3 {
     background-color: #afbdd8; }
-  .yasr table.dataTable.display tbody tr:hover > .sorting_1, .yasr table.dataTable.display tbody tr.odd:hover > .sorting_1, .yasr table.dataTable.display tbody tr.even:hover > .sorting_1, .yasr table.dataTable.order-column.hover tbody tr:hover > .sorting_1, .yasr table.dataTable.order-column.hover tbody tr.odd:hover > .sorting_1, .yasr table.dataTable.order-column.hover tbody tr.even:hover > .sorting_1 {
+  .yasr table.dataTable.display tbody tr:hover > .sorting_1,
+  .yasr table.dataTable.display tbody tr.odd:hover > .sorting_1,
+  .yasr table.dataTable.display tbody tr.even:hover > .sorting_1, .yasr table.dataTable.order-column.hover tbody tr:hover > .sorting_1,
+  .yasr table.dataTable.order-column.hover tbody tr.odd:hover > .sorting_1,
+  .yasr table.dataTable.order-column.hover tbody tr.even:hover > .sorting_1 {
     background-color: #eaeaea; }
-  .yasr table.dataTable.display tbody tr:hover > .sorting_2, .yasr table.dataTable.display tbody tr.odd:hover > .sorting_2, .yasr table.dataTable.display tbody tr.even:hover > .sorting_2, .yasr table.dataTable.order-column.hover tbody tr:hover > .sorting_2, .yasr table.dataTable.order-column.hover tbody tr.odd:hover > .sorting_2, .yasr table.dataTable.order-column.hover tbody tr.even:hover > .sorting_2 {
+  .yasr table.dataTable.display tbody tr:hover > .sorting_2,
+  .yasr table.dataTable.display tbody tr.odd:hover > .sorting_2,
+  .yasr table.dataTable.display tbody tr.even:hover > .sorting_2, .yasr table.dataTable.order-column.hover tbody tr:hover > .sorting_2,
+  .yasr table.dataTable.order-column.hover tbody tr.odd:hover > .sorting_2,
+  .yasr table.dataTable.order-column.hover tbody tr.even:hover > .sorting_2 {
     background-color: #ebebeb; }
-  .yasr table.dataTable.display tbody tr:hover > .sorting_3, .yasr table.dataTable.display tbody tr.odd:hover > .sorting_3, .yasr table.dataTable.display tbody tr.even:hover > .sorting_3, .yasr table.dataTable.order-column.hover tbody tr:hover > .sorting_3, .yasr table.dataTable.order-column.hover tbody tr.odd:hover > .sorting_3, .yasr table.dataTable.order-column.hover tbody tr.even:hover > .sorting_3 {
+  .yasr table.dataTable.display tbody tr:hover > .sorting_3,
+  .yasr table.dataTable.display tbody tr.odd:hover > .sorting_3,
+  .yasr table.dataTable.display tbody tr.even:hover > .sorting_3, .yasr table.dataTable.order-column.hover tbody tr:hover > .sorting_3,
+  .yasr table.dataTable.order-column.hover tbody tr.odd:hover > .sorting_3,
+  .yasr table.dataTable.order-column.hover tbody tr.even:hover > .sorting_3 {
     background-color: #eeeeee; }
-  .yasr table.dataTable.display tbody tr:hover.selected > .sorting_1, .yasr table.dataTable.display tbody tr.odd:hover.selected > .sorting_1, .yasr table.dataTable.display tbody tr.even:hover.selected > .sorting_1, .yasr table.dataTable.order-column.hover tbody tr:hover.selected > .sorting_1, .yasr table.dataTable.order-column.hover tbody tr.odd:hover.selected > .sorting_1, .yasr table.dataTable.order-column.hover tbody tr.even:hover.selected > .sorting_1 {
+  .yasr table.dataTable.display tbody tr:hover.selected > .sorting_1,
+  .yasr table.dataTable.display tbody tr.odd:hover.selected > .sorting_1,
+  .yasr table.dataTable.display tbody tr.even:hover.selected > .sorting_1, .yasr table.dataTable.order-column.hover tbody tr:hover.selected > .sorting_1,
+  .yasr table.dataTable.order-column.hover tbody tr.odd:hover.selected > .sorting_1,
+  .yasr table.dataTable.order-column.hover tbody tr.even:hover.selected > .sorting_1 {
     background-color: #a1aec7; }
-  .yasr table.dataTable.display tbody tr:hover.selected > .sorting_2, .yasr table.dataTable.display tbody tr.odd:hover.selected > .sorting_2, .yasr table.dataTable.display tbody tr.even:hover.selected > .sorting_2, .yasr table.dataTable.order-column.hover tbody tr:hover.selected > .sorting_2, .yasr table.dataTable.order-column.hover tbody tr.odd:hover.selected > .sorting_2, .yasr table.dataTable.order-column.hover tbody tr.even:hover.selected > .sorting_2 {
+  .yasr table.dataTable.display tbody tr:hover.selected > .sorting_2,
+  .yasr table.dataTable.display tbody tr.odd:hover.selected > .sorting_2,
+  .yasr table.dataTable.display tbody tr.even:hover.selected > .sorting_2, .yasr table.dataTable.order-column.hover tbody tr:hover.selected > .sorting_2,
+  .yasr table.dataTable.order-column.hover tbody tr.odd:hover.selected > .sorting_2,
+  .yasr table.dataTable.order-column.hover tbody tr.even:hover.selected > .sorting_2 {
     background-color: #a2afc8; }
-  .yasr table.dataTable.display tbody tr:hover.selected > .sorting_3, .yasr table.dataTable.display tbody tr.odd:hover.selected > .sorting_3, .yasr table.dataTable.display tbody tr.even:hover.selected > .sorting_3, .yasr table.dataTable.order-column.hover tbody tr:hover.selected > .sorting_3, .yasr table.dataTable.order-column.hover tbody tr.odd:hover.selected > .sorting_3, .yasr table.dataTable.order-column.hover tbody tr.even:hover.selected > .sorting_3 {
+  .yasr table.dataTable.display tbody tr:hover.selected > .sorting_3,
+  .yasr table.dataTable.display tbody tr.odd:hover.selected > .sorting_3,
+  .yasr table.dataTable.display tbody tr.even:hover.selected > .sorting_3, .yasr table.dataTable.order-column.hover tbody tr:hover.selected > .sorting_3,
+  .yasr table.dataTable.order-column.hover tbody tr.odd:hover.selected > .sorting_3,
+  .yasr table.dataTable.order-column.hover tbody tr.even:hover.selected > .sorting_3 {
     background-color: #a4b2cb; }
   .yasr table.dataTable.no-footer {
     border-bottom: 1px solid #111111; }
   .yasr table.dataTable.nowrap th, .yasr table.dataTable.nowrap td {
     white-space: nowrap; }
-  .yasr table.dataTable.compact thead th, .yasr table.dataTable.compact thead td {
+  .yasr table.dataTable.compact thead th,
+  .yasr table.dataTable.compact thead td {
     padding: 5px 9px; }
-  .yasr table.dataTable.compact tfoot th, .yasr table.dataTable.compact tfoot td {
+  .yasr table.dataTable.compact tfoot th,
+  .yasr table.dataTable.compact tfoot td {
     padding: 5px 9px 3px 9px; }
-  .yasr table.dataTable.compact tbody th, .yasr table.dataTable.compact tbody td {
+  .yasr table.dataTable.compact tbody th,
+  .yasr table.dataTable.compact tbody td {
     padding: 4px 5px; }
-  .yasr table.dataTable th.dt-left, .yasr table.dataTable td.dt-left {
+  .yasr table.dataTable th.dt-left,
+  .yasr table.dataTable td.dt-left {
     text-align: left; }
-  .yasr table.dataTable th.dt-center, .yasr table.dataTable td.dt-center, .yasr table.dataTable td.dataTables_empty {
+  .yasr table.dataTable th.dt-center,
+  .yasr table.dataTable td.dt-center,
+  .yasr table.dataTable td.dataTables_empty {
     text-align: center; }
-  .yasr table.dataTable th.dt-right, .yasr table.dataTable td.dt-right {
+  .yasr table.dataTable th.dt-right,
+  .yasr table.dataTable td.dt-right {
     text-align: right; }
-  .yasr table.dataTable th.dt-justify, .yasr table.dataTable td.dt-justify {
+  .yasr table.dataTable th.dt-justify,
+  .yasr table.dataTable td.dt-justify {
     text-align: justify; }
-  .yasr table.dataTable th.dt-nowrap, .yasr table.dataTable td.dt-nowrap {
+  .yasr table.dataTable th.dt-nowrap,
+  .yasr table.dataTable td.dt-nowrap {
     white-space: nowrap; }
-  .yasr table.dataTable thead th.dt-head-left, .yasr table.dataTable thead td.dt-head-left, .yasr table.dataTable tfoot th.dt-head-left, .yasr table.dataTable tfoot td.dt-head-left {
+  .yasr table.dataTable thead th.dt-head-left,
+  .yasr table.dataTable thead td.dt-head-left,
+  .yasr table.dataTable tfoot th.dt-head-left,
+  .yasr table.dataTable tfoot td.dt-head-left {
     text-align: left; }
-  .yasr table.dataTable thead th.dt-head-center, .yasr table.dataTable thead td.dt-head-center, .yasr table.dataTable tfoot th.dt-head-center, .yasr table.dataTable tfoot td.dt-head-center {
+  .yasr table.dataTable thead th.dt-head-center,
+  .yasr table.dataTable thead td.dt-head-center,
+  .yasr table.dataTable tfoot th.dt-head-center,
+  .yasr table.dataTable tfoot td.dt-head-center {
     text-align: center; }
-  .yasr table.dataTable thead th.dt-head-right, .yasr table.dataTable thead td.dt-head-right, .yasr table.dataTable tfoot th.dt-head-right, .yasr table.dataTable tfoot td.dt-head-right {
+  .yasr table.dataTable thead th.dt-head-right,
+  .yasr table.dataTable thead td.dt-head-right,
+  .yasr table.dataTable tfoot th.dt-head-right,
+  .yasr table.dataTable tfoot td.dt-head-right {
     text-align: right; }
-  .yasr table.dataTable thead th.dt-head-justify, .yasr table.dataTable thead td.dt-head-justify, .yasr table.dataTable tfoot th.dt-head-justify, .yasr table.dataTable tfoot td.dt-head-justify {
+  .yasr table.dataTable thead th.dt-head-justify,
+  .yasr table.dataTable thead td.dt-head-justify,
+  .yasr table.dataTable tfoot th.dt-head-justify,
+  .yasr table.dataTable tfoot td.dt-head-justify {
     text-align: justify; }
-  .yasr table.dataTable thead th.dt-head-nowrap, .yasr table.dataTable thead td.dt-head-nowrap, .yasr table.dataTable tfoot th.dt-head-nowrap, .yasr table.dataTable tfoot td.dt-head-nowrap {
+  .yasr table.dataTable thead th.dt-head-nowrap,
+  .yasr table.dataTable thead td.dt-head-nowrap,
+  .yasr table.dataTable tfoot th.dt-head-nowrap,
+  .yasr table.dataTable tfoot td.dt-head-nowrap {
     white-space: nowrap; }
-  .yasr table.dataTable tbody th.dt-body-left, .yasr table.dataTable tbody td.dt-body-left {
+  .yasr table.dataTable tbody th.dt-body-left,
+  .yasr table.dataTable tbody td.dt-body-left {
     text-align: left; }
-  .yasr table.dataTable tbody th.dt-body-center, .yasr table.dataTable tbody td.dt-body-center {
+  .yasr table.dataTable tbody th.dt-body-center,
+  .yasr table.dataTable tbody td.dt-body-center {
     text-align: center; }
-  .yasr table.dataTable tbody th.dt-body-right, .yasr table.dataTable tbody td.dt-body-right {
+  .yasr table.dataTable tbody th.dt-body-right,
+  .yasr table.dataTable tbody td.dt-body-right {
     text-align: right; }
-  .yasr table.dataTable tbody th.dt-body-justify, .yasr table.dataTable tbody td.dt-body-justify {
+  .yasr table.dataTable tbody th.dt-body-justify,
+  .yasr table.dataTable tbody td.dt-body-justify {
     text-align: justify; }
-  .yasr table.dataTable tbody th.dt-body-nowrap, .yasr table.dataTable tbody td.dt-body-nowrap {
+  .yasr table.dataTable tbody th.dt-body-nowrap,
+  .yasr table.dataTable tbody td.dt-body-nowrap {
     white-space: nowrap; }
-  .yasr table.dataTable, .yasr table.dataTable th, .yasr table.dataTable td {
+  .yasr table.dataTable,
+  .yasr table.dataTable th,
+  .yasr table.dataTable td {
     -webkit-box-sizing: content-box;
     -moz-box-sizing: content-box;
     box-sizing: content-box; }
@@ -314,21 +366,27 @@
     /* Opera 11.10+ */
     background: linear-gradient(to right, rgba(255, 255, 255, 0) 0%, rgba(255, 255, 255, 0.9) 25%, rgba(255, 255, 255, 0.9) 75%, rgba(255, 255, 255, 0) 100%);
     /* W3C */ }
-  .yasr .dataTables_wrapper .dataTables_length, .yasr .dataTables_wrapper .dataTables_filter, .yasr .dataTables_wrapper .dataTables_info, .yasr .dataTables_wrapper .dataTables_processing, .yasr .dataTables_wrapper .dataTables_paginate {
+  .yasr .dataTables_wrapper .dataTables_length,
+  .yasr .dataTables_wrapper .dataTables_filter,
+  .yasr .dataTables_wrapper .dataTables_info,
+  .yasr .dataTables_wrapper .dataTables_processing,
+  .yasr .dataTables_wrapper .dataTables_paginate {
     color: #333333; }
   .yasr .dataTables_wrapper .dataTables_scroll {
     clear: both; }
   .yasr .dataTables_wrapper .dataTables_scroll div.dataTables_scrollBody {
     *margin-top: -1px;
     -webkit-overflow-scrolling: touch; }
-  .yasr .dataTables_wrapper .dataTables_scroll div.dataTables_scrollBody th > div.dataTables_sizing, .yasr .dataTables_wrapper .dataTables_scroll div.dataTables_scrollBody td > div.dataTables_sizing {
+  .yasr .dataTables_wrapper .dataTables_scroll div.dataTables_scrollBody th > div.dataTables_sizing,
+  .yasr .dataTables_wrapper .dataTables_scroll div.dataTables_scrollBody td > div.dataTables_sizing {
     height: 0;
     overflow: hidden;
     margin: 0 !important;
     padding: 0 !important; }
   .yasr .dataTables_wrapper.no-footer .dataTables_scrollBody {
     border-bottom: 1px solid #111111; }
-  .yasr .dataTables_wrapper.no-footer div.dataTables_scrollHead table, .yasr .dataTables_wrapper.no-footer div.dataTables_scrollBody table {
+  .yasr .dataTables_wrapper.no-footer div.dataTables_scrollHead table,
+  .yasr .dataTables_wrapper.no-footer div.dataTables_scrollBody table {
     border-bottom: none; }
   .yasr .dataTables_wrapper:after {
     visibility: hidden;
@@ -337,13 +395,15 @@
     clear: both;
     height: 0; }
   @media screen and (max-width: 767px) {
-    .yasr .dataTables_wrapper .dataTables_info, .yasr .dataTables_wrapper .dataTables_paginate {
+    .yasr .dataTables_wrapper .dataTables_info,
+    .yasr .dataTables_wrapper .dataTables_paginate {
       float: none;
       text-align: center; }
     .yasr .dataTables_wrapper .dataTables_paginate {
       margin-top: 0.5em; } }
   @media screen and (max-width: 640px) {
-    .yasr .dataTables_wrapper .dataTables_length, .yasr .dataTables_wrapper .dataTables_filter {
+    .yasr .dataTables_wrapper .dataTables_length,
+    .yasr .dataTables_wrapper .dataTables_filter {
       float: none;
       text-align: center; }
     .yasr .dataTables_wrapper .dataTables_filter {
@@ -469,6 +529,30 @@
     -webkit-animation: blink 1.06s steps(1) infinite;
     -moz-animation: blink 1.06s steps(1) infinite;
     animation: blink 1.06s steps(1) infinite; }
+
+@-moz-keyframes blink {
+  0% {
+    background: #7e7; }
+  50% {
+    background: none; }
+  100% {
+    background: #7e7; } }
+
+@-webkit-keyframes blink {
+  0% {
+    background: #7e7; }
+  50% {
+    background: none; }
+  100% {
+    background: #7e7; } }
+
+@keyframes blink {
+  0% {
+    background: #7e7; }
+  50% {
+    background: none; }
+  100% {
+    background: #7e7; } }
   .yasr .cm-tab {
     display: inline-block;
     text-decoration: inherit; }
@@ -689,7 +773,8 @@
     cursor: pointer; }
   .yasr .CodeMirror-foldgutter {
     width: .7em; }
-  .yasr .CodeMirror-foldgutter-open, .yasr .CodeMirror-foldgutter-folded {
+  .yasr .CodeMirror-foldgutter-open,
+  .yasr .CodeMirror-foldgutter-folded {
     cursor: pointer; }
   .yasr .CodeMirror-foldgutter-open:after {
     content: "\25BE"; }
@@ -756,7 +841,7 @@
       padding: 4px 8px; }
     .yasr .yasr_btn[disabled], .yasr .yasr_btn.disabled {
       cursor: default;
-      opacity: .5;
+      opacity: .50;
       filter: alpha(opacity=50);
       -webkit-box-shadow: none;
       box-shadow: none; }
@@ -781,7 +866,7 @@
       height: 14px;
       width: 15px; }
   .yasr .yasr_embedBtn.yasr_btn {
-    font-family: Consolas, monospace;
+    font-family: Consolas,monospace;
     padding-left: 4px;
     padding-right: 4px; }
   .yasr .yasr_embedPopup {
@@ -794,7 +879,7 @@
     box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.05);
     width: 700px;
     height: 300px;
-    font-family: Consolas, monospace; }
+    font-family: Consolas,monospace; }
     .yasr .yasr_embedPopup textarea {
       width: 100%;
       height: 100%;
@@ -854,7 +939,7 @@
         padding-bottom: 3px; }
       .yasr .errorResult .errorHeader span.exception {
         display: inline;
-        padding: .2em .6em .3em;
+        padding: 0.2em 0.6em 0.3em;
         font-size: 75%;
         font-weight: 700;
         line-height: 1;
