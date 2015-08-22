@@ -23,10 +23,10 @@ gulp.task('browserify', function() {
 		bundler.exclude(modName);
 	}
 	bundler.bundle()
-		.pipe(exorcist(paths.bundleDir + '/' + paths.bundleName + '.js.map'))
-		.pipe(source(paths.bundleName + '.js'))
+		.pipe(exorcist(paths.bundleDir + '/' + paths.bundleFileName + '.js.map'))
+		.pipe(source(paths.bundleFileName + '.js'))
 		.pipe(gulp.dest(paths.bundleDir))
-		.pipe(rename(paths.bundleName + '.min.js'))
+		.pipe(rename(paths.bundleFileName + '.min.js'))
 		.pipe(buffer())
 		.pipe(sourcemaps.init({
 			loadMaps: true,
@@ -50,10 +50,10 @@ gulp.task('browserifyWithDeps', function() {
 	
 	return bundler
 		.bundle()
-		.pipe(exorcist(paths.bundleDir + '/' + paths.bundleName + '.bundled.js.map'))
-		.pipe(source(paths.bundleName + '.bundled.js'))
+		.pipe(exorcist(paths.bundleDir + '/' + paths.bundleFileName + '.bundled.js.map'))
+		.pipe(source(paths.bundleFileName + '.bundled.js'))
 		.pipe(gulp.dest(paths.bundleDir))
-		.pipe(rename(paths.bundleName + '.bundled.min.js'))
+		.pipe(rename(paths.bundleFileName + '.bundled.min.js'))
 		.pipe(buffer())
 		.pipe(sourcemaps.init({
 			loadMaps: true,
@@ -83,7 +83,7 @@ gulp.task('browserifyForDebug', function() {
 	    .on("error", notify.onError(function(error) {
 	    	return error.message;
 	    }))
-		.pipe(source(paths.bundleName + '.bundled.min.js'))
+		.pipe(source(paths.bundleFileName + '.bundled.min.js'))
 		.pipe(embedlr())
 		.pipe(gulp.dest(paths.bundleDir))
 		.pipe(connect.reload());
