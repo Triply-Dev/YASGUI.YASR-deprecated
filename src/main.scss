@@ -1,7 +1,7 @@
 .svgImg {
 	display:inline-block;
 	bottom: -2px;/**to properly align img**/
-} 
+}
 button.btn_smallscreen {
 	display: none;
 }
@@ -11,8 +11,8 @@ button.btn_smallscreen div, button.btn_fullscreen div {
 }
 &.yasr_fullscreen {
 	z-index: $zIndex-fullscreen;
-	
-	
+
+
 	.btn_smallscreen {
 		display: inline-block;
 	}
@@ -59,7 +59,7 @@ th {
 	display: inline-block;
 	text-align: center;
 	vertical-align: middle;
-	
+
 	cursor: pointer;
 	white-space: nowrap;
 	padding: 6px 12px;
@@ -71,7 +71,7 @@ th {
 	-webkit-appearance: button;
 	/* margin: 0; */
 	overflow: visible;
-	box-sizing: border-box;	
+	box-sizing: border-box;
 	&.btn_icon {
 		padding: 4px 8px;
 	}
@@ -107,7 +107,7 @@ th {
 	}
 	padding-top: 6px;
 	padding-bottom: 6px;
-	
+
 }
 .yasr_embedBtn.yasr_btn  {
 	font-family: Consolas,monospace;
@@ -159,7 +159,7 @@ th {
 	padding: 15px 35px 15px 15px;
 	border: 1px solid transparent;
 	border-radius: 4px;
-	
+
 	.toggableMsg {
 	}
 	.toggleWarning {
@@ -182,5 +182,5 @@ th {
 			opacity: .5;
 		}
 	}
-	
+
 }
