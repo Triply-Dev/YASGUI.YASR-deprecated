@@ -1948,20 +1948,26 @@ CodeMirror.registerHelper("fold", "include", function(cm, start) {
   }
 
   function onGutterClick(cm, line, gutter) {
-    var opts = cm.state.foldGutter.options;
+    var state = cm.state.foldGutter;
+    if (!state) return;
+    var opts = state.options;
     if (gutter != opts.gutter) return;
     cm.foldCode(Pos(line, 0), opts.rangeFinder);
   }
 
   function onChange(cm) {
-    var state = cm.state.foldGutter, opts = cm.state.foldGutter.options;
+    var state = cm.state.foldGutter;
+    if (!state) return;
+    var opts = state.options;
     state.from = state.to = 0;
     clearTimeout(state.changeUpdate);
     state.changeUpdate = setTimeout(function() { updateInViewport(cm); }, opts.foldOnChangeTimeSpan || 600);
   }
 
   function onViewportChange(cm) {
-    var state = cm.state.foldGutter, opts = cm.state.foldGutter.options;
+    var state = cm.state.foldGutter;
+    if (!state) return;
+    var opts = state.options;
     clearTimeout(state.changeUpdate);
     state.changeUpdate = setTimeout(function() {
       var vp = cm.getViewport();
@@ -1983,7 +1989,9 @@ CodeMirror.registerHelper("fold", "include", function(cm, start) {
   }
 
   function onFold(cm, from) {
-    var state = cm.state.foldGutter, line = from.line;
+    var state = cm.state.foldGutter;
+    if (!state) return;
+    var line = from.line;
     if (line >= state.from && line < state.to)
       updateFoldInfo(cm, line, line + 1);
   }
@@ -2294,7 +2302,7 @@ CodeMirror.defineMode("javascript", function(config, parserConfig) {
       } else if (state.lastType == "operator" || state.lastType == "keyword c" ||
                state.lastType == "sof" || /^[\[{}\(,;:]$/.test(state.lastType)) {
         readRegexp(stream);
-        stream.eatWhile(/[gimy]/); // 'y' is "sticky" option in Mozilla
+        stream.match(/^\b(([gimyu])(?![gimyu]*\2))+\b/);
         return ret("regexp", "string-2");
       } else {
         stream.eatWhile(isOperatorChar);
@@ -3270,18 +3278,29 @@ if (!CodeMirror.mimeModes.hasOwnProperty("text/html"))
   callWithJQuery(function($) {
     return $.pivotUtilities.d3_renderers = {
       Treemap: function(pivotData, opts) {
-        var addToTree, color, defaults, height, margin, result, rowKey, tree, treemap, value, width, _i, _len, _ref;
+        var addToTree, color, defaults, height, i, len, ref, result, rowKey, tree, treemap, value, width;
         defaults = {
-          localeStrings: {}
+          localeStrings: {},
+          d3: {
+            width: function() {
+              return $(window).width() / 1.4;
+            },
+            height: function() {
+              return $(window).height() / 1.4;
+            }
+          }
         };
         opts = $.extend(defaults, opts);
-        result = $("<div style='width: 100%; height: 100%;'>");
+        result = $("<div>").css({
+          width: "100%",
+          height: "100%"
+        });
         tree = {
           name: "All",
           children: []
         };
         addToTree = function(tree, path, value) {
-          var child, newChild, x, _i, _len, _ref;
+          var child, i, len, newChild, ref, x;
           if (path.length === 0) {
             tree.value = value;
             return;
@@ -3290,9 +3309,9 @@ if (!CodeMirror.mimeModes.hasOwnProperty("text/html"))
             tree.children = [];
           }
           x = path.shift();
-          _ref = tree.children;
-          for (_i = 0, _len = _ref.length; _i < _len; _i++) {
-            child = _ref[_i];
+          ref = tree.children;
+          for (i = 0, len = ref.length; i < len; i++) {
+            child = ref[i];
             if (!(child.name === x)) {
               continue;
             }
@@ -3305,22 +3324,21 @@ if (!CodeMirror.mimeModes.hasOwnProperty("text/html"))
           addToTree(newChild, path, value);
           return tree.children.push(newChild);
         };
-        _ref = pivotData.getRowKeys();
-        for (_i = 0, _len = _ref.length; _i < _len; _i++) {
-          rowKey = _ref[_i];
+        ref = pivotData.getRowKeys();
+        for (i = 0, len = ref.length; i < len; i++) {
+          rowKey = ref[i];
           value = pivotData.getAggregator(rowKey, []).value();
           if (value != null) {
             addToTree(tree, rowKey, value);
           }
         }
         color = d3.scale.category10();
-        width = $(window).width() / 1.4;
-        height = $(window).height() / 1.4;
-        margin = 10;
+        width = opts.d3.width();
+        height = opts.d3.height();
         treemap = d3.layout.treemap().size([width, height]).sticky(true).value(function(d) {
           return d.size;
         });
-        d3.select(result[0]).append("div").style("position", "relative").style("width", (width + margin * 2) + "px").style("height", (height + margin * 2) + "px").style("left", margin + "px").style("top", margin + "px").datum(tree).selectAll(".node").data(treemap.padding([15, 0, 0, 0]).value(function(d) {
+        d3.select(result[0]).append("div").style("position", "relative").style("width", width + "px").style("height", height + "px").datum(tree).selectAll(".node").data(treemap.padding([15, 0, 0, 0]).value(function(d) {
           return d.value;
         }).nodes).enter().append("div").attr("class", "node").style("background", function(d) {
           if (d.children != null) {
@@ -3367,14 +3385,21 @@ if (!CodeMirror.mimeModes.hasOwnProperty("text/html"))
     var makeGoogleChart;
     makeGoogleChart = function(chartType, extraOptions) {
       return function(pivotData, opts) {
-        var agg, colKey, colKeys, dataArray, dataTable, defaults, groupByTitle, h, hAxisTitle, headers, k, numCharsInHAxis, options, result, row, rowKey, rowKeys, title, v, vAxisTitle, wrapper, _i, _j, _len, _len1;
+        var agg, base, base1, colKey, colKeys, dataArray, dataTable, defaults, fullAggName, groupByTitle, h, hAxisTitle, headers, i, j, len, len1, numCharsInHAxis, options, ref, result, row, rowKey, rowKeys, title, tree2, vAxisTitle, val, wrapper, x, y;
         defaults = {
           localeStrings: {
             vs: "vs",
             by: "by"
-          }
+          },
+          gchart: {}
         };
-        opts = $.extend(defaults, opts);
+        opts = $.extend(true, defaults, opts);
+        if ((base = opts.gchart).width == null) {
+          base.width = window.innerWidth / 1.4;
+        }
+        if ((base1 = opts.gchart).height == null) {
+          base1.height = window.innerHeight / 1.4;
+        }
         rowKeys = pivotData.getRowKeys();
         if (rowKeys.length === 0) {
           rowKeys.push([]);
@@ -3383,45 +3408,80 @@ if (!CodeMirror.mimeModes.hasOwnProperty("text/html"))
         if (colKeys.length === 0) {
           colKeys.push([]);
         }
+        fullAggName = pivotData.aggregatorName;
+        if (pivotData.valAttrs.length) {
+          fullAggName += "(" + (pivotData.valAttrs.join(", ")) + ")";
+        }
         headers = (function() {
-          var _i, _len, _results;
-          _results = [];
-          for (_i = 0, _len = rowKeys.length; _i < _len; _i++) {
-            h = rowKeys[_i];
-            _results.push(h.join("-"));
+          var i, len, results;
+          results = [];
+          for (i = 0, len = rowKeys.length; i < len; i++) {
+            h = rowKeys[i];
+            results.push(h.join("-"));
           }
-          return _results;
+          return results;
         })();
         headers.unshift("");
         numCharsInHAxis = 0;
-        dataArray = [headers];
-        for (_i = 0, _len = colKeys.length; _i < _len; _i++) {
-          colKey = colKeys[_i];
-          row = [colKey.join("-")];
-          numCharsInHAxis += row[0].length;
-          for (_j = 0, _len1 = rowKeys.length; _j < _len1; _j++) {
-            rowKey = rowKeys[_j];
-            agg = pivotData.getAggregator(rowKey, colKey);
-            if (agg.value() != null) {
-              row.push(agg.value());
-            } else {
-              row.push(null);
+        if (chartType === "ScatterChart") {
+          dataArray = [];
+          ref = pivotData.tree;
+          for (y in ref) {
+            tree2 = ref[y];
+            for (x in tree2) {
+              agg = tree2[x];
+              dataArray.push([parseFloat(x), parseFloat(y), fullAggName + ": \n" + agg.format(agg.value())]);
             }
           }
-          dataArray.push(row);
-        }
-        title = vAxisTitle = pivotData.aggregatorName + (pivotData.valAttrs.length ? "(" + (pivotData.valAttrs.join(", ")) + ")" : "");
-        hAxisTitle = pivotData.colAttrs.join("-");
-        if (hAxisTitle !== "") {
-          title += " " + opts.localeStrings.vs + " " + hAxisTitle;
-        }
-        groupByTitle = pivotData.rowAttrs.join("-");
-        if (groupByTitle !== "") {
-          title += " " + opts.localeStrings.by + " " + groupByTitle;
+          dataTable = new google.visualization.DataTable();
+          dataTable.addColumn('number', pivotData.colAttrs.join("-"));
+          dataTable.addColumn('number', pivotData.rowAttrs.join("-"));
+          dataTable.addColumn({
+            type: "string",
+            role: "tooltip"
+          });
+          dataTable.addRows(dataArray);
+          hAxisTitle = pivotData.colAttrs.join("-");
+          vAxisTitle = pivotData.rowAttrs.join("-");
+          title = "";
+        } else {
+          dataArray = [headers];
+          for (i = 0, len = colKeys.length; i < len; i++) {
+            colKey = colKeys[i];
+            row = [colKey.join("-")];
+            numCharsInHAxis += row[0].length;
+            for (j = 0, len1 = rowKeys.length; j < len1; j++) {
+              rowKey = rowKeys[j];
+              agg = pivotData.getAggregator(rowKey, colKey);
+              if (agg.value() != null) {
+                val = agg.value();
+                if ($.isNumeric(val)) {
+                  if (val < 1) {
+                    row.push(parseFloat(val.toPrecision(3)));
+                  } else {
+                    row.push(parseFloat(val.toFixed(3)));
+                  }
+                } else {
+                  row.push(val);
+                }
+              } else {
+                row.push(null);
+              }
+            }
+            dataArray.push(row);
+          }
+          dataTable = google.visualization.arrayToDataTable(dataArray);
+          title = vAxisTitle = fullAggName;
+          hAxisTitle = pivotData.colAttrs.join("-");
+          if (hAxisTitle !== "") {
+            title += " " + opts.localeStrings.vs + " " + hAxisTitle;
+          }
+          groupByTitle = pivotData.rowAttrs.join("-");
+          if (groupByTitle !== "") {
+            title += " " + opts.localeStrings.by + " " + groupByTitle;
+          }
         }
         options = {
-          width: $(window).width() / 1.4,
-          height: $(window).height() / 1.4,
           title: title,
           hAxis: {
             title: hAxisTitle,
@@ -3429,19 +3489,35 @@ if (!CodeMirror.mimeModes.hasOwnProperty("text/html"))
           },
           vAxis: {
             title: vAxisTitle
+          },
+          tooltip: {
+            textStyle: {
+              fontName: 'Arial',
+              fontSize: 12
+            }
           }
         };
-        if (dataArray[0].length === 2 && dataArray[0][1] === "") {
+        if (chartType === "ColumnChart") {
+          options.vAxis.minValue = 0;
+        }
+        if (chartType === "ScatterChart") {
+          options.legend = {
+            position: "none"
+          };
+          options.chartArea = {
+            'width': '80%',
+            'height': '80%'
+          };
+        } else if (dataArray[0].length === 2 && dataArray[0][1] === "") {
           options.legend = {
             position: "none"
           };
         }
-        for (k in extraOptions) {
-          v = extraOptions[k];
-          options[k] = v;
-        }
-        dataTable = google.visualization.arrayToDataTable(dataArray);
-        result = $("<div style='width: 100%; height: 100%;'>");
+        $.extend(options, opts.gchart, extraOptions);
+        result = $("<div>").css({
+          width: "100%",
+          height: "100%"
+        });
         wrapper = new google.visualization.ChartWrapper({
           dataTable: dataTable,
           chartType: chartType,
@@ -3467,7 +3543,8 @@ if (!CodeMirror.mimeModes.hasOwnProperty("text/html"))
       }),
       "Area Chart": makeGoogleChart("AreaChart", {
         isStacked: true
-      })
+      }),
+      "Scatter Chart": makeGoogleChart("ScatterChart")
     };
   });
 
@@ -3667,12 +3744,14 @@ module.exports={
       "url": "http://yasgui.github.io/license.txt"
     }
   ],
-  "author": "Laurens Rietveld",
+  "author": {
+    "name": "Laurens Rietveld"
+  },
   "maintainers": [
     {
       "name": "Laurens Rietveld",
       "email": "laurens.rietveld@gmail.com",
-      "web": "http://laurensrietveld.nl"
+      "url": "http://laurensrietveld.nl"
     }
   ],
   "bugs": {
@@ -3681,7 +3760,11 @@ module.exports={
   "homepage": "https://github.com/YASGUI/Utils",
   "dependencies": {
     "store": "^1.3.14"
-  }
+  },
+  "readme": "A simple utils repo for the YASGUI tools\n",
+  "readmeFilename": "README.md",
+  "_id": "yasgui-utils@1.6.0",
+  "_from": "yasgui-utils@>=1.4.1 <2.0.0"
 }
 
 },{}],16:[function(require,module,exports){
@@ -3798,7 +3881,7 @@ module.exports = {
 module.exports={
   "name": "yasgui-yasr",
   "description": "Yet Another SPARQL Resultset GUI",
-  "version": "2.6.0",
+  "version": "2.6.1",
   "main": "src/main.js",
   "license": "MIT",
   "author": "Laurens Rietveld",
@@ -3855,7 +3938,8 @@ module.exports={
     "url": "https://github.com/YASGUI/YASR.git"
   },
   "dependencies": {
-    "jquery": "~ 1.11.0",
+    "jquery": ">=1.11.3",
+    "datatables": "^1.10.7",
     "codemirror": "^4.7.0",
     "yasgui-utils": "^1.4.1",
     "pivottable": "^1.2.2",
@@ -3882,10 +3966,6 @@ module.exports={
     "../../lib/codemirror": {
       "require": "codemirror",
       "global": "CodeMirror"
-    },
-    "../lib/DataTables/media/js/jquery.dataTables.js": {
-      "require": "datatables",
-      "global": "jQuery"
     },
     "datatables": {
       "require": "datatables",
@@ -4741,16 +4821,16 @@ $.fn.tableToCsv = function(config) {
 
 	var tableArrays = [];
 	var $el = $(this);
-	var rowSpans = {};
+	var rowspans = {};
 
 
 
-	var colCount = 0;
+	var totalColCount = 0;
 	$el.find('tr:first *').each(function() {
 		if ($(this).attr('colspan')) {
-			colCount += +$(this).attr('colspan');
+			totalColCount += +$(this).attr('colspan');
 		} else {
-			colCount++;
+			totalColCount++;
 		}
 	});
 
@@ -4758,38 +4838,33 @@ $.fn.tableToCsv = function(config) {
 		var $tr = $(tr);
 		var rowArray = []
 
-		var skippedCols = 0;
-		for (var colId = 0;
-			(colId + skippedCols) < colCount; colId++) {
-
-			//for col Id, do we have a rowspan attr left? Then first add this one to rowArray
-			if (rowSpans[colId]) {
-				rowArray.push(rowSpans[colId].text);
-				rowSpans[colId].rowSpan--;
-				if (!rowSpans[colId].rowSpan) delete rowSpans[colId];
+		var htmlColId = 0;
+		var actualColId = 0;
+		while (actualColId < totalColCount) {
+			if (rowspans[actualColId]) {
+				rowArray.push(rowspans[actualColId].text);
+				rowspans[actualColId].rowSpan--;
+				if (!rowspans[actualColId].rowSpan) rowspans[actualColId] = null;
+				actualColId++;
 				continue;
 			}
 
-			var $cell = $tr.find(':nth-child(' + (colId + 1) + ')');
-			console.log($cell);
+			var $cell = $tr.find(':nth-child(' + (htmlColId + 1) + ')');
+			if (!$cell) break;
+			var colspan = $cell.attr('colspan') || 1;
+			var rowspan = $cell.attr('rowspan') || 1;
 
-			var colspan = $cell.attr('colspan');
-			var rowspan = $cell.attr('rowspan');
-			if (colspan && !isNaN(colspan)) {
-				for (var i = 0; i < colspan; i++) {
-					rowArray.push($cell.text());
-				}
-				skippedCols += (colspan - 1);
-			} else if (rowspan && !isNaN(rowspan)) {
-				rowSpans[colId + skippedCols] = {
-					rowSpan: rowspan - 1,
-					text: $cell.text()
-				}
+			for (var i = 0; i < colspan; i++) {
 				rowArray.push($cell.text());
-				skippedCols++;
-			} else {
-				rowArray.push($cell.text());
+				if (rowspan > 1) {
+					rowspans[actualColId] = {
+						rowSpan: rowspan - 1,
+						text: $cell.text(),
+					}
+				}
+				actualColId++;
 			}
+			htmlColId++;
 		}
 		addRowToString(rowArray);
 
@@ -4798,6 +4873,7 @@ $.fn.tableToCsv = function(config) {
 
 	return csvString;
 }
+
 },{"jquery":undefined}],30:[function(require,module,exports){
 'use strict';
 var $ = (function(){try{return require('jquery')}catch(e){return window.jQuery}})(),
