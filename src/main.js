@@ -26,6 +26,8 @@ var YASR = function(parent, options, queryResults) {
 	// var yasr = {};
 	// EventEmitter.call(yasr);
 	yasr.options = $.extend(true, {}, module.exports.defaults, options);
+	//the recursive copy does merge (overwrite) array values how we want it to. Do this manually
+	if (options.outputPlugins) yasr.options.outputPlugins = options.outputPlugins;
 
 	yasr.container = $("<div class='yasr'></div>").appendTo(parent);
 	yasr.header = $("<div class='yasr_header'></div>").appendTo(yasr.container);
@@ -221,6 +223,7 @@ var YASR = function(parent, options, queryResults) {
 		var drawOutputSelector = function() {
 			var btnGroup = $('<div class="yasr_btnGroup"></div>');
 			$.each(yasr.options.outputPlugins, function(i, pluginName) {
+				console.log(pluginName);
 				var plugin = yasr.plugins[pluginName];
 				if (!plugin) return; //plugin not loaded
 
