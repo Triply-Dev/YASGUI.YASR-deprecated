@@ -17,15 +17,6 @@
   /* GUTTER */
   /* CURSOR */
   /* Shown when moving in bi-directional text */
-  @-moz-keyframes blink {
-    0% {
-      background: #7e7; }
-
-    50% {
-      background: none; }
-
-    100% {
-      background: #7e7; } }
 
   @-webkit-keyframes blink {
     0% {
@@ -204,8 +195,6 @@
   .yasr table.dataTable tbody th.dt-body-nowrap, .yasr table.dataTable tbody td.dt-body-nowrap {
     white-space: nowrap; }
   .yasr table.dataTable, .yasr table.dataTable th, .yasr table.dataTable td {
-    -webkit-box-sizing: content-box;
-    -moz-box-sizing: content-box;
     box-sizing: content-box; }
   .yasr .dataTables_wrapper {
     position: relative;
@@ -247,11 +236,8 @@
     /* Chrome,Safari4+ */
     background: -webkit-linear-gradient(top, white 0%, #dcdcdc 100%);
     /* Chrome10+,Safari5.1+ */
-    background: -moz-linear-gradient(top, white 0%, #dcdcdc 100%);
     /* FF3.6+ */
-    background: -ms-linear-gradient(top, white 0%, #dcdcdc 100%);
     /* IE10+ */
-    background: -o-linear-gradient(top, white 0%, #dcdcdc 100%);
     /* Opera 11.10+ */
     background: linear-gradient(to bottom, white 0%, #dcdcdc 100%);
     /* W3C */ }
@@ -269,11 +255,8 @@
     /* Chrome,Safari4+ */
     background: -webkit-linear-gradient(top, #585858 0%, #111 100%);
     /* Chrome10+,Safari5.1+ */
-    background: -moz-linear-gradient(top, #585858 0%, #111 100%);
     /* FF3.6+ */
-    background: -ms-linear-gradient(top, #585858 0%, #111 100%);
     /* IE10+ */
-    background: -o-linear-gradient(top, #585858 0%, #111 100%);
     /* Opera 11.10+ */
     background: linear-gradient(to bottom, #585858 0%, #111 100%);
     /* W3C */ }
@@ -284,11 +267,8 @@
     /* Chrome,Safari4+ */
     background: -webkit-linear-gradient(top, #2b2b2b 0%, #0c0c0c 100%);
     /* Chrome10+,Safari5.1+ */
-    background: -moz-linear-gradient(top, #2b2b2b 0%, #0c0c0c 100%);
     /* FF3.6+ */
-    background: -ms-linear-gradient(top, #2b2b2b 0%, #0c0c0c 100%);
     /* IE10+ */
-    background: -o-linear-gradient(top, #2b2b2b 0%, #0c0c0c 100%);
     /* Opera 11.10+ */
     background: linear-gradient(to bottom, #2b2b2b 0%, #0c0c0c 100%);
     /* W3C */
@@ -311,11 +291,8 @@
     /* Chrome,Safari4+ */
     background: -webkit-linear-gradient(left, rgba(255, 255, 255, 0) 0%, rgba(255, 255, 255, 0.9) 25%, rgba(255, 255, 255, 0.9) 75%, rgba(255, 255, 255, 0) 100%);
     /* Chrome10+,Safari5.1+ */
-    background: -moz-linear-gradient(left, rgba(255, 255, 255, 0) 0%, rgba(255, 255, 255, 0.9) 25%, rgba(255, 255, 255, 0.9) 75%, rgba(255, 255, 255, 0) 100%);
     /* FF3.6+ */
-    background: -ms-linear-gradient(left, rgba(255, 255, 255, 0) 0%, rgba(255, 255, 255, 0.9) 25%, rgba(255, 255, 255, 0.9) 75%, rgba(255, 255, 255, 0) 100%);
     /* IE10+ */
-    background: -o-linear-gradient(left, rgba(255, 255, 255, 0) 0%, rgba(255, 255, 255, 0.9) 25%, rgba(255, 255, 255, 0.9) 75%, rgba(255, 255, 255, 0) 100%);
     /* Opera 11.10+ */
     background: linear-gradient(to right, rgba(255, 255, 255, 0) 0%, rgba(255, 255, 255, 0.9) 25%, rgba(255, 255, 255, 0.9) 75%, rgba(255, 255, 255, 0) 100%);
     /* W3C */ }
@@ -394,7 +371,6 @@
   .yasr .pvtAxisContainer li.pvtPlaceholder {
     -webkit-border-radius: 5px;
     padding: 3px 15px;
-    -moz-border-radius: 5px;
     border-radius: 5px;
     border: 1px dashed #aaa; }
   .yasr .pvtAxisContainer li span.pvtAttr {
@@ -402,8 +378,6 @@
     border: 1px solid #DEDEDE;
     padding: 2px 5px;
     white-space: nowrap;
-    -webkit-border-radius: 5px;
-    -moz-border-radius: 5px;
     border-radius: 5px; }
   .yasr .pvtTriangle {
     cursor: pointer;
@@ -461,7 +435,6 @@
     min-width: 20px;
     text-align: right;
     color: #999;
-    -moz-box-sizing: content-box;
     box-sizing: content-box; }
   .yasr .CodeMirror-guttermarker {
     color: black; }
@@ -481,7 +454,6 @@
     width: auto;
     border: 0;
     -webkit-animation: blink 1.06s steps(1) infinite;
-    -moz-animation: blink 1.06s steps(1) infinite;
     animation: blink 1.06s steps(1) infinite; }
   .yasr .cm-tab {
     display: inline-block;
@@ -569,12 +541,10 @@
     outline: none;
     /* Prevent dragging from highlighting the element */
     position: relative;
-    -moz-box-sizing: content-box;
     box-sizing: content-box; }
   .yasr .CodeMirror-sizer {
     position: relative;
     border-right: 30px solid transparent;
-    -moz-box-sizing: content-box;
     box-sizing: content-box; }
   .yasr .CodeMirror-vscrollbar, .yasr .CodeMirror-hscrollbar, .yasr .CodeMirror-scrollbar-filler, .yasr .CodeMirror-gutter-filler {
     position: absolute;
@@ -604,7 +574,6 @@
   .yasr .CodeMirror-gutter {
     white-space: normal;
     height: 100%;
-    -moz-box-sizing: content-box;
     box-sizing: content-box;
     display: inline-block;
     margin-bottom: -30px;
@@ -625,8 +594,6 @@
     /* prevents collapsing before first draw */ }
   .yasr .CodeMirror pre {
     /* Reset some styles that the rest of the page might have set */
-    -moz-border-radius: 0;
-    -webkit-border-radius: 0;
     border-radius: 0;
     border-width: 0;
     background: transparent;
@@ -772,7 +739,6 @@
       cursor: default;
       opacity: .50;
       filter: alpha(opacity=50);
-      -webkit-box-shadow: none;
       box-shadow: none; }
     .yasr .yasr_btn:hover {
       outline: 0;
@@ -804,7 +770,6 @@
     background-color: #f5f5f5;
     border: 1px solid #e3e3e3;
     border-radius: 4px;
-    -webkit-box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.05);
     box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.05);
     width: 700px;
     height: 300px;

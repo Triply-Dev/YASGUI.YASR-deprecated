@@ -3881,7 +3881,7 @@ module.exports = {
 module.exports={
   "name": "yasgui-yasr",
   "description": "Yet Another SPARQL Resultset GUI",
-  "version": "2.6.1",
+  "version": "2.6.2",
   "main": "src/main.js",
   "license": "MIT",
   "author": "Laurens Rietveld",
@@ -3889,6 +3889,7 @@ module.exports={
   "devDependencies": {
     "browserify": "^6.1.0",
     "gulp": "~3.6.0",
+    "gulp-autoprefixer": "^3.0.2",
     "gulp-bump": "^0.1.11",
     "gulp-concat": "^2.4.1",
     "gulp-connect": "^2.0.5",
@@ -4903,6 +4904,8 @@ var YASR = function(parent, options, queryResults) {
 	// var yasr = {};
 	// EventEmitter.call(yasr);
 	yasr.options = $.extend(true, {}, module.exports.defaults, options);
+	//the recursive copy does merge (overwrite) array values how we want it to. Do this manually
+	if (options.outputPlugins) yasr.options.outputPlugins = options.outputPlugins;
 
 	yasr.container = $("<div class='yasr'></div>").appendTo(parent);
 	yasr.header = $("<div class='yasr_header'></div>").appendTo(yasr.container);
@@ -5098,6 +5101,7 @@ var YASR = function(parent, options, queryResults) {
 		var drawOutputSelector = function() {
 			var btnGroup = $('<div class="yasr_btnGroup"></div>');
 			$.each(yasr.options.outputPlugins, function(i, pluginName) {
+				console.log(pluginName);
 				var plugin = yasr.plugins[pluginName];
 				if (!plugin) return; //plugin not loaded
 
