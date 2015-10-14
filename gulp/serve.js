@@ -16,7 +16,7 @@ gulp.task('watch', function() {
 gulp.task('connect', function() {
 	connect.server({
 		root: __dirname + '/../',
-		port : 4000,
+		port : 4002,
 		livereload: true
 	});
 });
