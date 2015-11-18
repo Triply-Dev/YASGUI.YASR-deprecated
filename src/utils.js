@@ -22,6 +22,7 @@ module.exports = {
 		if (binding == null) return null;
 		if (binding.type != null && (binding.type === 'typed-literal' || binding.type === 'literal')) {
 			switch (binding.datatype) {
+				case 'http://www.w3.org/2001/XMLSchema#double':
 				case 'http://www.w3.org/2001/XMLSchema#float':
 				case 'http://www.w3.org/2001/XMLSchema#decimal':
 				case 'http://www.w3.org/2001/XMLSchema#int':
@@ -89,6 +90,8 @@ module.exports = {
 				case 'http://www.w3.org/2001/XMLSchema#gDay':
 				case 'http://www.w3.org/2001/XMLSchema#gMonth':
 					return Number(binding.value);
+				case 'http://www.w3.org/2001/XMLSchema#double':
+					return Number(parseFloat(binding.value));
 				case 'http://www.w3.org/2001/XMLSchema#date':
 					//grrr, the date function does not parse -any- date (including most xsd dates!)
 					//datetime and time seem to be fine though.
