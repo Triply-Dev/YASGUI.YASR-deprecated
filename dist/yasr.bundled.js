@@ -49450,43 +49450,44 @@ module.exports = {
 module.exports={
   "name": "yasgui-yasr",
   "description": "Yet Another SPARQL Resultset GUI",
-  "version": "2.6.2",
+  "version": "2.6.3",
   "main": "src/main.js",
   "license": "MIT",
   "author": "Laurens Rietveld",
   "homepage": "http://yasr.yasgui.org",
   "devDependencies": {
+    "bootstrap-sass": "^3.3.1",
     "browserify": "^6.1.0",
+    "browserify-shim": "^3.8.1",
+    "browserify-transform-tools": "^1.2.1",
+    "exorcist": "^0.1.6",
     "gulp": "~3.6.0",
     "gulp-autoprefixer": "^3.0.2",
     "gulp-bump": "^0.1.11",
     "gulp-concat": "^2.4.1",
     "gulp-connect": "^2.0.5",
+    "gulp-cssimport": "^1.3.1",
     "gulp-embedlr": "^0.5.2",
     "gulp-filter": "^1.0.2",
     "gulp-git": "^0.5.2",
+    "gulp-html-replace": "^1.4.1",
     "gulp-jsvalidate": "^0.2.0",
     "gulp-livereload": "^1.3.1",
     "gulp-minify-css": "0.3.11",
     "gulp-notify": "^2.0.1",
     "gulp-rename": "^1.2.0",
+    "gulp-sass": "^2.0.4",
+    "gulp-sourcemaps": "^1.2.8",
     "gulp-streamify": "0.0.5",
     "gulp-tag-version": "^1.1.0",
     "gulp-uglify": "^1.0.1",
+    "node-sass": "^3.4.0",
     "require-dir": "^0.1.0",
     "run-sequence": "^1.0.1",
     "vinyl-buffer": "^1.0.0",
     "vinyl-source-stream": "~0.1.1",
-    "watchify": "^0.6.4",
-    "gulp-sourcemaps": "^1.2.8",
-    "exorcist": "^0.1.6",
     "vinyl-transform": "0.0.1",
-    "gulp-sass": "^2.0.1",
-    "bootstrap-sass": "^3.3.1",
-    "browserify-transform-tools": "^1.2.1",
-    "gulp-cssimport": "^1.3.1",
-    "gulp-html-replace": "^1.4.1",
-    "browserify-shim": "^3.8.1"
+    "watchify": "^0.6.4"
   },
   "bugs": "https://github.com/YASGUI/YASR/issues/",
   "keywords": [
@@ -50474,7 +50475,7 @@ var YASR = function(parent, options, queryResults) {
 	// EventEmitter.call(yasr);
 	yasr.options = $.extend(true, {}, module.exports.defaults, options);
 	//the recursive copy does merge (overwrite) array values how we want it to. Do this manually
-	if (options.outputPlugins) yasr.options.outputPlugins = options.outputPlugins;
+	if (options && options.outputPlugins) yasr.options.outputPlugins = options.outputPlugins;
 
 	yasr.container = $("<div class='yasr'></div>").appendTo(parent);
 	yasr.header = $("<div class='yasr_header'></div>").appendTo(yasr.container);
@@ -50670,7 +50671,6 @@ var YASR = function(parent, options, queryResults) {
 		var drawOutputSelector = function() {
 			var btnGroup = $('<div class="yasr_btnGroup"></div>');
 			$.each(yasr.options.outputPlugins, function(i, pluginName) {
-				console.log(pluginName);
 				var plugin = yasr.plugins[pluginName];
 				if (!plugin) return; //plugin not loaded
 
@@ -52133,6 +52133,7 @@ module.exports = {
 		if (binding == null) return null;
 		if (binding.type != null && (binding.type === 'typed-literal' || binding.type === 'literal')) {
 			switch (binding.datatype) {
+				case 'http://www.w3.org/2001/XMLSchema#double':
 				case 'http://www.w3.org/2001/XMLSchema#float':
 				case 'http://www.w3.org/2001/XMLSchema#decimal':
 				case 'http://www.w3.org/2001/XMLSchema#int':
@@ -52200,6 +52201,8 @@ module.exports = {
 				case 'http://www.w3.org/2001/XMLSchema#gDay':
 				case 'http://www.w3.org/2001/XMLSchema#gMonth':
 					return Number(binding.value);
+				case 'http://www.w3.org/2001/XMLSchema#double':
+					return Number(parseFloat(binding.value));
 				case 'http://www.w3.org/2001/XMLSchema#date':
 					//grrr, the date function does not parse -any- date (including most xsd dates!)
 					//datetime and time seem to be fine though.
@@ -52247,6 +52250,7 @@ var parseXmlSchemaDate = function(dateString) {
 	if (isNaN(date)) return null;
 	return date;
 };
+
 },{"./exceptions.js":33,"jquery":19}]},{},[1])(1)
 });
 
