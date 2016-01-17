@@ -3881,7 +3881,7 @@ module.exports = {
 module.exports={
   "name": "yasgui-yasr",
   "description": "Yet Another SPARQL Resultset GUI",
-  "version": "2.6.4",
+  "version": "2.6.5",
   "main": "src/main.js",
   "license": "MIT",
   "author": "Laurens Rietveld",
@@ -4345,7 +4345,7 @@ var loader = function() {
 			 * Existing libraries either ignore several browsers (e.g. jquery 2.x), or use ugly hacks (timeouts or something)
 			 * So, we use our own custom ugly hack (yes, timeouts)
 			 */
-			loadScript('http://google.com/jsapi', function() {
+			loadScript('//google.com/jsapi', function() {
 				loadingMain = false;
 				mod.emit('initDone');
 			});
@@ -4437,6 +4437,7 @@ var loadScript = function(url, callback) {
 }
 loader.prototype = new EventEmitter;
 module.exports = new loader();
+
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
 
 },{"events":4,"jquery":undefined}],26:[function(require,module,exports){
