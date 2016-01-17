@@ -14,7 +14,7 @@ var loader = function() {
 			 * Existing libraries either ignore several browsers (e.g. jquery 2.x), or use ugly hacks (timeouts or something)
 			 * So, we use our own custom ugly hack (yes, timeouts)
 			 */
-			loadScript('http://google.com/jsapi', function() {
+			loadScript('//google.com/jsapi', function() {
 				loadingMain = false;
 				mod.emit('initDone');
 			});
