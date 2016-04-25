@@ -14,7 +14,7 @@ var root = module.exports = function(yasr) {
 	if (options.useD3Chart) {
 		try {
 			var d3 = require('d3');
-			if (d3) require('../node_modules/pivottable/dist/d3_renderers.js');
+			if (d3) require('pivottable/dist/d3_renderers.js');
 		} catch (e) {
 			//do nothing. just make sure we don't use this renderer
 		}
@@ -166,7 +166,7 @@ var root = module.exports = function(yasr) {
 			require('./gChartLoader.js')
 				.on('done', function() {
 					try {
-						require('../node_modules/pivottable/dist/gchart_renderers.js');
+						require('pivottable/dist/gchart_renderers.js');
 						$.extend(true, $.pivotUtilities.renderers, $.pivotUtilities.gchart_renderers);
 					} catch (e) {
 						//hmm, still something went wrong. forget about it;
