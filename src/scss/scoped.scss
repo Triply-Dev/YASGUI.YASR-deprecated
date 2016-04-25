@@ -8,11 +8,11 @@
 	color: #333333;
 /* 	position:relative; */
 	@import "../../node_modules/bootstrap-sass/assets/stylesheets/bootstrap/_variables.scss";
-	
-	@import "../../node_modules/datatables/media/css/jquery.dataTables.css";
+
+	@import "../../node_modules/datatables.net-dt/css/jquery.dataTables.css";
 	@import "../../node_modules/pivottable/dist/pivot.css";
-	@import "../../node_modules/codemirror/lib/codemirror.css"; 
-	@import "../../node_modules/codemirror/addon/fold/foldgutter.css"; 
+	@import "../../node_modules/codemirror/lib/codemirror.css";
+	@import "../../node_modules/codemirror/addon/fold/foldgutter.css";
 	@import "../main.scss";
 	@import "../boolean.scss";
 	@import "../error.scss";

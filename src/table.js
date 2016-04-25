@@ -3,7 +3,7 @@ var $ = require("jquery"),
 	yutils = require("yasgui-utils"),
 	utils = require('./utils.js'),
 	imgs = require('./imgs.js');
-require("datatables");
+require("datatables.net")();
 require("../lib/colResizable-1.4.js");
 
 
@@ -374,7 +374,6 @@ root.defaults = {
 		],
 	},
 };
-
 root.version = {
 	"YASR-table": require("../package.json").version,
 	"jquery": $.fn.jquery,

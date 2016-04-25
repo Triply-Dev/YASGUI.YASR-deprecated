@@ -12,7 +12,7 @@
     "browserify-shim": "^3.8.1",
     "browserify-transform-tools": "^1.2.1",
     "exorcist": "^0.1.6",
-    "gulp": "~3.6.0",
+    "gulp": "^3.9.0",
     "gulp-autoprefixer": "^3.0.2",
     "gulp-bump": "^0.1.11",
     "gulp-concat": "^2.4.1",
@@ -61,13 +61,14 @@
     "url": "https://github.com/YASGUI/YASR.git"
   },
   "dependencies": {
-    "jquery": ">=1.11.3",
-    "datatables": "^1.10.7",
     "codemirror": "^4.7.0",
-    "yasgui-utils": "^1.4.1",
-    "pivottable": "^1.2.2",
+    "d3": "^3.4.13",
+    "datatables.net": "^1.10.11",
+    "datatables.net-dt": "^1.10.11",
+    "jquery": ">=1.11.3",
     "jquery-ui": "^1.10.5",
-    "d3": "^3.4.13"
+    "pivottable": "^1.2.2",
+    "yasgui-utils": "^1.4.1"
   },
   "browserify-shim": {
     "google": "global:google"
