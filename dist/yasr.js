@@ -3881,7 +3881,7 @@ module.exports = {
 module.exports={
   "name": "yasgui-yasr",
   "description": "Yet Another SPARQL Resultset GUI",
-  "version": "2.6.5",
+  "version": "2.7.0",
   "main": "src/main.js",
   "license": "MIT",
   "author": "Laurens Rietveld",
@@ -3918,7 +3918,8 @@ module.exports={
     "vinyl-buffer": "^1.0.0",
     "vinyl-source-stream": "~0.1.1",
     "vinyl-transform": "0.0.1",
-    "watchify": "^0.6.4"
+    "watchify": "^0.6.4",
+    "yasgui-yasqe": "^2.9.1"
   },
   "bugs": "https://github.com/YASGUI/YASR/issues/",
   "keywords": [
@@ -4334,6 +4335,7 @@ var EventEmitter = require('events').EventEmitter,
 //cannot package google loader via browserify....
 var loadingMain = false;
 var loadingFailed = false;
+
 var loader = function() {
 	EventEmitter.call(this);
 	var mod = this;
@@ -4345,7 +4347,8 @@ var loader = function() {
 			 * Existing libraries either ignore several browsers (e.g. jquery 2.x), or use ugly hacks (timeouts or something)
 			 * So, we use our own custom ugly hack (yes, timeouts)
 			 */
-			loadScript('//google.com/jsapi', function() {
+			 //use protocol relative req when served via http. Otherwise, just use http:// (e.g. when yasr is served via file://)
+			loadScript((window.location.protocol.indexOf("http") === 0 ? '//': 'http://') + 'google.com/jsapi', function() {
 				loadingMain = false;
 				mod.emit('initDone');
 			});
@@ -6171,13 +6174,13 @@ require("../lib/colResizable-1.4.js");
 
 /**
  * Constructor of plugin which displays results as a table
- * 
+ *
  * @param yasr {object}
  * @param parent {DOM element}
  * @param options {object}
  * @class YASR.plugins.table
  * @return yasr-table (doc)
- * 
+ *
  */
 var root = module.exports = function(yasr) {
 	var table = null;
@@ -6267,7 +6270,7 @@ var root = module.exports = function(yasr) {
 
 
 
-		table.DataTable($.extend(true, {}, dataTableConfig)); //make copy. datatables adds properties for backwards compatability reasons, and don't want this cluttering our own 
+		table.DataTable($.extend(true, {}, dataTableConfig)); //make copy. datatables adds properties for backwards compatability reasons, and don't want this cluttering our own
 
 
 		drawSvgIcons();
@@ -6293,7 +6296,7 @@ var root = module.exports = function(yasr) {
 	};
 	/**
 	 * Check whether this plugin can handler the current results
-	 * 
+	 *
 	 * @property canHandleResults
 	 * @type function
 	 * @default If resultset contains variables in the resultset, return true
@@ -6375,7 +6378,7 @@ var addPrefLabel = function(td) {
 	var addEmptyTitle = function() {
 		td.attr("title", ""); //this avoids trying to fetch the label again on next hover
 	};
-	$.get("http://preflabel.org/api/v1/label/" + encodeURIComponent(td.text()) + "?silent=true")
+	$.get("//preflabel.org/api/v1/label/" + encodeURIComponent(td.text()) + "?silent=true")
 		.success(function(data) {
 			if (typeof data == "object" && data.label) {
 				td.attr("title", data.label);
@@ -6397,7 +6400,7 @@ var openCellUriInNewWindow = function(cell) {
 
 /**
  * Defaults for table plugin
- * 
+ *
  * @type object
  * @attribute YASR.plugins.table.defaults
  */
@@ -6405,7 +6408,7 @@ root.defaults = {
 
 	/**
 	 * Draw the cell content, from a given binding
-	 * 
+	 *
 	 * @property drawCellContent
 	 * @param binding {object}
 	 * @type function
@@ -6446,24 +6449,25 @@ root.defaults = {
 	},
 	/**
 	 * Try to fetch the label representation for each URI, using the preflabel.org services. (fetching occurs when hovering over the cell)
-	 * 
+	 *
 	 * @property fetchTitlesFromPreflabel
 	 * @type boolean
-	 * @default true
+	 * @default false, if YASR is served via https
 	 */
-	fetchTitlesFromPreflabel: true,
+	//important to keep supporting serving yasr via file:// protocol
+	fetchTitlesFromPreflabel: (window.location.protocol === "https:" ? false: true),
 
 	mergeLabelsWithUris: false,
 	/**
 	 * Set a number of handlers for the table
-	 * 
+	 *
 	 * @property handlers
 	 * @type object
 	 */
 	callbacks: {
 		/**
 		 * Mouse-enter-cell event
-		 * 
+		 *
 		 * @property handlers.onCellMouseEnter
 		 * @type function
 		 * @param td-element
@@ -6472,7 +6476,7 @@ root.defaults = {
 		onCellMouseEnter: null,
 		/**
 		 * Mouse-leave-cell event
-		 * 
+		 *
 		 * @property handlers.onCellMouseLeave
 		 * @type function
 		 * @param td-element
@@ -6481,7 +6485,7 @@ root.defaults = {
 		onCellMouseLeave: null,
 		/**
 		 * Cell clicked event
-		 * 
+		 *
 		 * @property handlers.onCellClick
 		 * @type function
 		 * @param td-element
@@ -6490,9 +6494,9 @@ root.defaults = {
 		onCellClick: null
 	},
 	/**
-	 * This plugin uses the datatables jquery plugin (See datatables.net). For any datatables specific defaults, change this object. 
+	 * This plugin uses the datatables jquery plugin (See datatables.net). For any datatables specific defaults, change this object.
 	 * See the datatables reference for more information
-	 * 
+	 *
 	 * @property datatable
 	 * @type object
 	 */
@@ -6540,6 +6544,7 @@ root.version = {
 	"jquery": $.fn.jquery,
 	"jquery-datatables": $.fn.DataTable.version
 };
+
 },{"../lib/colResizable-1.4.js":2,"../package.json":19,"./bindingsToCsv.js":20,"./imgs.js":27,"./utils.js":40,"datatables":undefined,"jquery":undefined,"yasgui-utils":16}],40:[function(require,module,exports){
 'use strict';
 var $ = (function(){try{return require('jquery')}catch(e){return window.jQuery}})(),
