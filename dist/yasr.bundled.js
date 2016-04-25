@@ -49450,7 +49450,7 @@ module.exports = {
 module.exports={
   "name": "yasgui-yasr",
   "description": "Yet Another SPARQL Resultset GUI",
-  "version": "2.7.1",
+  "version": "2.7.2",
   "main": "src/main.js",
   "license": "MIT",
   "author": "Laurens Rietveld",
@@ -50918,22 +50918,34 @@ module.exports.$ = $;
 //put these in a try-catch. When using the unbundled version, and when some dependencies are missing, then YASR as a whole will still function
 try {
 	module.exports.registerOutput('boolean', require("./boolean.js"))
-} catch (e) {};
+} catch (e) {
+	console.warn(e);
+};
 try {
 	module.exports.registerOutput('rawResponse', require("./rawResponse.js"))
-} catch (e) {};
+} catch (e) {
+	console.warn(e);
+};
 try {
 	module.exports.registerOutput('table', require("./table.js"))
-} catch (e) {};
+} catch (e) {
+	console.warn(e);
+};
 try {
 	module.exports.registerOutput('error', require("./error.js"))
-} catch (e) {};
+} catch (e) {
+	console.warn(e);
+};
 try {
 	module.exports.registerOutput('pivot', require("./pivot.js"))
-} catch (e) {};
+} catch (e) {
+	console.warn(e);
+};
 try {
 	module.exports.registerOutput('gchart', require("./gchart.js"))
-} catch (e) {};
+} catch (e) {
+	console.warn(e);
+};
 
 },{"../package.json":28,"./boolean.js":30,"./defaults.js":31,"./error.js":32,"./gChartLoader.js":34,"./gchart.js":35,"./imgs.js":36,"./jquery/extendJquery.js":37,"./parsers/wrapper.js":44,"./pivot.js":46,"./rawResponse.js":47,"./table.js":48,"./utils.js":49,"events":4,"jquery":19,"yasgui-utils":25}],40:[function(require,module,exports){
 'use strict';
