@@ -3,6 +3,7 @@ var EventEmitter = require('events').EventEmitter,
 //cannot package google loader via browserify....
 var loadingMain = false;
 var loadingFailed = false;
+
 var loader = function() {
 	EventEmitter.call(this);
 	var mod = this;
@@ -14,7 +15,8 @@ var loader = function() {
 			 * Existing libraries either ignore several browsers (e.g. jquery 2.x), or use ugly hacks (timeouts or something)
 			 * So, we use our own custom ugly hack (yes, timeouts)
 			 */
-			loadScript('//google.com/jsapi', function() {
+			 //use protocol relative req when served via http. Otherwise, just use http:// (e.g. when yasr is served via file://)
+			loadScript((window.location.protocol.indexOf("http") === 0 ? '//': 'http://') + 'google.com/jsapi', function() {
 				loadingMain = false;
 				mod.emit('initDone');
 			});
