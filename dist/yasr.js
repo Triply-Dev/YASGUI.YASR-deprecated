@@ -3881,7 +3881,7 @@ module.exports = {
 module.exports={
   "name": "yasgui-yasr",
   "description": "Yet Another SPARQL Resultset GUI",
-  "version": "2.7.0",
+  "version": "2.7.1",
   "main": "src/main.js",
   "license": "MIT",
   "author": "Laurens Rietveld",
@@ -5803,7 +5803,7 @@ var root = module.exports = function(yasr) {
 	if (options.useD3Chart) {
 		try {
 			var d3 = (function(){try{return require('d3')}catch(e){return window.d3}})();
-			if (d3) require('../node_modules/pivottable/dist/d3_renderers.js');
+			if (d3) require('pivottable/dist/d3_renderers.js');
 		} catch (e) {
 			//do nothing. just make sure we don't use this renderer
 		}
@@ -5955,7 +5955,7 @@ var root = module.exports = function(yasr) {
 			require('./gChartLoader.js')
 				.on('done', function() {
 					try {
-						require('../node_modules/pivottable/dist/gchart_renderers.js');
+						require('pivottable/dist/gchart_renderers.js');
 						$.extend(true, $.pivotUtilities.renderers, $.pivotUtilities.gchart_renderers);
 					} catch (e) {
 						//hmm, still something went wrong. forget about it;
@@ -6067,7 +6067,8 @@ root.version = {
 	"YASR-rawResponse": require("../package.json").version,
 	"jquery": $.fn.jquery,
 };
-},{"../node_modules/pivottable/dist/d3_renderers.js":12,"../node_modules/pivottable/dist/gchart_renderers.js":13,"../package.json":19,"./gChartLoader.js":25,"./imgs.js":27,"./utils.js":40,"d3":undefined,"jquery":undefined,"jquery-ui/sortable":undefined,"pivottable":undefined,"yasgui-utils":16}],38:[function(require,module,exports){
+
+},{"../package.json":19,"./gChartLoader.js":25,"./imgs.js":27,"./utils.js":40,"d3":undefined,"jquery":undefined,"jquery-ui/sortable":undefined,"pivottable":undefined,"pivottable/dist/d3_renderers.js":12,"pivottable/dist/gchart_renderers.js":13,"yasgui-utils":16}],38:[function(require,module,exports){
 'use strict';
 var $ = (function(){try{return require('jquery')}catch(e){return window.jQuery}})(),
 	CodeMirror = (function(){try{return require('codemirror')}catch(e){return window.CodeMirror}})();

@@ -49450,7 +49450,7 @@ module.exports = {
 module.exports={
   "name": "yasgui-yasr",
   "description": "Yet Another SPARQL Resultset GUI",
-  "version": "2.7.0",
+  "version": "2.7.1",
   "main": "src/main.js",
   "license": "MIT",
   "author": "Laurens Rietveld",
@@ -51372,7 +51372,7 @@ var root = module.exports = function(yasr) {
 	if (options.useD3Chart) {
 		try {
 			var d3 = require('d3');
-			if (d3) require('../node_modules/pivottable/dist/d3_renderers.js');
+			if (d3) require('pivottable/dist/d3_renderers.js');
 		} catch (e) {
 			//do nothing. just make sure we don't use this renderer
 		}
@@ -51524,7 +51524,7 @@ var root = module.exports = function(yasr) {
 			require('./gChartLoader.js')
 				.on('done', function() {
 					try {
-						require('../node_modules/pivottable/dist/gchart_renderers.js');
+						require('pivottable/dist/gchart_renderers.js');
 						$.extend(true, $.pivotUtilities.renderers, $.pivotUtilities.gchart_renderers);
 					} catch (e) {
 						//hmm, still something went wrong. forget about it;
@@ -51636,7 +51636,8 @@ root.version = {
 	"YASR-rawResponse": require("../package.json").version,
 	"jquery": $.fn.jquery,
 };
-},{"../node_modules/pivottable/dist/d3_renderers.js":20,"../node_modules/pivottable/dist/gchart_renderers.js":21,"../package.json":28,"./gChartLoader.js":34,"./imgs.js":36,"./utils.js":49,"d3":13,"jquery":19,"jquery-ui/sortable":17,"pivottable":22,"yasgui-utils":25}],47:[function(require,module,exports){
+
+},{"../package.json":28,"./gChartLoader.js":34,"./imgs.js":36,"./utils.js":49,"d3":13,"jquery":19,"jquery-ui/sortable":17,"pivottable":22,"pivottable/dist/d3_renderers.js":20,"pivottable/dist/gchart_renderers.js":21,"yasgui-utils":25}],47:[function(require,module,exports){
 'use strict';
 var $ = require("jquery"),
 	CodeMirror = require("codemirror");
