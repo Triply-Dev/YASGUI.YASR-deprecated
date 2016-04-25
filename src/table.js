@@ -288,9 +288,10 @@ root.defaults = {
 	 *
 	 * @property fetchTitlesFromPreflabel
 	 * @type boolean
-	 * @default true, if YASR is served via http
+	 * @default false, if YASR is served via https
 	 */
-	fetchTitlesFromPreflabel: (window.location.protocol === "http:" ? true, false),
+	//important to keep supporting serving yasr via file:// protocol
+	fetchTitlesFromPreflabel: (window.location.protocol === "https:" ? false, true),
 
 	mergeLabelsWithUris: false,
 	/**
