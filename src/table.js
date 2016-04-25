@@ -10,13 +10,13 @@ require("../lib/colResizable-1.4.js");
 
 /**
  * Constructor of plugin which displays results as a table
- * 
+ *
  * @param yasr {object}
  * @param parent {DOM element}
  * @param options {object}
  * @class YASR.plugins.table
  * @return yasr-table (doc)
- * 
+ *
  */
 var root = module.exports = function(yasr) {
 	var table = null;
@@ -106,7 +106,7 @@ var root = module.exports = function(yasr) {
 
 
 
-		table.DataTable($.extend(true, {}, dataTableConfig)); //make copy. datatables adds properties for backwards compatability reasons, and don't want this cluttering our own 
+		table.DataTable($.extend(true, {}, dataTableConfig)); //make copy. datatables adds properties for backwards compatability reasons, and don't want this cluttering our own
 
 
 		drawSvgIcons();
@@ -132,7 +132,7 @@ var root = module.exports = function(yasr) {
 	};
 	/**
 	 * Check whether this plugin can handler the current results
-	 * 
+	 *
 	 * @property canHandleResults
 	 * @type function
 	 * @default If resultset contains variables in the resultset, return true
@@ -214,7 +214,7 @@ var addPrefLabel = function(td) {
 	var addEmptyTitle = function() {
 		td.attr("title", ""); //this avoids trying to fetch the label again on next hover
 	};
-	$.get("http://preflabel.org/api/v1/label/" + encodeURIComponent(td.text()) + "?silent=true")
+	$.get("//preflabel.org/api/v1/label/" + encodeURIComponent(td.text()) + "?silent=true")
 		.success(function(data) {
 			if (typeof data == "object" && data.label) {
 				td.attr("title", data.label);
@@ -236,7 +236,7 @@ var openCellUriInNewWindow = function(cell) {
 
 /**
  * Defaults for table plugin
- * 
+ *
  * @type object
  * @attribute YASR.plugins.table.defaults
  */
@@ -244,7 +244,7 @@ root.defaults = {
 
 	/**
 	 * Draw the cell content, from a given binding
-	 * 
+	 *
 	 * @property drawCellContent
 	 * @param binding {object}
 	 * @type function
@@ -285,24 +285,24 @@ root.defaults = {
 	},
 	/**
 	 * Try to fetch the label representation for each URI, using the preflabel.org services. (fetching occurs when hovering over the cell)
-	 * 
+	 *
 	 * @property fetchTitlesFromPreflabel
 	 * @type boolean
-	 * @default true
+	 * @default true, if YASR is served via http
 	 */
-	fetchTitlesFromPreflabel: true,
+	fetchTitlesFromPreflabel: (window.location.protocol === "http:" ? true, false),
 
 	mergeLabelsWithUris: false,
 	/**
 	 * Set a number of handlers for the table
-	 * 
+	 *
 	 * @property handlers
 	 * @type object
 	 */
 	callbacks: {
 		/**
 		 * Mouse-enter-cell event
-		 * 
+		 *
 		 * @property handlers.onCellMouseEnter
 		 * @type function
 		 * @param td-element
@@ -311,7 +311,7 @@ root.defaults = {
 		onCellMouseEnter: null,
 		/**
 		 * Mouse-leave-cell event
-		 * 
+		 *
 		 * @property handlers.onCellMouseLeave
 		 * @type function
 		 * @param td-element
@@ -320,7 +320,7 @@ root.defaults = {
 		onCellMouseLeave: null,
 		/**
 		 * Cell clicked event
-		 * 
+		 *
 		 * @property handlers.onCellClick
 		 * @type function
 		 * @param td-element
@@ -329,9 +329,9 @@ root.defaults = {
 		onCellClick: null
 	},
 	/**
-	 * This plugin uses the datatables jquery plugin (See datatables.net). For any datatables specific defaults, change this object. 
+	 * This plugin uses the datatables jquery plugin (See datatables.net). For any datatables specific defaults, change this object.
 	 * See the datatables reference for more information
-	 * 
+	 *
 	 * @property datatable
 	 * @type object
 	 */
