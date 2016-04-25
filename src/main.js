@@ -466,19 +466,31 @@ module.exports.$ = $;
 //put these in a try-catch. When using the unbundled version, and when some dependencies are missing, then YASR as a whole will still function
 try {
 	module.exports.registerOutput('boolean', require("./boolean.js"))
-} catch (e) {};
+} catch (e) {
+	console.warn(e);
+};
 try {
 	module.exports.registerOutput('rawResponse', require("./rawResponse.js"))
-} catch (e) {};
+} catch (e) {
+	console.warn(e);
+};
 try {
 	module.exports.registerOutput('table', require("./table.js"))
-} catch (e) {};
+} catch (e) {
+	console.warn(e);
+};
 try {
 	module.exports.registerOutput('error', require("./error.js"))
-} catch (e) {};
+} catch (e) {
+	console.warn(e);
+};
 try {
 	module.exports.registerOutput('pivot', require("./pivot.js"))
-} catch (e) {};
+} catch (e) {
+	console.warn(e);
+};
 try {
 	module.exports.registerOutput('gchart', require("./gchart.js"))
-} catch (e) {};
+} catch (e) {
+	console.warn(e);
+};
