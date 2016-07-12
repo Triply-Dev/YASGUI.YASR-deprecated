@@ -175,8 +175,9 @@ var root = module.exports = function(yasr) {
 						containerId: wrapperId
 					});
 				}
-				chartWrapper.setOption("width", options.width);
-				chartWrapper.setOption("height", options.height);
+				var $wrapper = $('#' + wrapperId);
+				chartWrapper.setOption("width", $wrapper.width());
+				chartWrapper.setOption("height", $wrapper.height());
 				chartWrapper.draw();
 				google.visualization.events.addListener(chartWrapper, 'ready', yasr.updateHeader);
 			}
