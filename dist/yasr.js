@@ -19150,7 +19150,7 @@ module.exports = {
 module.exports={
   "name": "yasgui-yasr",
   "description": "Yet Another SPARQL Resultset GUI",
-  "version": "2.7.3",
+  "version": "2.7.4",
   "main": "src/main.js",
   "license": "MIT",
   "author": "Laurens Rietveld",
@@ -19892,8 +19892,9 @@ var root = module.exports = function(yasr) {
 						containerId: wrapperId
 					});
 				}
-				chartWrapper.setOption("width", options.width);
-				chartWrapper.setOption("height", options.height);
+				var $wrapper = $('#' + wrapperId);
+				chartWrapper.setOption("width", $wrapper.width());
+				chartWrapper.setOption("height", $wrapper.height());
 				chartWrapper.draw();
 				google.visualization.events.addListener(chartWrapper, 'ready', yasr.updateHeader);
 			}
