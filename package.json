@@ -49,6 +49,14 @@
     "Semantic Web",
     "Linked Data"
   ],
+  "scripts": {
+    "install": "gulp",
+    "dev": "gulp serve",
+    "build": "gulp",
+    "patch": "gulp patch",
+    "minor": "gulp minor",
+    "major": "gulp major"
+  },
   "maintainers": [
     {
       "name": "Laurens Rietveld",
