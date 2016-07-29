@@ -1,11 +1,4 @@
 .yasr {
-  padding-top: 5px;
-  background-color: white;
-  font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
-  font-size: 14px;
-  line-height: 1.428571429;
-  color: #333333;
-  /* 	position:relative; */
   /*
  * Table styles
  */
@@ -766,282 +759,289 @@
     content: "\25BE"; }
   .yasr .CodeMirror-foldgutter-folded:after {
     content: "\25B8"; }
-  .yasr .svgImg {
-    display: inline-block;
-    bottom: -2px;
-    /**to properly align img**/ }
-  .yasr button.btn_smallscreen {
-    display: none; }
-  .yasr button.btn_smallscreen div, .yasr button.btn_fullscreen div {
-    width: 15px;
-    height: 15px; }
-  .yasr.yasr_fullscreen {
-    z-index: 10;
-    position: fixed;
-    overflow: auto;
-    top: 0;
-    bottom: 0;
-    left: 0;
-    right: 0; }
-    .yasr.yasr_fullscreen .btn_smallscreen {
-      display: inline-block; }
-    .yasr.yasr_fullscreen .btn_fullscreen {
+  .yasr {
+    padding-top: 5px;
+    background-color: white;
+    font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+    font-size: 14px;
+    line-height: 1.428571429;
+    color: #333333; }
+    .yasr .svgImg {
+      display: inline-block;
+      bottom: -2px;
+      /**to properly align img**/ }
+    .yasr button.btn_smallscreen {
       display: none; }
-  .yasr a {
-    color: #428bca;
-    text-decoration: none; }
-    .yasr a:hover, .yasr a:active {
-      outline: 0;
-      color: #2a6496;
-      text-decoration: underline; }
-  .yasr th {
-    text-align: left; }
-  .yasr .yasr_header * {
-    /* use position relative and z-index, as this fixes issue where results div overflows the button (do this to align controls), and divs are not clickable anymore*/
-    z-index: 5;
-    position: relative; }
-  .yasr .yasr_header > * {
-    margin-left: 6px; }
-  .yasr .yasr_btn {
-    color: #333;
-    border: 1px solid transparent;
-    background-color: #fff;
-    border-color: #ccc;
-    border-width: 1px;
-    display: inline-block;
-    text-align: center;
-    vertical-align: middle;
-    cursor: pointer;
-    white-space: nowrap;
-    padding: 6px 12px;
-    border-radius: 4px;
-    -webkit-user-select: none;
-    user-select: none;
-    -webkit-appearance: button;
-    /* margin: 0; */
-    overflow: visible;
-    box-sizing: border-box; }
-    .yasr .yasr_btn.btn_icon {
-      padding: 4px 8px; }
-    .yasr .yasr_btn[disabled], .yasr .yasr_btn.disabled {
-      cursor: default;
-      opacity: .50;
-      filter: alpha(opacity=50);
-      box-shadow: none; }
-    .yasr .yasr_btn:hover {
-      outline: 0;
-      background-color: #ebebeb;
-      border-color: #adadad; }
-    .yasr .yasr_btn:focus, .yasr .yasr_btn.selected {
-      color: #fff;
-      outline: 0;
-      background-color: #337ab7;
-      border-color: #337ab7; }
-    .yasr .yasr_btn.btn_icon:focus {
+    .yasr button.btn_smallscreen div, .yasr button.btn_fullscreen div {
+      width: 15px;
+      height: 15px; }
+    .yasr.yasr_fullscreen {
+      z-index: 10;
+      position: fixed;
+      overflow: auto;
+      top: 0;
+      bottom: 0;
+      left: 0;
+      right: 0; }
+      .yasr.yasr_fullscreen .btn_smallscreen {
+        display: inline-block; }
+      .yasr.yasr_fullscreen .btn_fullscreen {
+        display: none; }
+    .yasr a {
+      color: #428bca;
+      text-decoration: none; }
+      .yasr a:hover, .yasr a:active {
+        outline: 0;
+        color: #2a6496;
+        text-decoration: underline; }
+    .yasr th {
+      text-align: left; }
+    .yasr .yasr_header * {
+      /* use position relative and z-index, as this fixes issue where results div overflows the button (do this to align controls), and divs are not clickable anymore*/
+      z-index: 5;
+      position: relative; }
+    .yasr .yasr_header > * {
+      margin-left: 6px; }
+    .yasr .yasr_btn {
       color: #333;
       border: 1px solid transparent;
       background-color: #fff;
-      border-color: #ccc; }
-  .yasr .yasr_downloadIcon.yasr_btn.btn_icon {
-    padding-top: 6px;
-    padding-bottom: 6px; }
-    .yasr .yasr_downloadIcon.yasr_btn.btn_icon div {
-      height: 14px;
-      width: 15px; }
-  .yasr .yasr_embedBtn.yasr_btn {
-    font-family: Consolas,monospace;
-    padding-left: 4px;
-    padding-right: 4px; }
-  .yasr .yasr_embedPopup {
-    position: absolute;
-    padding: 6px;
-    background-color: #f5f5f5;
-    border: 1px solid #e3e3e3;
-    border-radius: 4px;
-    box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.05);
-    width: 700px;
-    height: 300px;
-    font-family: Consolas,monospace; }
-    .yasr .yasr_embedPopup textarea {
-      width: 100%;
-      height: 100%;
-      border: 0; }
-  .yasr .yasr_btnGroup {
-    display: inline-block;
-    vertical-align: middle; }
-    .yasr .yasr_btnGroup > button:first-child:not(:last-child) {
-      border-bottom-right-radius: 0;
-      border-top-right-radius: 0; }
-    .yasr .yasr_btnGroup > button:last-child:not(:first-child) {
-      border-bottom-left-radius: 0;
-      border-top-left-radius: 0; }
-    .yasr .yasr_btnGroup > button:not(:first-child):not(:last-child) {
-      border-radius: 0; }
-    .yasr .yasr_btnGroup button + button {
-      margin-left: -1px; }
-  .yasr .toggableWarning {
-    color: #8a6d3b;
-    background-color: #fcf8e3;
-    border-color: #faebcc;
-    padding: 15px 35px 15px 15px;
-    border: 1px solid transparent;
-    border-radius: 4px; }
-    .yasr .toggableWarning .toggleWarning {
-      float: right;
-      font-size: 21px;
+      border-color: #ccc;
+      border-width: 1px;
+      display: inline-block;
+      text-align: center;
+      vertical-align: middle;
       cursor: pointer;
-      font-weight: 700;
-      line-height: 1;
-      color: #000;
-      text-shadow: 0 1px 0 #fff;
-      opacity: .2;
-      position: relative;
-      top: -2px;
-      right: -21px;
-      color: inherit; }
-      .yasr .toggableWarning .toggleWarning:hover {
-        color: #000;
-        cursor: pointer;
+      white-space: nowrap;
+      padding: 6px 12px;
+      border-radius: 4px;
+      -webkit-user-select: none;
+      user-select: none;
+      -webkit-appearance: button;
+      /* margin: 0; */
+      overflow: visible;
+      box-sizing: border-box; }
+      .yasr .yasr_btn.btn_icon {
+        padding: 4px 8px; }
+      .yasr .yasr_btn[disabled], .yasr .yasr_btn.disabled {
+        cursor: default;
+        opacity: .50;
         filter: alpha(opacity=50);
-        opacity: .5; }
-  .yasr .booleanResult {
-    width: 70px;
-    margin: 0 auto;
-    vertical-align: middle; }
-    .yasr .booleanResult svg {
-      margin-bottom: -10px;
-      margin-right: 7px; }
-  .yasr .errorResult {
-    padding: 10px; }
-    .yasr .errorResult .errorHeader {
-      overflow: hidden; }
-      .yasr .errorResult .errorHeader .yasr_tryQuery {
+        box-shadow: none; }
+      .yasr .yasr_btn:hover {
+        outline: 0;
+        background-color: #ebebeb;
+        border-color: #adadad; }
+      .yasr .yasr_btn:focus, .yasr .yasr_btn.selected {
+        color: #fff;
+        outline: 0;
+        background-color: #337ab7;
+        border-color: #337ab7; }
+      .yasr .yasr_btn.btn_icon:focus {
+        color: #333;
+        border: 1px solid transparent;
+        background-color: #fff;
+        border-color: #ccc; }
+    .yasr .yasr_downloadIcon.yasr_btn.btn_icon {
+      padding-top: 6px;
+      padding-bottom: 6px; }
+      .yasr .yasr_downloadIcon.yasr_btn.btn_icon div {
+        height: 14px;
+        width: 15px; }
+    .yasr .yasr_embedBtn.yasr_btn {
+      font-family: Consolas,monospace;
+      padding-left: 4px;
+      padding-right: 4px; }
+    .yasr .yasr_embedPopup {
+      position: absolute;
+      padding: 6px;
+      background-color: #f5f5f5;
+      border: 1px solid #e3e3e3;
+      border-radius: 4px;
+      box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.05);
+      width: 700px;
+      height: 300px;
+      font-family: Consolas,monospace; }
+      .yasr .yasr_embedPopup textarea {
+        width: 100%;
+        height: 100%;
+        border: 0; }
+    .yasr .yasr_btnGroup {
+      display: inline-block;
+      vertical-align: middle; }
+      .yasr .yasr_btnGroup > button:first-child:not(:last-child) {
+        border-bottom-right-radius: 0;
+        border-top-right-radius: 0; }
+      .yasr .yasr_btnGroup > button:last-child:not(:first-child) {
+        border-bottom-left-radius: 0;
+        border-top-left-radius: 0; }
+      .yasr .yasr_btnGroup > button:not(:first-child):not(:last-child) {
+        border-radius: 0; }
+      .yasr .yasr_btnGroup button + button {
+        margin-left: -1px; }
+    .yasr .toggableWarning {
+      color: #8a6d3b;
+      background-color: #fcf8e3;
+      border-color: #faebcc;
+      padding: 15px 35px 15px 15px;
+      border: 1px solid transparent;
+      border-radius: 4px; }
+      .yasr .toggableWarning .toggleWarning {
         float: right;
-        padding-top: 3px;
-        padding-bottom: 3px; }
-      .yasr .errorResult .errorHeader span.exception {
-        display: inline;
-        padding: .2em .6em .3em;
-        font-size: 75%;
+        font-size: 21px;
+        cursor: pointer;
         font-weight: 700;
         line-height: 1;
-        color: #fff;
-        text-align: center;
-        white-space: nowrap;
-        vertical-align: baseline;
-        border-radius: .25em;
-        background-color: #d9534f; }
-    .yasr .errorResult pre {
-      display: block;
-      padding: 10px;
-      margin: 10px 0 10px;
-      font-size: 13px;
-      line-height: 1.42857;
+        color: #000;
+        text-shadow: 0 1px 0 #fff;
+        opacity: .2;
+        position: relative;
+        top: -2px;
+        right: -21px;
+        color: inherit; }
+        .yasr .toggableWarning .toggleWarning:hover {
+          color: #000;
+          cursor: pointer;
+          filter: alpha(opacity=50);
+          opacity: .5; }
+    .yasr .booleanResult {
+      width: 70px;
+      margin: 0 auto;
+      vertical-align: middle; }
+      .yasr .booleanResult svg {
+        margin-bottom: -10px;
+        margin-right: 7px; }
+    .yasr .errorResult {
+      padding: 10px; }
+      .yasr .errorResult .errorHeader {
+        overflow: hidden; }
+        .yasr .errorResult .errorHeader .yasr_tryQuery {
+          float: right;
+          padding-top: 3px;
+          padding-bottom: 3px; }
+        .yasr .errorResult .errorHeader span.exception {
+          display: inline;
+          padding: .2em .6em .3em;
+          font-size: 75%;
+          font-weight: 700;
+          line-height: 1;
+          color: #fff;
+          text-align: center;
+          white-space: nowrap;
+          vertical-align: baseline;
+          border-radius: .25em;
+          background-color: #d9534f; }
+      .yasr .errorResult pre {
+        display: block;
+        padding: 10px;
+        margin: 10px 0 10px;
+        font-size: 13px;
+        line-height: 1.42857;
+        word-break: break-all;
+        word-wrap: break-word;
+        color: #333;
+        background-color: #f5f5f5;
+        border: 1px solid #ccc;
+        border-radius: 4px; }
+      .yasr .errorResult .corsMessage {
+        color: #a94442;
+        background-color: #f2dede;
+        margin-top: 10px;
+        padding: 5px;
+        border: 1px solid #ebccd1;
+        border-radius: 4px; }
+    .yasr .yasr_results .CodeMirror {
+      border: 1px solid #d1d1d1;
+      margin-top: 5px;
+      height: 100%; }
+    .yasr .dataTables_wrapper {
+      margin-top: 10px; }
+      .yasr .dataTables_wrapper .dataTables_length {
+        float: right;
+        margin-left: 10px; }
+        .yasr .dataTables_wrapper .dataTables_length label, .yasr .dataTables_wrapper .dataTables_length select {
+          vertical-align: middle; }
+    .yasr table.dataTable thead th {
+      background: none !important;
+      border-right: 1px dotted gray;
+      padding: 7px 0px; }
+      .yasr table.dataTable thead th:first-child, .yasr table.dataTable thead th:last-child {
+        border-right: 0; }
+      .yasr table.dataTable thead th span {
+        margin-left: 5px; }
+    .yasr table.dataTable td div {
+      -ms-word-break: break-all;
       word-break: break-all;
-      word-wrap: break-word;
-      color: #333;
-      background-color: #f5f5f5;
-      border: 1px solid #ccc;
-      border-radius: 4px; }
-    .yasr .errorResult .corsMessage {
-      color: #a94442;
-      background-color: #f2dede;
-      margin-top: 10px;
-      padding: 5px;
-      border: 1px solid #ebccd1;
-      border-radius: 4px; }
-  .yasr .yasr_results .CodeMirror {
-    border: 1px solid #d1d1d1;
-    margin-top: 5px;
-    height: 100%; }
-  .yasr .dataTables_wrapper {
-    margin-top: 10px; }
-    .yasr .dataTables_wrapper .dataTables_length {
+      /* Non standard for webkit */
+      word-break: break-word;
+      -webkit-hyphens: auto;
+      hyphens: auto;
+      padding: 0px 5px; }
+    .yasr .sortIcons {
       float: right;
-      margin-left: 10px; }
-      .yasr .dataTables_wrapper .dataTables_length label, .yasr .dataTables_wrapper .dataTables_length select {
-        vertical-align: middle; }
-  .yasr table.dataTable thead th {
-    background: none !important;
-    border-right: 1px dotted gray;
-    padding: 7px 0px; }
-    .yasr table.dataTable thead th:first-child, .yasr table.dataTable thead th:last-child {
-      border-right: 0; }
-    .yasr table.dataTable thead th span {
-      margin-left: 5px; }
-  .yasr table.dataTable td div {
-    -ms-word-break: break-all;
-    word-break: break-all;
-    /* Non standard for webkit */
-    word-break: break-word;
-    -webkit-hyphens: auto;
-    hyphens: auto;
-    padding: 0px 5px; }
-  .yasr .sortIcons {
-    float: right;
-    width: 8px;
-    height: 13px;
-    margin-right: 10px; }
-  .yasr .dtTopHeader .dataTables_info {
-    padding-top: 0px;
-    margin: 0px 10px; }
-  .yasr .pivotTable {
-    margin-top: 5px; }
-    .yasr .pivotTable > table {
-      background-color: white; }
-    .yasr .pivotTable td.pvtAxisContainer, .yasr .pivotTable td.pvtVals {
-      /**where vars are dragged to/from**/
-      border: 1px solid #ddd;
-      background-color: transparent; }
-    .yasr .pivotTable li span.pvtAttr {
-      background-color: #337ab7;
-      color: #fff;
-      padding: 4px 7px; }
-      .yasr .pivotTable li span.pvtAttr svg {
-        fill: #fff; }
-      .yasr .pivotTable li span.pvtAttr div {
-        /**svg container**/
-        margin-left: 6px;
-        vertical-align: middle; }
-    .yasr .pivotTable .pvtCols {
-      vertical-align: top; }
-    .yasr .pivotTable table.pvtTable tr th {
-      background-color: #f2f2f2; }
-      .yasr .pivotTable table.pvtTable tr th.pvtAxisLabel {
+      width: 8px;
+      height: 13px;
+      margin-right: 10px; }
+    .yasr .dtTopHeader .dataTables_info {
+      padding-top: 0px;
+      margin: 0px 10px; }
+    .yasr .pivotTable {
+      margin-top: 5px; }
+      .yasr .pivotTable > table {
+        background-color: white; }
+      .yasr .pivotTable td.pvtAxisContainer, .yasr .pivotTable td.pvtVals {
+        /**where vars are dragged to/from**/
+        border: 1px solid #ddd;
+        background-color: transparent; }
+      .yasr .pivotTable li span.pvtAttr {
         background-color: #337ab7;
-        color: #fff; }
-    .yasr .pivotTable .containerHeader {
-      margin-left: 8px;
-      margin-bottom: 8px;
-      font-style: italic;
-      font-size: 110%;
-      color: #999;
-      text-align: left; }
-    .yasr .pivotTable .pvtAttr .svgImg {
-      width: 14px;
-      height: 14px; }
-    .yasr .pivotTable .node {
-      border: solid 1px white;
-      font: 10px sans-serif;
-      line-height: 12px;
-      overflow: hidden;
-      position: absolute;
-      text-indent: 2px; }
-  .yasr .openPivotGchart {
-    float: right;
-    position: relative;
-    display: none;
-    top: -38px;
-    margin-bottom: -38px; }
-  .yasr .openGchartBtn {
-    float: right;
-    position: relative;
-    top: -35px;
-    margin-bottom: -35px; }
-  .yasr .gchartWrapper {
-    width: 100%;
-    height: 600px;
-    margin-top: 2px; }
+        color: #fff;
+        padding: 4px 7px; }
+        .yasr .pivotTable li span.pvtAttr svg {
+          fill: #fff; }
+        .yasr .pivotTable li span.pvtAttr div {
+          /**svg container**/
+          margin-left: 6px;
+          vertical-align: middle; }
+      .yasr .pivotTable .pvtCols {
+        vertical-align: top; }
+      .yasr .pivotTable table.pvtTable tr th {
+        background-color: #f2f2f2; }
+        .yasr .pivotTable table.pvtTable tr th.pvtAxisLabel {
+          background-color: #337ab7;
+          color: #fff; }
+      .yasr .pivotTable .containerHeader {
+        margin-left: 8px;
+        margin-bottom: 8px;
+        font-style: italic;
+        font-size: 110%;
+        color: #999;
+        text-align: left; }
+      .yasr .pivotTable .pvtAttr .svgImg {
+        width: 14px;
+        height: 14px; }
+      .yasr .pivotTable .node {
+        border: solid 1px white;
+        font: 10px sans-serif;
+        line-height: 12px;
+        overflow: hidden;
+        position: absolute;
+        text-indent: 2px; }
+    .yasr .openPivotGchart {
+      float: right;
+      position: relative;
+      display: none;
+      top: -38px;
+      margin-bottom: -38px; }
+    .yasr .openGchartBtn {
+      float: right;
+      position: relative;
+      top: -35px;
+      margin-bottom: -35px; }
+    .yasr .gchartWrapper {
+      width: 100%;
+      height: 600px;
+      margin-top: 2px; }
 
 /**need to reset this: the modal-dialog class conflicts with bootstrap**/
 .modal-dialog.google-visualization-charteditor-dialog {

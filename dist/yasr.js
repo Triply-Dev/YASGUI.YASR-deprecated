@@ -19222,7 +19222,7 @@ module.exports = {
 module.exports={
   "name": "yasgui-yasr",
   "description": "Yet Another SPARQL Resultset GUI",
-  "version": "2.8.1",
+  "version": "2.8.2",
   "main": "src/main.js",
   "license": "MIT",
   "author": "Laurens Rietveld",
