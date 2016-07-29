@@ -11,9 +11,9 @@ var gulp = require('gulp'),
 	minifyCSS = require('gulp-clean-css');
 
 
-gulp.task('makeCss', function() {
+gulp.task('makeCss', ['copyCssDeps'], function() {
 	  return gulp.src(paths.style)
-		.pipe(cssImport())//needed, because css files are not -actually- imported by sass, but remain as css @import statement...
+		.pipe(cssImport())//needed, because css files are not -actually- imported by sass, but remain as css statement...
 	    .pipe(sass())
 	    .on("error", notify.onError(function(error) {
 	    	return error.message;
@@ -33,4 +33,18 @@ gulp.task('makeCss', function() {
 	    .pipe(rename(paths.bundleFileName + '.min.css'))
 	    .pipe(gulp.dest(paths.bundleDir))
 	    .pipe(connect.reload());
+})
+var cssDeps = [
+	"./node_modules/datatables.net-dt/css/jquery.dataTables.css",
+	"./node_modules/pivottable/dist/pivot.css",
+	"./node_modules/codemirror/lib/codemirror.css",
+	"./node_modules/codemirror/addon/fold/foldgutter.css",
+]
+gulp.task('copyCssDeps', function() {
+	  return gulp.src(cssDeps)
+			.pipe(rename({
+				prefix: "_",
+				extname: '.scss'
+			}))
+	    .pipe(gulp.dest('./src/scss/cssIncludes'))
 })
