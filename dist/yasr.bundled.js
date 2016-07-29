@@ -58254,7 +58254,7 @@ module.exports = {
 module.exports={
   "name": "yasgui-yasr",
   "description": "Yet Another SPARQL Resultset GUI",
-  "version": "2.8.0",
+  "version": "2.8.1",
   "main": "src/main.js",
   "license": "MIT",
   "author": "Laurens Rietveld",
@@ -58303,7 +58303,6 @@ module.exports={
     "Linked Data"
   ],
   "scripts": {
-    "install": "gulp",
     "dev": "gulp serve",
     "build": "gulp",
     "patch": "gulp patch",
