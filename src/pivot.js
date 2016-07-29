@@ -3,7 +3,7 @@ var $ = require("jquery"),
 	utils = require('./utils.js'),
 	yUtils = require('yasgui-utils'),
 	imgs = require('./imgs.js');
-require('../node_modules/jquery-ui/ui/widgets/sortable');
+require('jquery-ui/ui/widgets/sortable');
 require('pivottable');
 
 if (!$.fn.pivotUI) throw new Error("Pivot lib not loaded");
