@@ -50,7 +50,6 @@
     "Linked Data"
   ],
   "scripts": {
-    "install": "gulp",
     "dev": "gulp serve",
     "build": "gulp",
     "patch": "gulp patch",
