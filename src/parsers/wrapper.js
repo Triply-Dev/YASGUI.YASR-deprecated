@@ -18,7 +18,8 @@ var root = module.exports = function(dataOrJqXhr, textStatus, jqXhrOrErrorString
 		xml: require("./xml.js"),
 		json: require("./json.js"),
 		tsv: require("./tsv.js"),
-		csv: require("./csv.js")
+		csv: require("./csv.js"),
+		graphJson: require("./graphJson.js"),
 	};
 	var contentType = null;
 	var origResponse = null;
@@ -86,7 +87,12 @@ var root = module.exports = function(dataOrJqXhr, textStatus, jqXhrOrErrorString
 			if (contentType) {
 				if (contentType.indexOf("json") > -1) {
 					try {
-						json = parsers.json(origResponse);
+						if (contentType.indexOf("sparql-results+json") > -1) {
+							json = parsers.json(origResponse);
+						} else if (contentType.indexOf("application/rdf+json") > -1) {
+							json = parsers.graphJson(parsers.json(origResponse));	
+						}
+						
 					} catch (e) {
 						exception = e;
 					}
