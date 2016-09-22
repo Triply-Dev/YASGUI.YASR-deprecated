@@ -5,7 +5,8 @@ var $ = require('jquery'),
 module.exports = {
 	escapeHtmlEntities: function(unescaped) {
 		//taken from http://stackoverflow.com/questions/5499078/fastest-method-to-escape-html-tags-as-html-entities
-		return unescaped.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+		//cast to string first, to avoid problems with e.g. integers
+		return ("" + unescaped).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 	},
 	uriToPrefixed: function(prefixes, uri) {
 		if (prefixes) {
