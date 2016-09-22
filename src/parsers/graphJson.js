@@ -1,6 +1,7 @@
 'use strict';
 var $ = require("jquery");
-var _ = require('lodash');
+var map = require('lodash/map');
+var reduce = require('lodash/reduce')
 
 var getAsObject = function(entity) {
 	if (typeof entity == "object") {
@@ -23,12 +24,12 @@ var getAsObject = function(entity) {
 var root = module.exports = function(responseJson) {
 	if (responseJson) {
 		var hasContext = false;
-		var mapped = _.map(responseJson, function(value, subject) { 
-			return _.map(value, function (value1, predicate) {
-				return _.map(value1, function(object) {
+		var mapped = map(responseJson, function(value, subject) {
+			return map(value, function (value1, predicate) {
+				return map(value1, function(object) {
 					if (object.graphs) {
 						hasContext = true;
-						return _.map(object.graphs, function(context){
+						return map(object.graphs, function(context){
 							return [
 									getAsObject(subject),
 									getAsObject(predicate),
@@ -46,13 +47,13 @@ var root = module.exports = function(responseJson) {
 				})
 			})
 		});
-		var reduced = _.reduce(mapped, function(memo, el) {return memo.concat(el)}, []);
-		reduced = _.reduce(reduced, function(memo, el) {return memo.concat(el)}, []);
+		var reduced = reduce(mapped, function(memo, el) {return memo.concat(el)}, []);
+		reduced = reduce(reduced, function(memo, el) {return memo.concat(el)}, []);
 		var bindings;
 		if (!hasContext) {
 			bindings = reduced.map(function(triple) {return {subject : triple[0], predicate: triple[1], object: triple[2]}});
 		} else {
-			reduced = _.reduce(reduced, function(memo, el) {return memo.concat(el)}, []);
+			reduced = reduce(reduced, function(memo, el) {return memo.concat(el)}, []);
 			bindings = reduced.map(function(triple) {return {subject : triple[0], predicate: triple[1], object: triple[2], context: triple[3]}});
 		}
 		var variables = (hasContext) ? [ "subject", "predicate", "object", "context" ] : [ "subject", "predicate", "object"];
@@ -67,5 +68,5 @@ var root = module.exports = function(responseJson) {
 
 	}
 	return false;
-	
+
 };
