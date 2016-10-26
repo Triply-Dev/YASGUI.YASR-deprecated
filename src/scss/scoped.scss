@@ -2,10 +2,10 @@
 .yasr {
 	@import "../../node_modules/bootstrap-sass/assets/stylesheets/bootstrap/_variables.scss";
 
-	@import "cssIncludes/jquery.dataTables";
-	@import "cssIncludes/pivot";
-	@import "cssIncludes/codemirror";
-	@import "cssIncludes/foldgutter";
+	@import "cssIncludes/_jquery.dataTables.scss";
+	@import "cssIncludes/_pivot.scss";
+	@import "cssIncludes/_codemirror.scss";
+	@import "cssIncludes/_foldgutter.scss";
 
 	@import "./yasr.scss";
 }
