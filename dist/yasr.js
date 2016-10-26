@@ -22605,7 +22605,7 @@ module.exports = {
 module.exports={
   "name": "yasgui-yasr",
   "description": "Yet Another SPARQL Resultset GUI",
-  "version": "2.9.0",
+  "version": "2.9.2",
   "main": "src/main.js",
   "license": "MIT",
   "author": "Laurens Rietveld",
@@ -22613,7 +22613,6 @@ module.exports={
   "devDependencies": {
     "bootstrap-sass": "^3.3.7",
     "browserify": "^13.1.0",
-    "browserify-shim": "^3.8.12",
     "browserify-transform-tools": "^1.6.0",
     "exorcist": "^0.4.0",
     "gulp": "^3.9.1",
@@ -22673,6 +22672,7 @@ module.exports={
     "url": "https://github.com/YASGUI/YASR.git"
   },
   "dependencies": {
+    "browserify-shim": "^3.8.12",
     "codemirror": "^5.17.0",
     "d3": "^4.1.1",
     "datatables.net": "^1.10.12",
