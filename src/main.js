@@ -475,6 +475,11 @@ try {
 	console.warn(e);
 };
 try {
+	module.exports.registerOutput('leaflet', require("./leaflet.js"))
+} catch (e) {
+	console.warn(e);
+};
+try {
 	module.exports.registerOutput('table', require("./table.js"))
 } catch (e) {
 	console.warn(e);
