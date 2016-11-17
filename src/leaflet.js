@@ -10,7 +10,7 @@ require('codemirror/addon/fold/brace-fold.js');
 require('codemirror/addon/edit/matchbrackets.js');
 require('codemirror/mode/xml/xml.js');
 require('codemirror/mode/javascript/javascript.js');
-
+var imgs = require('./imgs.js')
 var root = module.exports = function(yasr) {
 	var plugin = {};
 	var options = $.extend(true, {}, root.defaults);
@@ -38,7 +38,15 @@ var root = module.exports = function(yasr) {
 
 				if (!binding[plotVariable].value) continue;
 				var wicket = new Wkt.Wkt();
-				var feature = wicket.read(binding[plotVariable].value).toObject()
+				var svgURL = "data:image/svg+xml;base64," + btoa(imgs.marker);
+				var mySVGIcon = L.icon( {
+            iconUrl: svgURL,
+            iconSize: [25, 41],
+            shadowSize: [25, 45],
+            iconAnchor: [12, 41],
+            popupAnchor: [0, -41]
+        } );
+				var feature = wicket.read(binding[plotVariable].value).toObject({icon:mySVGIcon})
 				var markerPos;
 				if (feature.getBounds) {
 					//get center of polygon or something
@@ -52,13 +60,15 @@ var root = module.exports = function(yasr) {
 					el.on('dblclick', zoomToEl);
 					if (binding[plotVariable+'Label'] && binding[plotVariable+'Label'].value) {
 						hasLabel = true;
+
 						el.bindPopup(binding[plotVariable+'Label'].value)
 					}
 				}
+
 				if (markerPos) {
 					var shouldDrawSeparateMarker = !!feature.getBounds;//a lat/lng is already a marker
 					if (shouldDrawSeparateMarker) {
-						addPopupAndEventsToMarker(L.marker(markerPos).addTo(map))
+						addPopupAndEventsToMarker(L.marker(markerPos, { icon: mySVGIcon }).addTo(map))
 					} else {
 						addPopupAndEventsToMarker(feature)
 					}
