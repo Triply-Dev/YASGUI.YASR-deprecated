@@ -101,7 +101,7 @@ var root = module.exports = function(yasr) {
 	var getGeoVariables = function() {
 		if (!yasr.results) return [];
 		var bindings = yasr.results.getBindings();
-		if (bindings.length === 0) {
+		if (!bindings || bindings.length === 0) {
 			return [];
 		}
 		var geoVars = [];
