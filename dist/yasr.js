@@ -36952,7 +36952,7 @@ module.exports = {
 module.exports={
   "name": "yasgui-yasr",
   "description": "Yet Another SPARQL Resultset GUI",
-  "version": "2.10.0",
+  "version": "2.10.1",
   "main": "src/main.js",
   "license": "MIT",
   "author": "Laurens Rietveld",
@@ -38079,7 +38079,7 @@ var root = module.exports = function(yasr) {
 	var getGeoVariables = function() {
 		if (!yasr.results) return [];
 		var bindings = yasr.results.getBindings();
-		if (bindings.length === 0) {
+		if (!bindings || bindings.length === 0) {
 			return [];
 		}
 		var geoVars = [];
