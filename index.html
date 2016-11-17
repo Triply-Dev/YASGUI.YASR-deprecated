@@ -204,7 +204,7 @@
     yasqe = YASQE(document.getElementById("yasqe"), {
     	sparql: {
     		showQueryButton: true,
-    		endpoint: 'https://data.pdok.nl/sparql',
+    		endpoint: 'http://dbpedia.org/sparql',
         acceptHeaderGraph: "application/sparql-results+json",
         // requestMethod: 'POST',
         callbacks: {
@@ -221,7 +221,7 @@
     yasr.options.getUsedPrefixes = yasqe.getPrefixesFromQuery;
 	yasqe.options.sparql.callbacks.complete = yasr.setResponse;
 
-	// if (!yasr.storage.get("yasr_showcase_results"))  yasqe.query();
+	if (!yasr.storage.get("yasr_showcase_results"))  yasqe.query();
 	/**
 	* A function to do some quick testing
 	*/
