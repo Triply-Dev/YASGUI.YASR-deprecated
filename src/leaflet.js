@@ -11,6 +11,10 @@ require('codemirror/addon/edit/matchbrackets.js');
 require('codemirror/mode/xml/xml.js');
 require('codemirror/mode/javascript/javascript.js');
 var imgs = require('./imgs.js')
+var L = require('leaflet');
+//Ugly... need to set this global, as wicket-leaflet tries to access this global variable
+global.Wkt = require('wicket/wicket');
+require('wicket/wicket-leaflet');
 var root = module.exports = function(yasr) {
 	var plugin = {};
 	var options = $.extend(true, {}, root.defaults);

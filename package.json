@@ -78,6 +78,7 @@
     "leaflet": "^1.0.1",
     "lodash": "^4.16.1",
     "pivottable": "^2.1.0",
+    "wicket": "https://github.com/arthur-e/Wicket.git",
     "yasgui-utils": "^1.6.0"
   },
   "browserify-shim": {
