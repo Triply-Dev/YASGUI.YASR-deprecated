@@ -38,6 +38,11 @@ module.exports = function(result) {
 		//Quotes in the string need to be escaped
 		value.replace(quote, quote + quote);
 		if (needToQuoteString(value)) {
+			if (value.indexOf(quote)) {
+				//use double quotes to escape these
+				value = value.replace(new RegExp(quote, 'g'), quote+quote)
+			}
+			//and finally add quotes all around
 			value = quote + value + quote;
 		}
 		csvString += " " + value + " " + delimiter;
