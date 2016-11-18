@@ -19,18 +19,25 @@ var root = module.exports = function(yasr) {
 	var plugin = {};
 	var options = $.extend(true, {}, root.defaults);
 	var cm = null;
-
+	var getOption = function(key) {
+		// if (!options[key]) return {};
+		if (options[key]) {
+			if (typeof options[key] === 'function') {
+				return options[key](yasr, L)
+			} else {
+				return options[key]
+			}
+		} else {
+			return undefined;
+		}
+	}
 
 	var draw = function() {
 		var zoomToEl = function(e){map.setView(e.latlng, 15)}
 		var plotVariables = getGeoVariables();
 		if (plotVariables.length === 0) return $('<div class="leaflet">Nothing to draw</div>').appendTo(yasr.resultsContainer);
 		var mapWrapper = $('<div class="leaflet"/>').appendTo(yasr.resultsContainer);
-		var map = new L.Map(mapWrapper.get()[0]);
-		L.tileLayer('http://{s}.tile.osm.org/{z}/{x}/{y}.png', {
-		    attribution: '&copy; <a href="http://osm.org/copyright">OpenStreetMap</a> contributors'
-		}).addTo(map);
-
+		var map = new L.Map(mapWrapper.get()[0], getOption('map'));
 		var features = [];
 		var bindings = yasr.results.getBindings();
 		var hasLabel = false;
@@ -127,36 +134,28 @@ var root = module.exports = function(yasr) {
 		return getGeoVariables().length > 0
 	};
 
-	// var getDownloadInfo = function() {
-	// 	if (!yasr.results) return null;
-	// 	var contentType = yasr.results.getOriginalContentType();
-	// 	var type = yasr.results.getType();
-	// 	return {
-	// 		getContent: function() {
-	// 			return yasr.results.getOriginalResponse();
-	// 		},
-	// 		filename: "queryResults" + (type ? "." + type : ""),
-	// 		contentType: (contentType ? contentType : "text/plain"),
-	// 		buttonTitle: "Download raw response"
-	// 	};
-	// };
 
 	return {
 		draw: draw,
 		name: "Geo",
 		canHandleResults: canHandleResults,
 		getPriority: 2,
-		// getDownloadInfo: getDownloadInfo,
-
 	}
 };
 
 
-
 root.defaults = {
-
+	map: function(yasr, L) {
+    return {
+				layers: [
+					new L.tileLayer('http://{s}.tile.osm.org/{z}/{x}/{y}.png', {
+		 		    attribution: '&copy; <a href="http://osm.org/copyright">OpenStreetMap</a> contributors'
+			 		})
+		 	 ]
+    };
+ }
 };
 
 root.version = {
-
+	leaflet: L.version
 };
