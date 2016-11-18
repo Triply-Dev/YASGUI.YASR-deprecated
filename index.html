@@ -225,11 +225,20 @@
 	/**
 	* A function to do some quick testing
 	*/
-	// function testFile(testFile) {
-	// 	$.get("test/" + testFile, function(data) {
-	// 		yasr.setResponse(data);
-	// 	});
-	// }
+	function testFile(testFile) {
+	    var xhr = new XMLHttpRequest();
+	    xhr.open('GET', testFile);
+	    xhr.onload = function() {
+		if (xhr.status === 200) {
+		    yasr.setResponse(xhr.responseText);
+		}
+		else {
+		    console.error('Request failed.  Returned status of ' + xhr.status);
+		}
+	    };
+	    xhr.send();
+	}
+  // testFile('queryResults.json')
 </script>
   </body>
 </html>
