@@ -36,9 +36,8 @@ module.exports = function(result) {
 	};
 	var addValueToString = function(value) {
 		//Quotes in the string need to be escaped
-		value.replace(quote, quote + quote);
 		if (needToQuoteString(value)) {
-			if (value.indexOf(quote)) {
+			if (value.indexOf(quote) >= 0) {
 				//use double quotes to escape these
 				value = value.replace(new RegExp(quote, 'g'), quote+quote)
 			}
