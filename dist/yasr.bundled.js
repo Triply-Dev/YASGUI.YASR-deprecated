@@ -75844,7 +75844,7 @@ module.exports = {
 module.exports={
   "name": "yasgui-yasr",
   "description": "Yet Another SPARQL Resultset GUI",
-  "version": "2.10.2",
+  "version": "2.10.3",
   "main": "src/main.js",
   "license": "MIT",
   "author": "Laurens Rietveld",
@@ -76003,9 +76003,8 @@ module.exports = function(result) {
 	};
 	var addValueToString = function(value) {
 		//Quotes in the string need to be escaped
-		value.replace(quote, quote + quote);
 		if (needToQuoteString(value)) {
-			if (value.indexOf(quote)) {
+			if (value.indexOf(quote) >= 0) {
 				//use double quotes to escape these
 				value = value.replace(new RegExp(quote, 'g'), quote+quote)
 			}
