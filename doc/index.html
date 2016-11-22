@@ -110,7 +110,7 @@
 			Output visualizations are <a href="#outputPlugins">defined separately</a>.
 			</p>
 			<div class="doc" >
-				<code>outputPlugins: array (default: ["error", "boolean", "rawResponse", "table", "pivot"])</code>
+				<code>outputPlugins: array (default: ["error", "boolean", "rawResponse", "table", "pivot", "leaflet"])</code>
 				<p>List of enabled output plugins. The order of these plugins specifies the order of the output buttons as well</p>
 			</div>
 			<div class="doc" >
@@ -276,6 +276,50 @@
 				<p>Merge bindings together, by using one value as the label. When setting this to <code>true</code>, every projection variable ending with 'Label' will be used as text for the corresponding projection variable without that label. I.e., <code>?carLabel</code> is used as text for the <code>?car</code> projection variable (as long as <code>?car</code> is a URI).
 				If you'd like to specify your own postfix to trigger this behaviour, set your postfix as value, instead of true.
 				</p>.
+			</div>
+
+
+			<h3 id="outputLeaflet">Geo (leaflet)</h3>
+			A plugin which uses <a href="https://leafletjs.com" target="_blank">leaflet</a>.
+			<div class="doc">
+				<code>YASR.plugins.leaflet(yasr: Object) → yasr-leaflet (doc): </code>
+				<p>Constructor of plugin</p>
+			</div>
+			<div class="doc">
+			<code>YASR.plugins.leaflet.defaults</code>
+			<p>Settings object</p>
+			</div>
+
+      <!-- map: function(yasr, L) {
+        return {
+            layers: [
+              new L.tileLayer('http://{s}.tile.osm.org/{z}/{x}/{y}.png', {
+                attribution: '&copy; <a href="http://osm.org/copyright">OpenStreetMap</a> contributors'
+              })
+           ]
+        };
+     },
+     formatPopup: function(yasr, L, forVariable, bindings) {
+       if (bindings[forVariable+'Label'] && bindings[forVariable+'Label'].value) {
+        return bindings[forVariable+'Label'].value
+       }
+     },
+     missingPopupMsg: function(yasr, L, geoVariables) {
+       if (geoVariables && geoVariables.length) {
+         return '<small>Tip: Add a label variable prefixed with the geo variable name to show popups on the map. E.g. <code>'+ geoVariables[0] + 'Label</code></small>';
+       }
+     } -->
+			<div class="doc" style="margin-left: 30px">
+  			<code>map: function(yasr: doc, L: leaflet) → map-instance</code>
+  			<p>Instantiate the leaflet map. By default, it instantiates the map with an Open Street Maps layer</p>
+			</div>
+			<div class="doc" style="margin-left: 30px">
+  			<code>formatPopup: function(yasr: doc, L: leaflet, forVariable:string, bindings) → string</code>
+  			<p>Return the popup content for a given variable. The content is rendered as html. By default it tries to detect whether a similar variable exists in the bindings that is post-fixes with `Label`, and uses that as popup content.</p>
+			</div>
+			<div class="doc" style="margin-left: 30px">
+  			<code>missingPopupMsg: string | function(yasr: doc, L: leaflet, geoVariables: string[]) → string</code>
+  			<p>The notification message when no poup content is found</p>
 			</div>
 
 			<h3 id="outputGchart">Google Charts</h3>

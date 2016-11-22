@@ -69,10 +69,10 @@ var root = module.exports = function(yasr) {
 
 				function addPopupAndEventsToMarker(el) {
 					el.on('dblclick', zoomToEl);
-					if (binding[plotVariable+'Label'] && binding[plotVariable+'Label'].value) {
+					var popupContent = options.formatPopup && options.formatPopup(yasr, L, plotVariable, binding);
+					if (popupContent) {
 						hasLabel = true;
-
-						el.bindPopup(binding[plotVariable+'Label'].value)
+						el.bindPopup(popupContent)
 					}
 				}
 
@@ -92,7 +92,17 @@ var root = module.exports = function(yasr) {
 			var group = new L.featureGroup(features).addTo(map)
 			map.fitBounds(group.getBounds())
 		}
-		if (!hasLabel) yasr.resultsContainer.prepend('<small>Tip: Add a label variable prefixed with the geo variable name to show popups on the map. E.g. <code>'+ plotVariables[0] + 'Label</code></small>')
+
+		// missingPopupMsg: function(yasr, L, geoVariables, bindings) {
+		if (!hasLabel && options.missingPopupMsg) {
+			var msg = null;
+			if (typeof options.missingPopupMsg === 'string') {
+				msg = options.missingPopupMsg;
+			} else if (typeof options.missingPopupMsg === 'function') {
+				msg = options.missingPopupMsg(yasr, L, plotVariables);
+			}
+			if (msg) yasr.resultsContainer.prepend(msg);
+		}
 	};
 
 	var geoKeywords = ['POINT', 'POLYGON', 'LINESTRING', 'MULTIPOINT', 'MULTILINESTRING', 'MULTIPOLYGON']
@@ -153,6 +163,16 @@ root.defaults = {
 			 		})
 		 	 ]
     };
+ },
+ formatPopup: function(yasr, L, forVariable, bindings) {
+  if (bindings[forVariable+'Label'] && bindings[forVariable+'Label'].value) {
+  	return bindings[forVariable+'Label'].value
+  }
+ },
+ missingPopupMsg: function(yasr, L, geoVariables) {
+	 if (geoVariables && geoVariables.length) {
+		 return '<small>Tip: Add a label variable prefixed with the geo variable name to show popups on the map. E.g. <code>'+ geoVariables[0] + 'Label</code></small>';
+	 }
  }
 };
 
