@@ -36952,7 +36952,7 @@ module.exports = {
 module.exports={
   "name": "yasgui-yasr",
   "description": "Yet Another SPARQL Resultset GUI",
-  "version": "2.10.4",
+  "version": "2.10.5",
   "main": "src/main.js",
   "license": "MIT",
   "author": "Laurens Rietveld",
@@ -38156,7 +38156,8 @@ root.defaults = {
 	 if (geoVariables && geoVariables.length) {
 		 return '<small>Tip: Add a label variable prefixed with the geo variable name to show popups on the map. E.g. <code>'+ geoVariables[0] + 'Label</code></small>';
 	 }
- }
+ },
+ disabledMsg: 'Query for geo variables in WKT format to plot them on a map'
 };
 
 root.version = {
@@ -38317,7 +38318,9 @@ var YASR = function(parent, options, queryResults) {
 
 		//now disable the outputs passed as param
 		outputs.forEach(function(outputName) {
-			yasr.header.find('.yasr_btnGroup .select_' + outputName).addClass('disabled');
+			yasr.header.find('.yasr_btnGroup .select_' + outputName)
+				.addClass('disabled')
+				.attr('title', (module.exports.plugins[outputName].defaults? module.exports.plugins[outputName].defaults.disabledMsg:''));
 		});
 
 	};
