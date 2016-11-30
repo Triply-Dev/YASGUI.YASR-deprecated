@@ -149,7 +149,9 @@ var YASR = function(parent, options, queryResults) {
 
 		//now disable the outputs passed as param
 		outputs.forEach(function(outputName) {
-			yasr.header.find('.yasr_btnGroup .select_' + outputName).addClass('disabled');
+			yasr.header.find('.yasr_btnGroup .select_' + outputName)
+				.addClass('disabled')
+				.attr('title', (module.exports.plugins[outputName].defaults? module.exports.plugins[outputName].defaults.disabledMsg:''));
 		});
 
 	};
