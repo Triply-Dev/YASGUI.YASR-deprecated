@@ -174,7 +174,7 @@ root.defaults = {
 		 return '<small>Tip: Add a label variable prefixed with the geo variable name to show popups on the map. E.g. <code>'+ geoVariables[0] + 'Label</code></small>';
 	 }
  },
- disabledMsg: 'Query for geo variables in WKT format to plot them on a map'
+ disabledTitle: 'Query for geo variables in WKT format to plot them on a map',
 };
 
 root.version = {
