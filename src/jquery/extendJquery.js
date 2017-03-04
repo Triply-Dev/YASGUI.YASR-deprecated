@@ -1,1 +1,1 @@
-require('./tableToCsv.js');
+require("./tableToCsv.js");
