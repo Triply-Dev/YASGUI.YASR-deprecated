@@ -345,7 +345,7 @@ root.defaults = {
 	 * @type object
 	 */
   datatable: {
-    autoWidth: false,
+    autoWidth: true,
     dom: '<"dtTopHeader"ilf>rtip',
     order: [], //disable initial sorting
     pageLength: 50, //default page length
