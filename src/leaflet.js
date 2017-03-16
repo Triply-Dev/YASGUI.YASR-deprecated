@@ -59,30 +59,33 @@ var root = module.exports = function(yasr) {
           popupAnchor: [0, -41]
         });
         var feature = wicket.read(binding[plotVariable].value).toObject({ icon: mySVGIcon });
-        var markerPos;
-        if (feature.getBounds) {
-          //get center of polygon or something
-          markerPos = feature.getBounds().getCenter();
-        } else if (feature.getLatLng) {
-          //its a point, just get the lat/lng
-          markerPos = feature.getLatLng();
-        }
 
-        function addPopupAndEventsToMarker(el) {
-          el.on("dblclick", zoomToEl);
-          var popupContent = options.formatPopup && options.formatPopup(yasr, L, plotVariable, binding);
-          if (popupContent) {
-            hasLabel = true;
-            el.bindPopup(popupContent);
+        var popupContent = options.formatPopup && options.formatPopup(yasr, L, plotVariable, binding);
+        if (popupContent) {
+          function addPopupAndEventsToMarker(el) {
+            el.on("dblclick", zoomToEl);
+            var popupContent = options.formatPopup && options.formatPopup(yasr, L, plotVariable, binding);
+            if (popupContent) {
+              hasLabel = true;
+              el.bindPopup(popupContent);
+            }
           }
-        }
 
-        if (markerPos) {
-          var shouldDrawSeparateMarker = !!feature.getBounds; //a lat/lng is already a marker
-          if (shouldDrawSeparateMarker) {
-            addPopupAndEventsToMarker(L.marker(markerPos, { icon: mySVGIcon }).addTo(map));
-          } else {
-            addPopupAndEventsToMarker(feature);
+          var markerPos;
+          if (feature.getBounds) {
+            //get center of polygon or something
+            markerPos = feature.getBounds().getCenter();
+          } else if (feature.getLatLng) {
+            //its a point, just get the lat/lng
+            markerPos = feature.getLatLng();
+          }
+          if (markerPos) {
+            var shouldDrawSeparateMarker = !!feature.getBounds; //a lat/lng is already a marker
+            if (shouldDrawSeparateMarker) {
+              addPopupAndEventsToMarker(L.marker(markerPos, { icon: mySVGIcon }).addTo(map));
+            } else {
+              addPopupAndEventsToMarker(feature);
+            }
           }
         }
         features.push(feature);
