@@ -130,8 +130,8 @@ var root = module.exports = function(yasr) {
             })
           );
         var dataTable = new google.visualization.DataTable();
-        var jsonResults = yasr.results.getAsJson();
-
+        //clone, because we'll be manipulating the literals types
+        var jsonResults = $.extend(true, {}, yasr.results.getAsJson());
         jsonResults.head.vars.forEach(function(variable) {
           var type = "string";
           try {
