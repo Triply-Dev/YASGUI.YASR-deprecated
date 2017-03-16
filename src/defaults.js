@@ -29,6 +29,14 @@ module.exports = {
 	 * @default true
 	 */
   drawDownloadIcon: true,
+  /**
+	 * Open links (anchor tags) of SPARQL results in a new browser tab/window (_blank), or the current one (_self)
+	 *
+	 * @property uriTarget
+	 * @type string ('_blank' | '_self')
+	 * @default '_blank'
+	 */
+  uriTarget: '_blank',
 
   getUsedPrefixes: null,
   /**

@@ -204,7 +204,7 @@ var getCellContent = function(yasr, plugin, bindings, sparqlVar, context) {
     }
     value = "<a " +
       (title ? "title='" + href + "' " : "") +
-      "class='uri' target='_blank' href='" +
+      "class='uri' target='" + yasr.options.uriTarget + "' href='" +
       href +
       "'>" +
       visibleString +
