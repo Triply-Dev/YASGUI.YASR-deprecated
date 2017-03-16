@@ -75844,7 +75844,7 @@ module.exports = {
 module.exports={
   "name": "yasgui-yasr",
   "description": "Yet Another SPARQL Resultset GUI",
-  "version": "2.10.6",
+  "version": "2.10.7",
   "main": "src/main.js",
   "license": "MIT",
   "author": "Laurens Rietveld",
@@ -75965,72 +75965,70 @@ module.exports={
 }
 
 },{}],145:[function(require,module,exports){
-'use strict';
+"use strict";
 module.exports = function(result) {
-	var quote = "\"";
-	var delimiter = ",";
-	var lineBreak = "\n";
+  var quote = '"';
+  var delimiter = ",";
+  var lineBreak = "\n";
 
-	var variables = result.head.vars;
+  var variables = result.head.vars;
 
-	var querySolutions = result.results.bindings;
+  var querySolutions = result.results.bindings;
 
+  var createHeader = function() {
+    for (var i = 0; i < variables.length; i++) {
+      addValueToString(variables[i]);
+    }
+    csvString += lineBreak;
+  };
 
+  var createBody = function() {
+    for (var i = 0; i < querySolutions.length; i++) {
+      addQuerySolutionToString(querySolutions[i]);
+      csvString += lineBreak;
+    }
+  };
 
-	var createHeader = function() {
-		for (var i = 0; i < variables.length; i++) {
-			addValueToString(variables[i]);
-		}
-		csvString += lineBreak;
-	};
+  var addQuerySolutionToString = function(querySolution) {
+    for (var i = 0; i < variables.length; i++) {
+      var variable = variables[i];
+      if (querySolution.hasOwnProperty(variable)) {
+        addValueToString(querySolution[variable]["value"]);
+      } else {
+        addValueToString("");
+      }
+    }
+  };
+  var addValueToString = function(value) {
+    //Quotes in the string need to be escaped
+    if (needToQuoteString(value)) {
+      if (value.indexOf(quote) >= 0) {
+        //use double quotes to escape these
+        value = value.replace(new RegExp(quote, "g"), quote + quote);
+      }
+      //and finally add quotes all around
+      value = quote + value + quote;
+    }
+    csvString += " " + value + " " + delimiter;
+  };
 
-	var createBody = function() {
-		for (var i = 0; i < querySolutions.length; i++) {
-			addQuerySolutionToString(querySolutions[i]);
-			csvString += lineBreak;
-		}
-	};
+  var needToQuoteString = function(value) {
+    //quote when it contains whitespace or the delimiter
+    var needQuoting = false;
+    if (value.match("[\\w|" + delimiter + "|" + quote + "]")) {
+      needQuoting = true;
+    }
+    return needQuoting;
+  };
 
-	var addQuerySolutionToString = function(querySolution) {
-		for (var i = 0; i < variables.length; i++) {
-			var variable = variables[i];
-			if (querySolution.hasOwnProperty(variable)) {
-				addValueToString(querySolution[variable]["value"]);
-			} else {
-				addValueToString("");
-			}
-		}
-	};
-	var addValueToString = function(value) {
-		//Quotes in the string need to be escaped
-		if (needToQuoteString(value)) {
-			if (value.indexOf(quote) >= 0) {
-				//use double quotes to escape these
-				value = value.replace(new RegExp(quote, 'g'), quote+quote)
-			}
-			//and finally add quotes all around
-			value = quote + value + quote;
-		}
-		csvString += " " + value + " " + delimiter;
-	};
-
-	var needToQuoteString = function(value) {
-		//quote when it contains whitespace or the delimiter
-		var needQuoting = false;
-		if (value.match("[\\w|" + delimiter + "|" + quote + "]")) {
-			needQuoting = true;
-		}
-		return needQuoting;
-	};
-
-	var csvString = "";
-	createHeader();
-	createBody();
-	return csvString;
+  var csvString = "";
+  createHeader();
+  createBody();
+  return csvString;
 };
 
 },{}],146:[function(require,module,exports){
-'use strict';
+"use strict";
 var $ = require("jquery");
 
 /**
@@ -76044,75 +76042,72 @@ var $ = require("jquery");
  * 
  */
 var root = module.exports = function(yasr) {
-	var container = $("<div class='booleanResult'></div>");
-	var draw = function() {
-		container.empty().appendTo(yasr.resultsContainer);
-		var booleanVal = yasr.results.getBoolean();
+  var container = $("<div class='booleanResult'></div>");
+  var draw = function() {
+    container.empty().appendTo(yasr.resultsContainer);
+    var booleanVal = yasr.results.getBoolean();
 
-		var imgId = null;
-		var textVal = null;
-		if (booleanVal === true) {
-			imgId = "check";
-			textVal = "True";
-		} else if (booleanVal === false) {
-			imgId = "cross";
-			textVal = "False";
-		} else {
-			container.width("140");
-			textVal = "Could not find boolean value in response";
-		}
+    var imgId = null;
+    var textVal = null;
+    if (booleanVal === true) {
+      imgId = "check";
+      textVal = "True";
+    } else if (booleanVal === false) {
+      imgId = "cross";
+      textVal = "False";
+    } else {
+      container.width("140");
+      textVal = "Could not find boolean value in response";
+    }
 
-		//add icon
-		if (imgId) require("yasgui-utils").svg.draw(container, require('./imgs.js')[imgId]);
+    //add icon
+    if (imgId) require("yasgui-utils").svg.draw(container, require("./imgs.js")[imgId]);
 
-		$("<span></span>").text(textVal).appendTo(container);
-	};
+    $("<span></span>").text(textVal).appendTo(container);
+  };
 
+  var canHandleResults = function() {
+    return yasr.results.getBoolean && (yasr.results.getBoolean() === true || yasr.results.getBoolean() == false);
+  };
 
-	var canHandleResults = function() {
-		return yasr.results.getBoolean && (yasr.results.getBoolean() === true || yasr.results.getBoolean() == false);
-	};
-
-
-
-	return {
-		name: null, //don't need to set this: we don't show it in the selection widget anyway, so don't need a human-friendly name
-		draw: draw,
-		hideFromSelection: true,
-		getPriority: 10,
-		canHandleResults: canHandleResults
-	}
+  return {
+    name: null, //don't need to set this: we don't show it in the selection widget anyway, so don't need a human-friendly name
+    draw: draw,
+    hideFromSelection: true,
+    getPriority: 10,
+    canHandleResults: canHandleResults
+  };
 };
-
 
 root.version = {
-	"YASR-boolean": require("../package.json").version,
-	"jquery": $.fn.jquery,
+  "YASR-boolean": require("../package.json").version,
+  jquery: $.fn.jquery
 };
+
 },{"../package.json":144,"./imgs.js":153,"jquery":18,"yasgui-utils":141}],147:[function(require,module,exports){
-'use strict';
-var $ = require('jquery');
+"use strict";
+var $ = require("jquery");
 module.exports = {
-	/**
+  /**
 	 * key of default plugin to use
 	 * @property output
 	 * @type string
 	 * @default "table"
 	 */
-	output: "table",
-	useGoogleCharts: true,
-	outputPlugins: ["table", "error", "boolean", "rawResponse", "pivot", "gchart", "leaflet"],
+  output: "table",
+  useGoogleCharts: true,
+  outputPlugins: ["table", "error", "boolean", "rawResponse", "pivot", "gchart", "leaflet"],
 
-	/**
+  /**
 	 * Draw the output selector widget
 	 *
 	 * @property drawOutputSelector
 	 * @type boolean
 	 * @default true
 	 */
-	drawOutputSelector: true,
+  drawOutputSelector: true,
 
-	/**
+  /**
 	 * Draw download icon. This issues html5 download functionality to 'download' files created on the client-side.
 	 *  This allows the user to download results already queried for, such as a CSV when a table is shown, or the original response when the raw response output is selected
 	 *
@@ -76120,11 +76115,18 @@ module.exports = {
 	 * @type boolean
 	 * @default true
 	 */
-	drawDownloadIcon: true,
+  drawDownloadIcon: true,
+  /**
+	 * Open links (anchor tags) of SPARQL results in a new browser tab/window (_blank), or the current one (_self)
+	 *
+	 * @property uriTarget
+	 * @type string ('_blank' | '_self')
+	 * @default '_blank'
+	 */
+  uriTarget: '_blank',
 
-
-	getUsedPrefixes: null,
-	/**
+  getUsedPrefixes: null,
+  /**
 	 * Make certain settings and values of YASR persistent. Setting a key
 	 * to null, will disable persistancy: nothing is stored between browser
 	 * sessions Setting the values to a string (or a function which returns a
@@ -76135,39 +76137,39 @@ module.exports = {
 	 * @property persistency
 	 * @type object
 	 */
-	persistency: {
-		prefix: function(yasr) {
-			return "yasr_" + $(yasr.container).closest('[id]').attr('id') + "_";
-		},
-		/**
+  persistency: {
+    prefix: function(yasr) {
+      return "yasr_" + $(yasr.container).closest("[id]").attr("id") + "_";
+    },
+    /**
 		 * Persistency setting for the selected output
 		 *
 		 * @property persistency.outputSelector
 		 * @type string|function
 		 * @default function (determine unique id)
 		 */
-		outputSelector: function(yasr) {
-			return "selector";
-		},
-		/**
+    outputSelector: function(yasr) {
+      return "selector";
+    },
+    /**
 		 * Persistency setting for query results.
 		 *
 		 * @property persistency.results
 		 * @type object
 		 */
-		results: {
-			/**
+    results: {
+      /**
 			 * Get the key to store results in
 			 *
 			 * @property persistency.results.id
 			 * @type string|function
 			 * @default function (determine unique id)
 			 */
-			id: function(yasr) {
-				return "results_" + $(yasr.container).closest('[id]').attr('id');
-			},
-			key: 'results',
-			/**
+      id: function(yasr) {
+        return "results_" + $(yasr.container).closest("[id]").attr("id");
+      },
+      key: "results",
+      /**
 			 * The result set might too large to fit in local storage.
 			 * It is impossible to detect how large the local storage is.
 			 * Therefore, we do not store all results in local storage, depending on a max number of characters in the SPARQL result serialization.
@@ -76177,21 +76179,19 @@ module.exports = {
 			 * @type int
 			 * @default 100000
 			 */
-			maxSize: 100000 //char count
-		}
-
-	},
-
-
+      maxSize: 100000 //char count
+    }
+  }
 };
 
 },{"jquery":18}],148:[function(require,module,exports){
 //this is the entry-point for browserify.
 //the current browserify version does not support require-ing js files which are used as entry-point
 //this way, we can still require our main.js file
-module.exports = require('./main.js');
+module.exports = require("./main.js");
+
 },{"./main.js":157}],149:[function(require,module,exports){
-'use strict';
+"use strict";
 var $ = require("jquery");
 
 /**
@@ -76205,83 +76205,78 @@ var $ = require("jquery");
  * 
  */
 var root = module.exports = function(yasr) {
-	var $container = $("<div class='errorResult'></div>");
-	var options = $.extend(true, {}, root.defaults);
+  var $container = $("<div class='errorResult'></div>");
+  var options = $.extend(true, {}, root.defaults);
 
-	var getTryBtn = function() {
-		var $tryBtn = null;
-		if (options.tryQueryLink) {
-			var link = options.tryQueryLink();
-			$tryBtn = $('<button>', {
-					class: 'yasr_btn yasr_tryQuery'
-				})
-				.text('Try query in new browser window')
-				.click(function() {
-					window.open(link, '_blank');
-					$(this).blur();
-				})
-		}
-		return $tryBtn;
-	}
+  var getTryBtn = function() {
+    var $tryBtn = null;
+    if (options.tryQueryLink) {
+      var link = options.tryQueryLink();
+      $tryBtn = $("<button>", {
+        class: "yasr_btn yasr_tryQuery"
+      })
+        .text("Try query in new browser window")
+        .click(function() {
+          window.open(link, "_blank");
+          $(this).blur();
+        });
+    }
+    return $tryBtn;
+  };
 
-	var draw = function() {
-		var error = yasr.results.getException();
-		$container.empty().appendTo(yasr.resultsContainer);
-		var $header = $("<div>", {
-			class: 'errorHeader'
-		}).appendTo($container);
+  var draw = function() {
+    var error = yasr.results.getException();
+    $container.empty().appendTo(yasr.resultsContainer);
+    var $header = $("<div>", {
+      class: "errorHeader"
+    }).appendTo($container);
 
-		if (error.status !== 0) {
-			var statusText = 'Error';
-			if (error.statusText && error.statusText.length < 100) {
-				//use a max: otherwise the alert span will look ugly
-				statusText = error.statusText;
-			}
-			statusText += ' (#' + error.status + ')';
+    if (error.status !== 0) {
+      var statusText = "Error";
+      if (error.statusText && error.statusText.length < 100) {
+        //use a max: otherwise the alert span will look ugly
+        statusText = error.statusText;
+      }
+      statusText += " (#" + error.status + ")";
 
-			$header
-				.append(
-					$("<span>", {
-						class: 'exception'
-					})
-					.text(statusText)
-				)
-				.append(getTryBtn());
+      $header
+        .append(
+          $("<span>", {
+            class: "exception"
+          }).text(statusText)
+        )
+        .append(getTryBtn());
 
-			var responseText = null;
-			if (error.responseText) {
-				responseText = error.responseText;
-			} else if (typeof error == "string") {
-				//for backwards compatability (when creating the error string was done externally
-				responseText = error;
-			}
-			if (responseText) $container.append($("<pre>").text(responseText));
-		} else {
-			$header.append(getTryBtn());
-			//cors disabled, wrong url, or endpoint down
-			$container
-				.append(
-					$('<div>', {
-						class: 'corsMessage'
-					})
-					.append(options.corsMessage)
-				);
-		}
+      var responseText = null;
+      if (error.responseText) {
+        responseText = error.responseText;
+      } else if (typeof error == "string") {
+        //for backwards compatability (when creating the error string was done externally
+        responseText = error;
+      }
+      if (responseText) $container.append($("<pre>").text(responseText));
+    } else {
+      $header.append(getTryBtn());
+      //cors disabled, wrong url, or endpoint down
+      $container.append(
+        $("<div>", {
+          class: "corsMessage"
+        }).append(options.corsMessage)
+      );
+    }
+  };
 
-	};
+  var canHandleResults = function(yasr) {
+    return yasr.results.getException() || false;
+  };
 
-
-	var canHandleResults = function(yasr) {
-		return yasr.results.getException() || false;
-	};
-
-	return {
-		name: null, //don't need to set this: we don't show it in the selection widget anyway, so don't need a human-friendly name
-		draw: draw,
-		getPriority: 20,
-		hideFromSelection: true,
-		canHandleResults: canHandleResults,
-	}
+  return {
+    name: null, //don't need to set this: we don't show it in the selection widget anyway, so don't need a human-friendly name
+    draw: draw,
+    getPriority: 20,
+    hideFromSelection: true,
+    canHandleResults: canHandleResults
+  };
 };
 
 /**
@@ -76291,784 +76286,788 @@ var root = module.exports = function(yasr) {
  * @attribute YASR.plugins.error.defaults
  */
 root.defaults = {
-	corsMessage: 'Unable to get response from endpoint',
-	tryQueryLink: null,
+  corsMessage: "Unable to get response from endpoint",
+  tryQueryLink: null
 };
+
 },{"jquery":18}],150:[function(require,module,exports){
 module.exports = {
-	GoogleTypeException: function(foundTypes, varName) {
-		this.foundTypes = foundTypes;
-		this.varName = varName;
-		this.toString = function() {
-			var string = 'Conflicting data types found for variable ' + this.varName + '. Assuming all values of this variable are "string".';
-			string += ' To avoid this issue, cast the values in your SPARQL query to the intended xsd datatype';
+  GoogleTypeException: function(foundTypes, varName) {
+    this.foundTypes = foundTypes;
+    this.varName = varName;
+    this.toString = function() {
+      var string = "Conflicting data types found for variable " +
+        this.varName +
+        '. Assuming all values of this variable are "string".';
+      string += " To avoid this issue, cast the values in your SPARQL query to the intended xsd datatype";
 
-			return string;
-		};
-		this.toHtml = function() {
-			var string = 'Conflicting data types found for variable <i>' + this.varName + '</i>. Assuming all values of this variable are "string".';
-			string += ' As a result, several Google Charts will not render values of this particular variable.';
-			string += ' To avoid this issue, cast the values in your SPARQL query to the intended xsd datatype';
+      return string;
+    };
+    this.toHtml = function() {
+      var string = "Conflicting data types found for variable <i>" +
+        this.varName +
+        '</i>. Assuming all values of this variable are "string".';
+      string += " As a result, several Google Charts will not render values of this particular variable.";
+      string += " To avoid this issue, cast the values in your SPARQL query to the intended xsd datatype";
 
-			return string;
-		};
-	}
-}
+      return string;
+    };
+  }
+};
+
 },{}],151:[function(require,module,exports){
 (function (global){
-var EventEmitter = require('events').EventEmitter,
-	$ = require('jquery');
+var EventEmitter = require("events").EventEmitter, $ = require("jquery");
 //cannot package google loader via browserify....
 var loadingMain = false;
 var loadingFailed = false;
 
 var loader = function() {
-	EventEmitter.call(this);
-	var mod = this;
-	this.init = function() {
-		if (!loadingFailed && !(typeof window !== "undefined" ? window['google'] : typeof global !== "undefined" ? global['google'] : null) && !loadingMain) { //not initiated yet, not currently loading, and has not failed the previous time
-			loadingMain = true;
-			/**
+  EventEmitter.call(this);
+  var mod = this;
+  this.init = function() {
+    if (!loadingFailed && !(typeof window !== "undefined" ? window['google'] : typeof global !== "undefined" ? global['google'] : null) && !loadingMain) {
+      //not initiated yet, not currently loading, and has not failed the previous time
+      loadingMain = true;
+      /**
 			 * It is extremely difficult to catch script loader errors (see http://www.html5rocks.com/en/tutorials/speed/script-loading/)
 			 * Existing libraries either ignore several browsers (e.g. jquery 2.x), or use ugly hacks (timeouts or something)
 			 * So, we use our own custom ugly hack (yes, timeouts)
 			 */
-			 //use protocol relative req when served via http. Otherwise, just use http:// (e.g. when yasr is served via file://)
-			loadScript((window.location.protocol.indexOf("http") === 0 ? '//': 'http://') + 'google.com/jsapi', function() {
-				loadingMain = false;
-				mod.emit('initDone');
-			});
+      //use protocol relative req when served via http. Otherwise, just use http:// (e.g. when yasr is served via file://)
+      loadScript((window.location.protocol.indexOf("http") === 0 ? "//" : "http://") + "google.com/jsapi", function() {
+        loadingMain = false;
+        mod.emit("initDone");
+      });
 
-			var timeout = 100; //ms
-			var maxTimeout = 6000; //so 6 sec max
-			var startTime = +new Date();
-			var checkAndWait = function() {
-				if (!(typeof window !== "undefined" ? window['google'] : typeof global !== "undefined" ? global['google'] : null)) {
-					if ((+new Date() - startTime) > maxTimeout) {
-						//ok, we've waited long enough. Obviously we could not load the googleloader...
-						loadingFailed = true;
-						loadingMain = false;
-						mod.emit('initError');
+      var timeout = 100; //ms
+      var maxTimeout = 6000; //so 6 sec max
+      var startTime = +new Date();
+      var checkAndWait = function() {
+        if (!(typeof window !== "undefined" ? window['google'] : typeof global !== "undefined" ? global['google'] : null)) {
+          if (+new Date() - startTime > maxTimeout) {
+            //ok, we've waited long enough. Obviously we could not load the googleloader...
+            loadingFailed = true;
+            loadingMain = false;
+            mod.emit("initError");
 
-						//TODO: clear initDone callbacks. they won't fire anymore anyway
-
-					} else {
-						setTimeout(checkAndWait, timeout);
-					}
-				} else {
-					//TODO: clear initFailed callbacks. they won't fire anymore anyway
-				}
-			}
-			checkAndWait();
-		} else {
-			if ((typeof window !== "undefined" ? window['google'] : typeof global !== "undefined" ? global['google'] : null)) {
-				//already loaded! everything is fine
-				mod.emit('initDone');
-			} else if (loadingFailed) {
-				mod.emit('initError')
-			} else {
-				//hmmm, should never get here
-			}
-
-		}
-	}
-	this.googleLoad = function() {
-
-		var load = function() {
-			(typeof window !== "undefined" ? window['google'] : typeof global !== "undefined" ? global['google'] : null).load("visualization", "1", {
-				packages: ["corechart", "charteditor"],
-				callback: function() {
-					mod.emit('done')
-				}
-			})
-		}
-		if (loadingMain) {
-			mod.once('initDone', load);
-			mod.once('initError', function() {
-				mod.emit('error', 'Could not load google loader')
-			});
-		} else if ((typeof window !== "undefined" ? window['google'] : typeof global !== "undefined" ? global['google'] : null)) {
-			//google loader is there. use it
-			load();
-		} else if (loadingFailed) {
-			mod.emit('error', 'Could not load google loader');
-		} else {
-			//not loading, no loading error, and not loaded. it must not have been initialized yet. Do that
-			mod.once('initDone', load);
-			mod.once('initError', function() {
-				mod.emit('error', 'Could not load google loader')
-			});
-		}
-	};
-}
-
+            //TODO: clear initDone callbacks. they won't fire anymore anyway
+          } else {
+            setTimeout(checkAndWait, timeout);
+          }
+        } else {
+          //TODO: clear initFailed callbacks. they won't fire anymore anyway
+        }
+      };
+      checkAndWait();
+    } else {
+      if ((typeof window !== "undefined" ? window['google'] : typeof global !== "undefined" ? global['google'] : null)) {
+        //already loaded! everything is fine
+        mod.emit("initDone");
+      } else if (loadingFailed) {
+        mod.emit("initError");
+      } else {
+        //hmmm, should never get here
+      }
+    }
+  };
+  this.googleLoad = function() {
+    var load = function() {
+      (typeof window !== "undefined" ? window['google'] : typeof global !== "undefined" ? global['google'] : null).load("visualization", "1", {
+        packages: ["corechart", "charteditor"],
+        callback: function() {
+          mod.emit("done");
+        }
+      });
+    };
+    if (loadingMain) {
+      mod.once("initDone", load);
+      mod.once("initError", function() {
+        mod.emit("error", "Could not load google loader");
+      });
+    } else if ((typeof window !== "undefined" ? window['google'] : typeof global !== "undefined" ? global['google'] : null)) {
+      //google loader is there. use it
+      load();
+    } else if (loadingFailed) {
+      mod.emit("error", "Could not load google loader");
+    } else {
+      //not loading, no loading error, and not loaded. it must not have been initialized yet. Do that
+      mod.once("initDone", load);
+      mod.once("initError", function() {
+        mod.emit("error", "Could not load google loader");
+      });
+    }
+  };
+};
 
 var loadScript = function(url, callback) {
-	var script = document.createElement("script")
-	script.type = "text/javascript";
+  var script = document.createElement("script");
+  script.type = "text/javascript";
 
-	if (script.readyState) { //IE
-		script.onreadystatechange = function() {
-			if (script.readyState == "loaded" ||
-				script.readyState == "complete") {
-				script.onreadystatechange = null;
-				callback();
-			}
-		};
-	} else { //Others
-		script.onload = function() {
-			callback();
-		};
-	}
+  if (script.readyState) {
+    //IE
+    script.onreadystatechange = function() {
+      if (script.readyState == "loaded" || script.readyState == "complete") {
+        script.onreadystatechange = null;
+        callback();
+      }
+    };
+  } else {
+    //Others
+    script.onload = function() {
+      callback();
+    };
+  }
 
-	script.src = url;
-	document.body.appendChild(script);
-}
-loader.prototype = new EventEmitter;
+  script.src = url;
+  document.body.appendChild(script);
+};
+loader.prototype = new EventEmitter();
 module.exports = new loader();
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
 
 },{"events":13,"jquery":18}],152:[function(require,module,exports){
 (function (global){
-'use strict';
+"use strict";
 /**
  * todo: chart height as option
  * 
  */
-var $ = require('jquery'),
-	utils = require('./utils.js'),
-	yUtils = require('yasgui-utils');
+var $ = require("jquery"), utils = require("./utils.js"), yUtils = require("yasgui-utils");
 
 var root = module.exports = function(yasr) {
+  var options = $.extend(true, {}, root.defaults);
+  var id = yasr.container.closest("[id]").attr("id");
 
-	var options = $.extend(true, {}, root.defaults);
-	var id = yasr.container.closest('[id]').attr('id');
+  var chartWrapper = null;
+  var editor = null;
 
-	var chartWrapper = null;
-	var editor = null;
+  var initEditor = function(callback) {
+    var google = (typeof window !== "undefined" ? window['google'] : typeof global !== "undefined" ? global['google'] : null);
+    editor = new google.visualization.ChartEditor();
+    google.visualization.events.addListener(editor, "ok", function() {
+      var tmp;
+      chartWrapper = editor.getChartWrapper();
+      tmp = chartWrapper.getDataTable();
+      chartWrapper.setDataTable(null);
+      //ugly: need to parse json string to json obj again, as google chart does not provide access to object directly
+      options.chartConfig = JSON.parse(chartWrapper.toJSON());
+      //remove container ID though, for portability
+      if (options.chartConfig.containerId) delete options.chartConfig["containerId"];
+      yasr.store();
+      chartWrapper.setDataTable(tmp);
+      var wrapperId = id + "_gchartWrapper";
+      var $wrapper = $("#" + wrapperId);
+      chartWrapper.setOption("width", $wrapper.width());
+      chartWrapper.setOption("height", $wrapper.height());
+      chartWrapper.draw();
+      yasr.updateHeader();
+    });
+    if (callback) callback();
+  };
 
-	var initEditor = function(callback) {
-		var google = (typeof window !== "undefined" ? window['google'] : typeof global !== "undefined" ? global['google'] : null);
-		editor = new google.visualization.ChartEditor();
-		google.visualization.events.addListener(editor, 'ok', function() {
-			var tmp;
-			chartWrapper = editor.getChartWrapper();
-			tmp = chartWrapper.getDataTable();
-			chartWrapper.setDataTable(null);
-			//ugly: need to parse json string to json obj again, as google chart does not provide access to object directly
-			options.chartConfig = JSON.parse(chartWrapper.toJSON());
-			//remove container ID though, for portability
-			if (options.chartConfig.containerId) delete options.chartConfig['containerId'];
-			yasr.store();
-			chartWrapper.setDataTable(tmp);
-			var wrapperId = id + '_gchartWrapper';
-			var $wrapper = $('#' + wrapperId);
-			chartWrapper.setOption("width", $wrapper.width());
-			chartWrapper.setOption("height", $wrapper.height());
-			chartWrapper.draw();
-			yasr.updateHeader();
-		});
-		if (callback) callback();
-	};
+  return {
+    name: "Google Chart",
+    hideFromSelection: false,
+    priority: 7,
+    options: options,
+    getPersistentSettings: function() {
+      return {
+        chartConfig: options.chartConfig,
+        motionChartState: options.motionChartState
+      };
+    },
+    setPersistentSettings: function(persSettings) {
+      if (persSettings["chartConfig"]) options.chartConfig = persSettings["chartConfig"];
+      if (persSettings["motionChartState"]) options.motionChartState = persSettings["motionChartState"];
+    },
+    canHandleResults: function(yasr) {
+      var results, variables;
+      return (results = yasr.results) != null && (variables = results.getVariables()) && variables.length > 0;
+    },
+    getDownloadInfo: function() {
+      if (!yasr.results) return null;
+      var svgEl = yasr.resultsContainer.find("svg");
+      if (svgEl.length > 0) {
+        return {
+          getContent: function() {
+            if (svgEl[0].outerHTML) {
+              return svgEl[0].outerHTML;
+            } else {
+              //outerHTML not supported. use workaround
+              return $("<div>").append(svgEl.clone()).html();
+            }
+          },
+          filename: "queryResults.svg",
+          contentType: "image/svg+xml",
+          buttonTitle: "Download SVG Image"
+        };
+      }
+      //ok, not a svg. is it a table?
+      var $table = yasr.resultsContainer.find(".google-visualization-table-table");
+      if ($table.length > 0) {
+        return {
+          getContent: function() {
+            return $table.tableToCsv();
+          },
+          filename: "queryResults.csv",
+          contentType: "text/csv",
+          buttonTitle: "Download as CSV"
+        };
+      }
+    },
+    getEmbedHtml: function() {
+      if (!yasr.results) return null;
 
-	return {
-		name: "Google Chart",
-		hideFromSelection: false,
-		priority: 7,
-		options: options,
-		getPersistentSettings: function() {
-			return {
-				chartConfig: options.chartConfig,
-				motionChartState: options.motionChartState
-			}
-		},
-		setPersistentSettings: function(persSettings) {
-			if (persSettings['chartConfig']) options.chartConfig = persSettings['chartConfig'];
-			if (persSettings['motionChartState']) options.motionChartState = persSettings['motionChartState'];
-		},
-		canHandleResults: function(yasr) {
-			var results, variables;
-			return (results = yasr.results) != null && (variables = results.getVariables()) && variables.length > 0;
-		},
-		getDownloadInfo: function() {
-			if (!yasr.results) return null;
-			var svgEl = yasr.resultsContainer.find('svg');
-			if (svgEl.length > 0) {
-				return {
-					getContent: function() {
-						if (svgEl[0].outerHTML) {
-							return svgEl[0].outerHTML;
-						} else {
-							//outerHTML not supported. use workaround
-							return $('<div>').append(svgEl.clone()).html();
-						}
-					},
-					filename: "queryResults.svg",
-					contentType: "image/svg+xml",
-					buttonTitle: "Download SVG Image"
-				};
-			}
-			//ok, not a svg. is it a table?
-			var $table = yasr.resultsContainer.find('.google-visualization-table-table');
-			if ($table.length > 0) {
-				return {
-					getContent: function() {
-						return $table.tableToCsv();
-					},
-					filename: "queryResults.csv",
-					contentType: "text/csv",
-					buttonTitle: "Download as CSV"
-				};
-			}
-		},
-		getEmbedHtml: function() {
-			if (!yasr.results) return null;
+      var svgEl = yasr.resultsContainer
+        .find("svg")
+        .clone() //create clone, as we'd like to remove height/width attributes
+        .removeAttr("height")
+        .removeAttr("width")
+        .css("height", "")
+        .css("width", "");
+      if (svgEl.length == 0) return null;
 
-			var svgEl = yasr.resultsContainer.find('svg')
-				.clone() //create clone, as we'd like to remove height/width attributes
-				.removeAttr('height').removeAttr('width')
-				.css('height', '').css('width', '');
-			if (svgEl.length == 0) return null;
+      var htmlString = svgEl[0].outerHTML;
+      if (!htmlString) {
+        //outerHTML not supported. use workaround
+        htmlString = $("<div>").append(svgEl.clone()).html();
+      }
+      //wrap in div, so users can more easily tune width/height
+      //don't use jquery, so we can easily influence indentation
+      return '<div style="width: 800px; height: 600px;">\n' + htmlString + "\n</div>";
+    },
+    draw: function() {
+      var doDraw = function() {
+        //clear previous results (if any)
+        yasr.resultsContainer.empty();
+        var wrapperId = id + "_gchartWrapper";
 
-			var htmlString = svgEl[0].outerHTML;
-			if (!htmlString) {
-				//outerHTML not supported. use workaround
-				htmlString = $('<div>').append(svgEl.clone()).html();
-			}
-			//wrap in div, so users can more easily tune width/height
-			//don't use jquery, so we can easily influence indentation
-			return '<div style="width: 800px; height: 600px;">\n' + htmlString + '\n</div>';
-		},
-		draw: function() {
-			var doDraw = function() {
-				//clear previous results (if any)
-				yasr.resultsContainer.empty();
-				var wrapperId = id + '_gchartWrapper';
+        yasr.resultsContainer
+          .append(
+            $("<button>", {
+              class: "openGchartBtn yasr_btn"
+            })
+              .text("Chart Config")
+              .click(function() {
+                editor.openDialog(chartWrapper);
+              })
+          )
+          .append(
+            $("<div>", {
+              id: wrapperId,
+              class: "gchartWrapper"
+            })
+          );
+        var dataTable = new google.visualization.DataTable();
+        //clone, because we'll be manipulating the literals types
+        var jsonResults = $.extend(true, {}, yasr.results.getAsJson());
+        jsonResults.head.vars.forEach(function(variable) {
+          var type = "string";
+          try {
+            type = utils.getGoogleTypeForBindings(jsonResults.results.bindings, variable);
+          } catch (e) {
+            if (e instanceof require("./exceptions.js").GoogleTypeException) {
+              yasr.warn(e.toHtml());
+            } else {
+              throw e;
+            }
+          }
+          dataTable.addColumn(type, variable);
+        });
+        var usedPrefixes = null;
+        if (yasr.options.getUsedPrefixes) {
+          usedPrefixes = typeof yasr.options.getUsedPrefixes == "function"
+            ? yasr.options.getUsedPrefixes(yasr)
+            : yasr.options.getUsedPrefixes;
+        }
+        jsonResults.results.bindings.forEach(function(binding) {
+          var row = [];
+          jsonResults.head.vars.forEach(function(variable, columnId) {
+            row.push(utils.castGoogleType(binding[variable], usedPrefixes, dataTable.getColumnType(columnId)));
+          });
+          dataTable.addRow(row);
+        });
 
-				yasr.resultsContainer.append(
-					$('<button>', {
-						class: 'openGchartBtn yasr_btn'
-					})
-					.text('Chart Config')
-					.click(function() {
-						editor.openDialog(chartWrapper);
-					})
-				).append(
-					$('<div>', {
-						id: wrapperId,
-						class: 'gchartWrapper'
-					})
-				);
-				var dataTable = new google.visualization.DataTable();
-				var jsonResults = yasr.results.getAsJson();
+        if (options.chartConfig && options.chartConfig.chartType) {
+          options.chartConfig.containerId = wrapperId;
+          chartWrapper = new google.visualization.ChartWrapper(options.chartConfig);
+          if (chartWrapper.getChartType() === "MotionChart" && options.motionChartState) {
+            chartWrapper.setOption("state", options.motionChartState);
+            google.visualization.events.addListener(chartWrapper, "ready", function() {
+              var motionChart;
+              motionChart = chartWrapper.getChart();
+              google.visualization.events.addListener(motionChart, "statechange", function() {
+                options.motionChartState = motionChart.getState();
+                yasr.store();
+              });
+            });
+          }
+          chartWrapper.setDataTable(dataTable);
+        } else {
+          chartWrapper = new google.visualization.ChartWrapper({
+            chartType: "Table",
+            dataTable: dataTable,
+            containerId: wrapperId
+          });
+        }
+        var $wrapper = $("#" + wrapperId);
+        chartWrapper.setOption("width", $wrapper.width());
+        chartWrapper.setOption("height", $wrapper.height());
+        chartWrapper.draw();
+        google.visualization.events.addListener(chartWrapper, "ready", yasr.updateHeader);
+      };
 
-				jsonResults.head.vars.forEach(function(variable) {
-					var type = 'string';
-					try {
-						type = utils.getGoogleTypeForBindings(jsonResults.results.bindings, variable);
-					} catch (e) {
-						if (e instanceof require('./exceptions.js').GoogleTypeException) {
-							yasr.warn(e.toHtml())
-						} else {
-							throw e;
-						}
-					}
-					dataTable.addColumn(type, variable);
-				});
-				var usedPrefixes = null;
-				if (yasr.options.getUsedPrefixes) {
-					usedPrefixes = (typeof yasr.options.getUsedPrefixes == "function" ? yasr.options.getUsedPrefixes(yasr) : yasr.options.getUsedPrefixes);
-				}
-				jsonResults.results.bindings.forEach(function(binding) {
-					var row = [];
-					jsonResults.head.vars.forEach(function(variable, columnId) {
-						row.push(utils.castGoogleType(binding[variable], usedPrefixes, dataTable.getColumnType(columnId)));
-					})
-					dataTable.addRow(row);
-				});
-
-				if (options.chartConfig && options.chartConfig.chartType) {
-					options.chartConfig.containerId = wrapperId;
-					chartWrapper = new google.visualization.ChartWrapper(options.chartConfig);
-					if (chartWrapper.getChartType() === "MotionChart" && options.motionChartState) {
-						chartWrapper.setOption("state", options.motionChartState);
-						google.visualization.events.addListener(chartWrapper, 'ready', function() {
-							var motionChart;
-							motionChart = chartWrapper.getChart();
-							google.visualization.events.addListener(motionChart, 'statechange', function() {
-								options.motionChartState = motionChart.getState();
-								yasr.store();
-							});
-						});
-					}
-					chartWrapper.setDataTable(dataTable);
-				} else {
-					chartWrapper = new google.visualization.ChartWrapper({
-						chartType: 'Table',
-						dataTable: dataTable,
-						containerId: wrapperId
-					});
-				}
-				var $wrapper = $('#' + wrapperId);
-				chartWrapper.setOption("width", $wrapper.width());
-				chartWrapper.setOption("height", $wrapper.height());
-				chartWrapper.draw();
-				google.visualization.events.addListener(chartWrapper, 'ready', yasr.updateHeader);
-			}
-
-			if (!(typeof window !== "undefined" ? window['google'] : typeof global !== "undefined" ? global['google'] : null) || !(typeof window !== "undefined" ? window['google'] : typeof global !== "undefined" ? global['google'] : null).visualization || !editor) {
-				require('./gChartLoader.js')
-					.on('done', function() {
-						initEditor();
-						doDraw();
-					})
-					.on('error', function() {
-						//TODO: disable or something?
-					})
-					.googleLoad();
-			} else {
-				//everything (editor as well) is already initialized
-				doDraw();
-			}
-		}
-	};
+      if (!(typeof window !== "undefined" ? window['google'] : typeof global !== "undefined" ? global['google'] : null) || !(typeof window !== "undefined" ? window['google'] : typeof global !== "undefined" ? global['google'] : null).visualization || !editor) {
+        require("./gChartLoader.js")
+          .on("done", function() {
+            initEditor();
+            doDraw();
+          })
+          .on("error", function() {
+            //TODO: disable or something?
+          })
+          .googleLoad();
+      } else {
+        //everything (editor as well) is already initialized
+        doDraw();
+      }
+    }
+  };
 };
 root.defaults = {
-	height: "100%",
-	width: "100%",
-	persistencyId: 'gchart',
-	chartConfig: null,
-	motionChartState: null
+  height: "100%",
+  width: "100%",
+  persistencyId: "gchart",
+  chartConfig: null,
+  motionChartState: null
 };
 
 function deepEq$(x, y, type) {
-	var toString = {}.toString,
-		hasOwnProperty = {}.hasOwnProperty,
-		has = function(obj, key) {
-			return hasOwnProperty.call(obj, key);
-		};
-	var first = true;
-	return eq(x, y, []);
+  var toString = ({}).toString,
+    hasOwnProperty = ({}).hasOwnProperty,
+    has = function(obj, key) {
+      return hasOwnProperty.call(obj, key);
+    };
+  var first = true;
+  return eq(x, y, []);
 
-	function eq(a, b, stack) {
-		var className, length, size, result, alength, blength, r, key, ref, sizeB;
-		if (a == null || b == null) {
-			return a === b;
-		}
-		if (a.__placeholder__ || b.__placeholder__) {
-			return true;
-		}
-		if (a === b) {
-			return a !== 0 || 1 / a == 1 / b;
-		}
-		className = toString.call(a);
-		if (toString.call(b) != className) {
-			return false;
-		}
-		switch (className) {
-			case '[object String]':
-				return a == String(b);
-			case '[object Number]':
-				return a != +a ? b != +b : (a == 0 ? 1 / a == 1 / b : a == +b);
-			case '[object Date]':
-			case '[object Boolean]':
-				return +a == +b;
-			case '[object RegExp]':
-				return a.source == b.source &&
-					a.global == b.global &&
-					a.multiline == b.multiline &&
-					a.ignoreCase == b.ignoreCase;
-		}
-		if (typeof a != 'object' || typeof b != 'object') {
-			return false;
-		}
-		length = stack.length;
-		while (length--) {
-			if (stack[length] == a) {
-				return true;
-			}
-		}
-		stack.push(a);
-		size = 0;
-		result = true;
-		if (className == '[object Array]') {
-			alength = a.length;
-			blength = b.length;
-			if (first) {
-				switch (type) {
-					case '===':
-						result = alength === blength;
-						break;
-					case '<==':
-						result = alength <= blength;
-						break;
-					case '<<=':
-						result = alength < blength;
-						break;
-				}
-				size = alength;
-				first = false;
-			} else {
-				result = alength === blength;
-				size = alength;
-			}
-			if (result) {
-				while (size--) {
-					if (!(result = size in a == size in b && eq(a[size], b[size], stack))) {
-						break;
-					}
-				}
-			}
-		} else {
-			if ('constructor' in a != 'constructor' in b || a.constructor != b.constructor) {
-				return false;
-			}
-			for (key in a) {
-				if (has(a, key)) {
-					size++;
-					if (!(result = has(b, key) && eq(a[key], b[key], stack))) {
-						break;
-					}
-				}
-			}
-			if (result) {
-				sizeB = 0;
-				for (key in b) {
-					if (has(b, key)) {
-						++sizeB;
-					}
-				}
-				if (first) {
-					if (type === '<<=') {
-						result = size < sizeB;
-					} else if (type === '<==') {
-						result = size <= sizeB
-					} else {
-						result = size === sizeB;
-					}
-				} else {
-					first = false;
-					result = size === sizeB;
-				}
-			}
-		}
-		stack.pop();
-		return result;
-	}
+  function eq(a, b, stack) {
+    var className, length, size, result, alength, blength, r, key, ref, sizeB;
+    if (a == null || b == null) {
+      return a === b;
+    }
+    if (a.__placeholder__ || b.__placeholder__) {
+      return true;
+    }
+    if (a === b) {
+      return a !== 0 || 1 / a == 1 / b;
+    }
+    className = toString.call(a);
+    if (toString.call(b) != className) {
+      return false;
+    }
+    switch (className) {
+      case "[object String]":
+        return a == String(b);
+      case "[object Number]":
+        return a != +a ? b != +b : a == 0 ? 1 / a == 1 / b : a == +b;
+      case "[object Date]":
+      case "[object Boolean]":
+        return +a == +b;
+      case "[object RegExp]":
+        return a.source == b.source &&
+          a.global == b.global &&
+          a.multiline == b.multiline &&
+          a.ignoreCase == b.ignoreCase;
+    }
+    if (typeof a != "object" || typeof b != "object") {
+      return false;
+    }
+    length = stack.length;
+    while (length--) {
+      if (stack[length] == a) {
+        return true;
+      }
+    }
+    stack.push(a);
+    size = 0;
+    result = true;
+    if (className == "[object Array]") {
+      alength = a.length;
+      blength = b.length;
+      if (first) {
+        switch (type) {
+          case "===":
+            result = alength === blength;
+            break;
+          case "<==":
+            result = alength <= blength;
+            break;
+          case "<<=":
+            result = alength < blength;
+            break;
+        }
+        size = alength;
+        first = false;
+      } else {
+        result = alength === blength;
+        size = alength;
+      }
+      if (result) {
+        while (size--) {
+          if (!(result = size in a == size in b && eq(a[size], b[size], stack))) {
+            break;
+          }
+        }
+      }
+    } else {
+      if ("constructor" in a != "constructor" in b || a.constructor != b.constructor) {
+        return false;
+      }
+      for (key in a) {
+        if (has(a, key)) {
+          size++;
+          if (!(result = has(b, key) && eq(a[key], b[key], stack))) {
+            break;
+          }
+        }
+      }
+      if (result) {
+        sizeB = 0;
+        for (key in b) {
+          if (has(b, key)) {
+            ++sizeB;
+          }
+        }
+        if (first) {
+          if (type === "<<=") {
+            result = size < sizeB;
+          } else if (type === "<==") {
+            result = size <= sizeB;
+          } else {
+            result = size === sizeB;
+          }
+        } else {
+          first = false;
+          result = size === sizeB;
+        }
+      }
+    }
+    stack.pop();
+    return result;
+  }
 }
+
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
 
 },{"./exceptions.js":150,"./gChartLoader.js":151,"./utils.js":168,"jquery":18,"yasgui-utils":141}],153:[function(require,module,exports){
-'use strict';
+"use strict";
 module.exports = {
-	cross: '<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" x="0px" y="0px" width="30px" height="30px" viewBox="0 0 100 100" enable-background="new 0 0 100 100" xml:space="preserve"><g>	<path d="M83.288,88.13c-2.114,2.112-5.575,2.112-7.689,0L53.659,66.188c-2.114-2.112-5.573-2.112-7.687,0L24.251,87.907   c-2.113,2.114-5.571,2.114-7.686,0l-4.693-4.691c-2.114-2.114-2.114-5.573,0-7.688l21.719-21.721c2.113-2.114,2.113-5.573,0-7.686   L11.872,24.4c-2.114-2.113-2.114-5.571,0-7.686l4.842-4.842c2.113-2.114,5.571-2.114,7.686,0L46.12,33.591   c2.114,2.114,5.572,2.114,7.688,0l21.721-21.719c2.114-2.114,5.573-2.114,7.687,0l4.695,4.695c2.111,2.113,2.111,5.571-0.003,7.686   L66.188,45.973c-2.112,2.114-2.112,5.573,0,7.686L88.13,75.602c2.112,2.111,2.112,5.572,0,7.687L83.288,88.13z"/></g></svg>',
-	check: '<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" x="0px" y="0px" width="30px" height="30px" viewBox="0 0 100 100" enable-background="new 0 0 100 100" xml:space="preserve"><path fill="#000000" d="M14.301,49.982l22.606,17.047L84.361,4.903c2.614-3.733,7.76-4.64,11.493-2.026l0.627,0.462  c3.732,2.614,4.64,7.758,2.025,11.492l-51.783,79.77c-1.955,2.791-3.896,3.762-7.301,3.988c-3.405,0.225-5.464-1.039-7.508-3.084  L2.447,61.814c-3.263-3.262-3.263-8.553,0-11.814l0.041-0.019C5.75,46.718,11.039,46.718,14.301,49.982z"/></svg>',
-	unsorted: '<svg   xmlns:dc="http://purl.org/dc/elements/1.1/"   xmlns:cc="http://creativecommons.org/ns#"   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"   xmlns:svg="http://www.w3.org/2000/svg"   xmlns="http://www.w3.org/2000/svg"   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"   version="1.1"   id="Layer_1"   x="0px"   y="0px"   width="100%"   height="100%"   viewBox="0 0 54.552711 113.78478"   enable-background="new 0 0 100 100"   xml:space="preserve"><g     id="g5"     transform="matrix(-0.70522156,-0.70898699,-0.70898699,0.70522156,97.988199,55.081205)"><path       style="fill:#000000"       inkscape:connector-curvature="0"       id="path7"       d="M 57.911,66.915 45.808,55.063 42.904,52.238 31.661,41.25 31.435,41.083 31.131,40.775 30.794,40.523 30.486,40.3 30.069,40.05 29.815,39.911 29.285,39.659 29.089,39.576 28.474,39.326 28.363,39.297 H 28.336 L 27.665,39.128 27.526,39.1 26.94,38.99 26.714,38.961 26.212,38.934 h -0.31 -0.444 l -0.339,0.027 c -1.45,0.139 -2.876,0.671 -4.11,1.564 l -0.223,0.141 -0.279,0.25 -0.335,0.308 -0.054,0.029 -0.171,0.194 -0.334,0.364 -0.224,0.279 -0.25,0.336 -0.225,0.362 -0.192,0.308 -0.197,0.421 -0.142,0.279 -0.193,0.477 -0.084,0.222 -12.441,38.414 c -0.814,2.458 -0.313,5.029 1.115,6.988 v 0.026 l 0.418,0.532 0.17,0.165 0.251,0.281 0.084,0.079 0.283,0.281 0.25,0.194 0.474,0.367 0.083,0.053 c 2.015,1.371 4.641,1.874 7.131,1.094 L 55.228,80.776 c 4.303,-1.342 6.679,-5.814 5.308,-10.006 -0.387,-1.259 -1.086,-2.35 -1.979,-3.215 l -0.368,-0.337 -0.278,-0.303 z m -6.318,5.896 0.079,0.114 -37.369,11.57 11.854,-36.538 10.565,10.317 2.876,2.825 11.995,11.712 z" /></g><path     style="fill:#000000"     inkscape:connector-curvature="0"     id="path7-9"     d="m 8.8748339,52.571766 16.9382111,-0.222584 4.050851,-0.06665 15.719154,-0.222166 0.27778,-0.04246 0.43276,0.0017 0.41632,-0.06121 0.37532,-0.0611 0.47132,-0.119342 0.27767,-0.08206 0.55244,-0.198047 0.19707,-0.08043 0.61095,-0.259721 0.0988,-0.05825 0.019,-0.01914 0.59303,-0.356548 0.11787,-0.0788 0.49125,-0.337892 0.17994,-0.139779 0.37317,-0.336871 0.21862,-0.219786 0.31311,-0.31479 0.21993,-0.259387 c 0.92402,-1.126057 1.55249,-2.512251 1.78961,-4.016904 l 0.0573,-0.25754 0.0195,-0.374113 0.0179,-0.454719 0.0175,-0.05874 -0.0169,-0.258049 -0.0225,-0.493503 -0.0398,-0.355569 -0.0619,-0.414201 -0.098,-0.414812 -0.083,-0.353334 L 53.23955,41.1484 53.14185,40.850967 52.93977,40.377742 52.84157,40.161628 34.38021,4.2507375 C 33.211567,1.9401875 31.035446,0.48226552 28.639484,0.11316952 l -0.01843,-0.01834 -0.671963,-0.07882 -0.236871,0.0042 L 27.335984,-4.7826577e-7 27.220736,0.00379952 l -0.398804,0.0025 -0.313848,0.04043 -0.594474,0.07724 -0.09611,0.02147 C 23.424549,0.60716252 21.216017,2.1142355 20.013025,4.4296865 L 0.93967491,40.894479 c -2.08310801,3.997178 -0.588125,8.835482 3.35080799,10.819749 1.165535,0.613495 2.43199,0.88731 3.675026,0.864202 l 0.49845,-0.02325 0.410875,0.01658 z M 9.1502369,43.934401 9.0136999,43.910011 27.164145,9.2564625 44.70942,43.42818 l -14.765289,0.214677 -4.031106,0.0468 -16.7627881,0.244744 z" /></svg>',
-	sortDesc: '<svg   xmlns:dc="http://purl.org/dc/elements/1.1/"   xmlns:cc="http://creativecommons.org/ns#"   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"   xmlns:svg="http://www.w3.org/2000/svg"   xmlns="http://www.w3.org/2000/svg"   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"   version="1.1"   id="Layer_1"   x="0px"   y="0px"   width="100%"   height="100%"   viewBox="0 0 54.552711 113.78478"   enable-background="new 0 0 100 100"   xml:space="preserve"><g     id="g5"     transform="matrix(-0.70522156,-0.70898699,-0.70898699,0.70522156,97.988199,55.081205)"><path       style="fill:#000000"       inkscape:connector-curvature="0"       id="path7"       d="M 57.911,66.915 45.808,55.063 42.904,52.238 31.661,41.25 31.435,41.083 31.131,40.775 30.794,40.523 30.486,40.3 30.069,40.05 29.815,39.911 29.285,39.659 29.089,39.576 28.474,39.326 28.363,39.297 H 28.336 L 27.665,39.128 27.526,39.1 26.94,38.99 26.714,38.961 26.212,38.934 h -0.31 -0.444 l -0.339,0.027 c -1.45,0.139 -2.876,0.671 -4.11,1.564 l -0.223,0.141 -0.279,0.25 -0.335,0.308 -0.054,0.029 -0.171,0.194 -0.334,0.364 -0.224,0.279 -0.25,0.336 -0.225,0.362 -0.192,0.308 -0.197,0.421 -0.142,0.279 -0.193,0.477 -0.084,0.222 -12.441,38.414 c -0.814,2.458 -0.313,5.029 1.115,6.988 v 0.026 l 0.418,0.532 0.17,0.165 0.251,0.281 0.084,0.079 0.283,0.281 0.25,0.194 0.474,0.367 0.083,0.053 c 2.015,1.371 4.641,1.874 7.131,1.094 L 55.228,80.776 c 4.303,-1.342 6.679,-5.814 5.308,-10.006 -0.387,-1.259 -1.086,-2.35 -1.979,-3.215 l -0.368,-0.337 -0.278,-0.303 z m -6.318,5.896 0.079,0.114 -37.369,11.57 11.854,-36.538 10.565,10.317 2.876,2.825 11.995,11.712 z" /></g><path     style="fill:#000000"     inkscape:connector-curvature="0"     id="path9"     d="m 27.813273,0.12823506 0.09753,0.02006 c 2.39093,0.458209 4.599455,1.96811104 5.80244,4.28639004 L 52.785897,40.894525 c 2.088044,4.002139 0.590949,8.836902 -3.348692,10.821875 -1.329078,0.688721 -2.766603,0.943695 -4.133174,0.841768 l -0.454018,0.02 L 27.910392,52.354171 23.855313,52.281851 8.14393,52.061827 7.862608,52.021477 7.429856,52.021738 7.014241,51.959818 6.638216,51.900838 6.164776,51.779369 5.889216,51.699439 5.338907,51.500691 5.139719,51.419551 4.545064,51.145023 4.430618,51.105123 4.410168,51.084563 3.817138,50.730843 3.693615,50.647783 3.207314,50.310611 3.028071,50.174369 2.652795,49.833957 2.433471,49.613462 2.140099,49.318523 1.901127,49.041407 C 0.97781,47.916059 0.347935,46.528448 0.11153,45.021676 L 0.05352,44.766255 0.05172,44.371683 0.01894,43.936017 0,43.877277 0.01836,43.62206 0.03666,43.122889 0.0765,42.765905 0.13912,42.352413 0.23568,41.940425 0.32288,41.588517 0.481021,41.151945 0.579391,40.853806 0.77369,40.381268 0.876097,40.162336 19.338869,4.2542801 c 1.172169,-2.308419 3.34759,-3.76846504 5.740829,-4.17716604 l 0.01975,0.01985 0.69605,-0.09573 0.218437,0.0225 0.490791,-0.02132 0.39809,0.0046 0.315972,0.03973 0.594462,0.08149 z" /></svg>',
-	sortAsc: '<svg   xmlns:dc="http://purl.org/dc/elements/1.1/"   xmlns:cc="http://creativecommons.org/ns#"   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"   xmlns:svg="http://www.w3.org/2000/svg"   xmlns="http://www.w3.org/2000/svg"   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"   version="1.1"   id="Layer_1"   x="0px"   y="0px"   width="100%"   height="100%"   viewBox="0 0 54.552711 113.78478"   enable-background="new 0 0 100 100"   xml:space="preserve"><g     id="g5"     transform="matrix(-0.70522156,0.70898699,-0.70898699,-0.70522156,97.988199,58.704807)"><path       style="fill:#000000"       inkscape:connector-curvature="0"       id="path7"       d="M 57.911,66.915 45.808,55.063 42.904,52.238 31.661,41.25 31.435,41.083 31.131,40.775 30.794,40.523 30.486,40.3 30.069,40.05 29.815,39.911 29.285,39.659 29.089,39.576 28.474,39.326 28.363,39.297 H 28.336 L 27.665,39.128 27.526,39.1 26.94,38.99 26.714,38.961 26.212,38.934 h -0.31 -0.444 l -0.339,0.027 c -1.45,0.139 -2.876,0.671 -4.11,1.564 l -0.223,0.141 -0.279,0.25 -0.335,0.308 -0.054,0.029 -0.171,0.194 -0.334,0.364 -0.224,0.279 -0.25,0.336 -0.225,0.362 -0.192,0.308 -0.197,0.421 -0.142,0.279 -0.193,0.477 -0.084,0.222 -12.441,38.414 c -0.814,2.458 -0.313,5.029 1.115,6.988 v 0.026 l 0.418,0.532 0.17,0.165 0.251,0.281 0.084,0.079 0.283,0.281 0.25,0.194 0.474,0.367 0.083,0.053 c 2.015,1.371 4.641,1.874 7.131,1.094 L 55.228,80.776 c 4.303,-1.342 6.679,-5.814 5.308,-10.006 -0.387,-1.259 -1.086,-2.35 -1.979,-3.215 l -0.368,-0.337 -0.278,-0.303 z m -6.318,5.896 0.079,0.114 -37.369,11.57 11.854,-36.538 10.565,10.317 2.876,2.825 11.995,11.712 z" /></g><path     style="fill:#000000"     inkscape:connector-curvature="0"     id="path9"     d="m 27.813273,113.65778 0.09753,-0.0201 c 2.39093,-0.45821 4.599455,-1.96811 5.80244,-4.28639 L 52.785897,72.891487 c 2.088044,-4.002139 0.590949,-8.836902 -3.348692,-10.821875 -1.329078,-0.688721 -2.766603,-0.943695 -4.133174,-0.841768 l -0.454018,-0.02 -16.939621,0.223997 -4.055079,0.07232 -15.711383,0.220024 -0.281322,0.04035 -0.432752,-2.61e-4 -0.415615,0.06192 -0.376025,0.05898 -0.47344,0.121469 -0.27556,0.07993 -0.550309,0.198748 -0.199188,0.08114 -0.594655,0.274528 -0.114446,0.0399 -0.02045,0.02056 -0.59303,0.35372 -0.123523,0.08306 -0.486301,0.337172 -0.179243,0.136242 -0.375276,0.340412 -0.219324,0.220495 -0.293372,0.294939 -0.238972,0.277116 C 0.97781,65.869953 0.347935,67.257564 0.11153,68.764336 L 0.05352,69.019757 0.05172,69.414329 0.01894,69.849995 0,69.908735 l 0.01836,0.255217 0.0183,0.499171 0.03984,0.356984 0.06262,0.413492 0.09656,0.411988 0.0872,0.351908 0.158141,0.436572 0.09837,0.298139 0.194299,0.472538 0.102407,0.218932 18.462772,35.908054 c 1.172169,2.30842 3.34759,3.76847 5.740829,4.17717 l 0.01975,-0.0199 0.69605,0.0957 0.218437,-0.0225 0.490791,0.0213 0.39809,-0.005 0.315972,-0.0397 0.594462,-0.0815 z" /></svg>',
-	download: '<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" baseProfile="tiny" x="0px" y="0px" width="100%" height="100%" viewBox="0 0 100 100" xml:space="preserve"><g id="Captions"></g><g id="Your_Icon">	<path fill-rule="evenodd" fill="#000000" d="M88,84v-2c0-2.961-0.859-4-4-4H16c-2.961,0-4,0.98-4,4v2c0,3.102,1.039,4,4,4h68   C87.02,88,88,87.039,88,84z M58,12H42c-5,0-6,0.941-6,6v22H16l34,34l34-34H64V18C64,12.941,62.939,12,58,12z"/></g></svg>',
-	move: '<svg   xmlns:dc="http://purl.org/dc/elements/1.1/"   xmlns:cc="http://creativecommons.org/ns#"   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"   xmlns:svg="http://www.w3.org/2000/svg"   xmlns="http://www.w3.org/2000/svg"   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"   version="1.1"   id="Layer_1"   x="0px"   y="0px"   width="100%"   height="100%"   viewBox="5 -10 74.074074 100"   enable-background="new 0 0 100 100"   xml:space="preserve"   inkscape:version="0.48.4 r9939"   sodipodi:docname="noun_11656_cc.svg"><metadata     ><rdf:RDF><cc:Work         rdf:about=""><dc:format>image/svg+xml</dc:format><dc:type           rdf:resource="http://purl.org/dc/dcmitype/StillImage" /></cc:Work></rdf:RDF></metadata><defs      /><sodipodi:namedview     pagecolor="#ffffff"     bordercolor="#666666"     borderopacity="1"     objecttolerance="10"     gridtolerance="10"     guidetolerance="10"     inkscape:pageopacity="0"     inkscape:pageshadow="2"     inkscape:window-width="753"     inkscape:window-height="480"          showgrid="false"     fit-margin-top="0"     fit-margin-left="0"     fit-margin-right="0"     fit-margin-bottom="0"     inkscape:zoom="2.36"     inkscape:cx="44.101509"     inkscape:cy="31.481481"     inkscape:window-x="287"     inkscape:window-y="249"     inkscape:window-maximized="0"     inkscape:current-layer="Layer_1" /><polygon     points="33,83 50,100 67,83 54,83 54,17 67,17 50,0 33,17 46,17 46,83 "          transform="translate(-7.962963,-10)" /><polygon     points="83,67 100,50 83,33 83,46 17,46 17,33 0,50 17,67 17,54 83,54 "          transform="translate(-7.962963,-10)" /></svg>',
-	fullscreen: '<svg   xmlns:dc="http://purl.org/dc/elements/1.1/"   xmlns:cc="http://creativecommons.org/ns#"   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"   xmlns:svg="http://www.w3.org/2000/svg"   xmlns="http://www.w3.org/2000/svg"   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"   version="1.1"      x="0px"   y="0px"   width="100%"   height="100%"   viewBox="5 -10 74.074074 100"   enable-background="new 0 0 100 100"   xml:space="preserve"   inkscape:version="0.48.4 r9939"   sodipodi:docname="noun_2186_cc.svg"><metadata     ><rdf:RDF><cc:Work         rdf:about=""><dc:format>image/svg+xml</dc:format><dc:type           rdf:resource="http://purl.org/dc/dcmitype/StillImage" /></cc:Work></rdf:RDF></metadata><defs      /><sodipodi:namedview     pagecolor="#ffffff"     bordercolor="#666666"     borderopacity="1"     objecttolerance="10"     gridtolerance="10"     guidetolerance="10"     inkscape:pageopacity="0"     inkscape:pageshadow="2"     inkscape:window-width="640"     inkscape:window-height="480"          showgrid="false"     fit-margin-top="0"     fit-margin-left="0"     fit-margin-right="0"     fit-margin-bottom="0"     inkscape:zoom="2.36"     inkscape:cx="44.101509"     inkscape:cy="31.481481"     inkscape:window-x="65"     inkscape:window-y="24"     inkscape:window-maximized="0"     inkscape:current-layer="Layer_1" /><path     d="m -7.962963,-10 v 38.889 l 16.667,-16.667 16.667,16.667 5.555,-5.555 -16.667,-16.667 16.667,-16.667 h -38.889 z"          inkscape:connector-curvature="0"     style="fill:#010101" /><path     d="m 92.037037,-10 v 38.889 l -16.667,-16.667 -16.666,16.667 -5.556,-5.555 16.666,-16.667 -16.666,-16.667 h 38.889 z"          inkscape:connector-curvature="0"     style="fill:#010101" /><path     d="M -7.962963,90 V 51.111 l 16.667,16.666 16.667,-16.666 5.555,5.556 -16.667,16.666 16.667,16.667 h -38.889 z"          inkscape:connector-curvature="0"     style="fill:#010101" /><path     d="M 92.037037,90 V 51.111 l -16.667,16.666 -16.666,-16.666 -5.556,5.556 16.666,16.666 -16.666,16.667 h 38.889 z"          inkscape:connector-curvature="0"     style="fill:#010101" /></svg>',
-	smallscreen: '<svg   xmlns:dc="http://purl.org/dc/elements/1.1/"   xmlns:cc="http://creativecommons.org/ns#"   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"   xmlns:svg="http://www.w3.org/2000/svg"   xmlns="http://www.w3.org/2000/svg"   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"   version="1.1"      x="0px"   y="0px"   width="100%"   height="100%"   viewBox="5 -10 74.074074 100"   enable-background="new 0 0 100 100"   xml:space="preserve"   inkscape:version="0.48.4 r9939"   sodipodi:docname="noun_2186_cc.svg"><metadata     ><rdf:RDF><cc:Work         rdf:about=""><dc:format>image/svg+xml</dc:format><dc:type           rdf:resource="http://purl.org/dc/dcmitype/StillImage" /></cc:Work></rdf:RDF></metadata><defs      /><sodipodi:namedview     pagecolor="#ffffff"     bordercolor="#666666"     borderopacity="1"     objecttolerance="10"     gridtolerance="10"     guidetolerance="10"     inkscape:pageopacity="0"     inkscape:pageshadow="2"     inkscape:window-width="1855"     inkscape:window-height="1056"          showgrid="false"     fit-margin-top="0"     fit-margin-left="0"     fit-margin-right="0"     fit-margin-bottom="0"     inkscape:zoom="2.36"     inkscape:cx="44.101509"     inkscape:cy="31.481481"     inkscape:window-x="65"     inkscape:window-y="24"     inkscape:window-maximized="1"     inkscape:current-layer="Layer_1" /><path     d="m 30.926037,28.889 0,-38.889 -16.667,16.667 -16.667,-16.667 -5.555,5.555 16.667,16.667 -16.667,16.667 38.889,0 z"          inkscape:connector-curvature="0"     style="fill:#010101" /><path     d="m 53.148037,28.889 0,-38.889 16.667,16.667 16.666,-16.667 5.556,5.555 -16.666,16.667 16.666,16.667 -38.889,0 z"          inkscape:connector-curvature="0"     style="fill:#010101" /><path     d="m 30.926037,51.111 0,38.889 -16.667,-16.666 -16.667,16.666 -5.555,-5.556 16.667,-16.666 -16.667,-16.667 38.889,0 z"          inkscape:connector-curvature="0"     style="fill:#010101" /><path     d="m 53.148037,51.111 0,38.889 16.667,-16.666 16.666,16.666 5.556,-5.556 -16.666,-16.666 16.666,-16.667 -38.889,0 z"          inkscape:connector-curvature="0"     style="fill:#010101" /></svg>',
-	marker: '<?xml version="1.0" encoding="UTF-8" standalone="no"?>  <svg     xmlns:dc="http://purl.org/dc/elements/1.1/"     xmlns:cc="http://creativecommons.org/ns#"     xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"     xmlns:svg="http://www.w3.org/2000/svg"     xmlns="http://www.w3.org/2000/svg"     xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"     width="1024"     height="1536"     viewBox="0 0 1070 1536"     id="svg2"     version="1.1"     sodipodi:docname="test.svg"    >    <metadata       id="metadata10">      <rdf:RDF>        <cc:Work           rdf:about="">          <dc:format>image/svg+xml</dc:format>          <dc:type             rdf:resource="http://purl.org/dc/dcmitype/StillImage" />          <dc:title></dc:title>        </cc:Work>      </rdf:RDF>    </metadata>    <defs       id="defs8" />       <filter id="dropshadow" height="130%">  		  <feGaussianBlur in="SourceAlpha" stdDeviation="18"/> <!-- stdDeviation is how much to blur -->  		  <feOffset dx="12" dy="12" result="offsetblur"/> <!-- how much to offset -->  		  <feMerge>   			<feMergeNode/> <!-- this contains the offset blurred image -->  			<feMergeNode in="SourceGraphic"/> <!-- this contains the element that the filter is applied to -->  		  </feMerge>  		</filter>    <sodipodi:namedview       pagecolor="#ffffff"       bordercolor="#666666"       borderopacity="1"       objecttolerance="10"       gridtolerance="10"       guidetolerance="10"       id="namedview6"       showgrid="false"       fit-margin-top="0"       fit-margin-left="0"       fit-margin-right="0"       fit-margin-bottom="0"   />    <rect       style="fill:#ffffff;fill-opacity:1"       id="rect3137"       width="592.27118"       height="611.79663"       x="214.77966"       y="182.23727" />    <path        d="m 768,512 q 0,-106 -75,-181 -75,-75 -181,-75 -106,0 -181,75 -75,75 -75,181 0,106 75,181 75,75 181,75 106,0 181,-75 75,-75 75,-181 z m 256,0 q 0,109 -33,179 l -364,774 q -16,33 -47.5,52 -31.5,19 -67.5,19 -36,0 -67.5,-19 Q 413,1498 398,1465 L 33,691 Q 0,621 0,512 0,300 150,150 300,0 512,0 q 212,0 362,150 150,150 150,362 z"       id="path4"       style="filter:url(#dropshadow);stroke:none;stroke-opacity:1;fill:#2b82cb;fill-opacity:1" />  </svg>  ',
+  cross: '<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" x="0px" y="0px" width="30px" height="30px" viewBox="0 0 100 100" enable-background="new 0 0 100 100" xml:space="preserve"><g>	<path d="M83.288,88.13c-2.114,2.112-5.575,2.112-7.689,0L53.659,66.188c-2.114-2.112-5.573-2.112-7.687,0L24.251,87.907   c-2.113,2.114-5.571,2.114-7.686,0l-4.693-4.691c-2.114-2.114-2.114-5.573,0-7.688l21.719-21.721c2.113-2.114,2.113-5.573,0-7.686   L11.872,24.4c-2.114-2.113-2.114-5.571,0-7.686l4.842-4.842c2.113-2.114,5.571-2.114,7.686,0L46.12,33.591   c2.114,2.114,5.572,2.114,7.688,0l21.721-21.719c2.114-2.114,5.573-2.114,7.687,0l4.695,4.695c2.111,2.113,2.111,5.571-0.003,7.686   L66.188,45.973c-2.112,2.114-2.112,5.573,0,7.686L88.13,75.602c2.112,2.111,2.112,5.572,0,7.687L83.288,88.13z"/></g></svg>',
+  check: '<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" x="0px" y="0px" width="30px" height="30px" viewBox="0 0 100 100" enable-background="new 0 0 100 100" xml:space="preserve"><path fill="#000000" d="M14.301,49.982l22.606,17.047L84.361,4.903c2.614-3.733,7.76-4.64,11.493-2.026l0.627,0.462  c3.732,2.614,4.64,7.758,2.025,11.492l-51.783,79.77c-1.955,2.791-3.896,3.762-7.301,3.988c-3.405,0.225-5.464-1.039-7.508-3.084  L2.447,61.814c-3.263-3.262-3.263-8.553,0-11.814l0.041-0.019C5.75,46.718,11.039,46.718,14.301,49.982z"/></svg>',
+  unsorted: '<svg   xmlns:dc="http://purl.org/dc/elements/1.1/"   xmlns:cc="http://creativecommons.org/ns#"   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"   xmlns:svg="http://www.w3.org/2000/svg"   xmlns="http://www.w3.org/2000/svg"   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"   version="1.1"   id="Layer_1"   x="0px"   y="0px"   width="100%"   height="100%"   viewBox="0 0 54.552711 113.78478"   enable-background="new 0 0 100 100"   xml:space="preserve"><g     id="g5"     transform="matrix(-0.70522156,-0.70898699,-0.70898699,0.70522156,97.988199,55.081205)"><path       style="fill:#000000"       inkscape:connector-curvature="0"       id="path7"       d="M 57.911,66.915 45.808,55.063 42.904,52.238 31.661,41.25 31.435,41.083 31.131,40.775 30.794,40.523 30.486,40.3 30.069,40.05 29.815,39.911 29.285,39.659 29.089,39.576 28.474,39.326 28.363,39.297 H 28.336 L 27.665,39.128 27.526,39.1 26.94,38.99 26.714,38.961 26.212,38.934 h -0.31 -0.444 l -0.339,0.027 c -1.45,0.139 -2.876,0.671 -4.11,1.564 l -0.223,0.141 -0.279,0.25 -0.335,0.308 -0.054,0.029 -0.171,0.194 -0.334,0.364 -0.224,0.279 -0.25,0.336 -0.225,0.362 -0.192,0.308 -0.197,0.421 -0.142,0.279 -0.193,0.477 -0.084,0.222 -12.441,38.414 c -0.814,2.458 -0.313,5.029 1.115,6.988 v 0.026 l 0.418,0.532 0.17,0.165 0.251,0.281 0.084,0.079 0.283,0.281 0.25,0.194 0.474,0.367 0.083,0.053 c 2.015,1.371 4.641,1.874 7.131,1.094 L 55.228,80.776 c 4.303,-1.342 6.679,-5.814 5.308,-10.006 -0.387,-1.259 -1.086,-2.35 -1.979,-3.215 l -0.368,-0.337 -0.278,-0.303 z m -6.318,5.896 0.079,0.114 -37.369,11.57 11.854,-36.538 10.565,10.317 2.876,2.825 11.995,11.712 z" /></g><path     style="fill:#000000"     inkscape:connector-curvature="0"     id="path7-9"     d="m 8.8748339,52.571766 16.9382111,-0.222584 4.050851,-0.06665 15.719154,-0.222166 0.27778,-0.04246 0.43276,0.0017 0.41632,-0.06121 0.37532,-0.0611 0.47132,-0.119342 0.27767,-0.08206 0.55244,-0.198047 0.19707,-0.08043 0.61095,-0.259721 0.0988,-0.05825 0.019,-0.01914 0.59303,-0.356548 0.11787,-0.0788 0.49125,-0.337892 0.17994,-0.139779 0.37317,-0.336871 0.21862,-0.219786 0.31311,-0.31479 0.21993,-0.259387 c 0.92402,-1.126057 1.55249,-2.512251 1.78961,-4.016904 l 0.0573,-0.25754 0.0195,-0.374113 0.0179,-0.454719 0.0175,-0.05874 -0.0169,-0.258049 -0.0225,-0.493503 -0.0398,-0.355569 -0.0619,-0.414201 -0.098,-0.414812 -0.083,-0.353334 L 53.23955,41.1484 53.14185,40.850967 52.93977,40.377742 52.84157,40.161628 34.38021,4.2507375 C 33.211567,1.9401875 31.035446,0.48226552 28.639484,0.11316952 l -0.01843,-0.01834 -0.671963,-0.07882 -0.236871,0.0042 L 27.335984,-4.7826577e-7 27.220736,0.00379952 l -0.398804,0.0025 -0.313848,0.04043 -0.594474,0.07724 -0.09611,0.02147 C 23.424549,0.60716252 21.216017,2.1142355 20.013025,4.4296865 L 0.93967491,40.894479 c -2.08310801,3.997178 -0.588125,8.835482 3.35080799,10.819749 1.165535,0.613495 2.43199,0.88731 3.675026,0.864202 l 0.49845,-0.02325 0.410875,0.01658 z M 9.1502369,43.934401 9.0136999,43.910011 27.164145,9.2564625 44.70942,43.42818 l -14.765289,0.214677 -4.031106,0.0468 -16.7627881,0.244744 z" /></svg>',
+  sortDesc: '<svg   xmlns:dc="http://purl.org/dc/elements/1.1/"   xmlns:cc="http://creativecommons.org/ns#"   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"   xmlns:svg="http://www.w3.org/2000/svg"   xmlns="http://www.w3.org/2000/svg"   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"   version="1.1"   id="Layer_1"   x="0px"   y="0px"   width="100%"   height="100%"   viewBox="0 0 54.552711 113.78478"   enable-background="new 0 0 100 100"   xml:space="preserve"><g     id="g5"     transform="matrix(-0.70522156,-0.70898699,-0.70898699,0.70522156,97.988199,55.081205)"><path       style="fill:#000000"       inkscape:connector-curvature="0"       id="path7"       d="M 57.911,66.915 45.808,55.063 42.904,52.238 31.661,41.25 31.435,41.083 31.131,40.775 30.794,40.523 30.486,40.3 30.069,40.05 29.815,39.911 29.285,39.659 29.089,39.576 28.474,39.326 28.363,39.297 H 28.336 L 27.665,39.128 27.526,39.1 26.94,38.99 26.714,38.961 26.212,38.934 h -0.31 -0.444 l -0.339,0.027 c -1.45,0.139 -2.876,0.671 -4.11,1.564 l -0.223,0.141 -0.279,0.25 -0.335,0.308 -0.054,0.029 -0.171,0.194 -0.334,0.364 -0.224,0.279 -0.25,0.336 -0.225,0.362 -0.192,0.308 -0.197,0.421 -0.142,0.279 -0.193,0.477 -0.084,0.222 -12.441,38.414 c -0.814,2.458 -0.313,5.029 1.115,6.988 v 0.026 l 0.418,0.532 0.17,0.165 0.251,0.281 0.084,0.079 0.283,0.281 0.25,0.194 0.474,0.367 0.083,0.053 c 2.015,1.371 4.641,1.874 7.131,1.094 L 55.228,80.776 c 4.303,-1.342 6.679,-5.814 5.308,-10.006 -0.387,-1.259 -1.086,-2.35 -1.979,-3.215 l -0.368,-0.337 -0.278,-0.303 z m -6.318,5.896 0.079,0.114 -37.369,11.57 11.854,-36.538 10.565,10.317 2.876,2.825 11.995,11.712 z" /></g><path     style="fill:#000000"     inkscape:connector-curvature="0"     id="path9"     d="m 27.813273,0.12823506 0.09753,0.02006 c 2.39093,0.458209 4.599455,1.96811104 5.80244,4.28639004 L 52.785897,40.894525 c 2.088044,4.002139 0.590949,8.836902 -3.348692,10.821875 -1.329078,0.688721 -2.766603,0.943695 -4.133174,0.841768 l -0.454018,0.02 L 27.910392,52.354171 23.855313,52.281851 8.14393,52.061827 7.862608,52.021477 7.429856,52.021738 7.014241,51.959818 6.638216,51.900838 6.164776,51.779369 5.889216,51.699439 5.338907,51.500691 5.139719,51.419551 4.545064,51.145023 4.430618,51.105123 4.410168,51.084563 3.817138,50.730843 3.693615,50.647783 3.207314,50.310611 3.028071,50.174369 2.652795,49.833957 2.433471,49.613462 2.140099,49.318523 1.901127,49.041407 C 0.97781,47.916059 0.347935,46.528448 0.11153,45.021676 L 0.05352,44.766255 0.05172,44.371683 0.01894,43.936017 0,43.877277 0.01836,43.62206 0.03666,43.122889 0.0765,42.765905 0.13912,42.352413 0.23568,41.940425 0.32288,41.588517 0.481021,41.151945 0.579391,40.853806 0.77369,40.381268 0.876097,40.162336 19.338869,4.2542801 c 1.172169,-2.308419 3.34759,-3.76846504 5.740829,-4.17716604 l 0.01975,0.01985 0.69605,-0.09573 0.218437,0.0225 0.490791,-0.02132 0.39809,0.0046 0.315972,0.03973 0.594462,0.08149 z" /></svg>',
+  sortAsc: '<svg   xmlns:dc="http://purl.org/dc/elements/1.1/"   xmlns:cc="http://creativecommons.org/ns#"   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"   xmlns:svg="http://www.w3.org/2000/svg"   xmlns="http://www.w3.org/2000/svg"   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"   version="1.1"   id="Layer_1"   x="0px"   y="0px"   width="100%"   height="100%"   viewBox="0 0 54.552711 113.78478"   enable-background="new 0 0 100 100"   xml:space="preserve"><g     id="g5"     transform="matrix(-0.70522156,0.70898699,-0.70898699,-0.70522156,97.988199,58.704807)"><path       style="fill:#000000"       inkscape:connector-curvature="0"       id="path7"       d="M 57.911,66.915 45.808,55.063 42.904,52.238 31.661,41.25 31.435,41.083 31.131,40.775 30.794,40.523 30.486,40.3 30.069,40.05 29.815,39.911 29.285,39.659 29.089,39.576 28.474,39.326 28.363,39.297 H 28.336 L 27.665,39.128 27.526,39.1 26.94,38.99 26.714,38.961 26.212,38.934 h -0.31 -0.444 l -0.339,0.027 c -1.45,0.139 -2.876,0.671 -4.11,1.564 l -0.223,0.141 -0.279,0.25 -0.335,0.308 -0.054,0.029 -0.171,0.194 -0.334,0.364 -0.224,0.279 -0.25,0.336 -0.225,0.362 -0.192,0.308 -0.197,0.421 -0.142,0.279 -0.193,0.477 -0.084,0.222 -12.441,38.414 c -0.814,2.458 -0.313,5.029 1.115,6.988 v 0.026 l 0.418,0.532 0.17,0.165 0.251,0.281 0.084,0.079 0.283,0.281 0.25,0.194 0.474,0.367 0.083,0.053 c 2.015,1.371 4.641,1.874 7.131,1.094 L 55.228,80.776 c 4.303,-1.342 6.679,-5.814 5.308,-10.006 -0.387,-1.259 -1.086,-2.35 -1.979,-3.215 l -0.368,-0.337 -0.278,-0.303 z m -6.318,5.896 0.079,0.114 -37.369,11.57 11.854,-36.538 10.565,10.317 2.876,2.825 11.995,11.712 z" /></g><path     style="fill:#000000"     inkscape:connector-curvature="0"     id="path9"     d="m 27.813273,113.65778 0.09753,-0.0201 c 2.39093,-0.45821 4.599455,-1.96811 5.80244,-4.28639 L 52.785897,72.891487 c 2.088044,-4.002139 0.590949,-8.836902 -3.348692,-10.821875 -1.329078,-0.688721 -2.766603,-0.943695 -4.133174,-0.841768 l -0.454018,-0.02 -16.939621,0.223997 -4.055079,0.07232 -15.711383,0.220024 -0.281322,0.04035 -0.432752,-2.61e-4 -0.415615,0.06192 -0.376025,0.05898 -0.47344,0.121469 -0.27556,0.07993 -0.550309,0.198748 -0.199188,0.08114 -0.594655,0.274528 -0.114446,0.0399 -0.02045,0.02056 -0.59303,0.35372 -0.123523,0.08306 -0.486301,0.337172 -0.179243,0.136242 -0.375276,0.340412 -0.219324,0.220495 -0.293372,0.294939 -0.238972,0.277116 C 0.97781,65.869953 0.347935,67.257564 0.11153,68.764336 L 0.05352,69.019757 0.05172,69.414329 0.01894,69.849995 0,69.908735 l 0.01836,0.255217 0.0183,0.499171 0.03984,0.356984 0.06262,0.413492 0.09656,0.411988 0.0872,0.351908 0.158141,0.436572 0.09837,0.298139 0.194299,0.472538 0.102407,0.218932 18.462772,35.908054 c 1.172169,2.30842 3.34759,3.76847 5.740829,4.17717 l 0.01975,-0.0199 0.69605,0.0957 0.218437,-0.0225 0.490791,0.0213 0.39809,-0.005 0.315972,-0.0397 0.594462,-0.0815 z" /></svg>',
+  download: '<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" baseProfile="tiny" x="0px" y="0px" width="100%" height="100%" viewBox="0 0 100 100" xml:space="preserve"><g id="Captions"></g><g id="Your_Icon">	<path fill-rule="evenodd" fill="#000000" d="M88,84v-2c0-2.961-0.859-4-4-4H16c-2.961,0-4,0.98-4,4v2c0,3.102,1.039,4,4,4h68   C87.02,88,88,87.039,88,84z M58,12H42c-5,0-6,0.941-6,6v22H16l34,34l34-34H64V18C64,12.941,62.939,12,58,12z"/></g></svg>',
+  move: '<svg   xmlns:dc="http://purl.org/dc/elements/1.1/"   xmlns:cc="http://creativecommons.org/ns#"   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"   xmlns:svg="http://www.w3.org/2000/svg"   xmlns="http://www.w3.org/2000/svg"   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"   version="1.1"   id="Layer_1"   x="0px"   y="0px"   width="100%"   height="100%"   viewBox="5 -10 74.074074 100"   enable-background="new 0 0 100 100"   xml:space="preserve"   inkscape:version="0.48.4 r9939"   sodipodi:docname="noun_11656_cc.svg"><metadata     ><rdf:RDF><cc:Work         rdf:about=""><dc:format>image/svg+xml</dc:format><dc:type           rdf:resource="http://purl.org/dc/dcmitype/StillImage" /></cc:Work></rdf:RDF></metadata><defs      /><sodipodi:namedview     pagecolor="#ffffff"     bordercolor="#666666"     borderopacity="1"     objecttolerance="10"     gridtolerance="10"     guidetolerance="10"     inkscape:pageopacity="0"     inkscape:pageshadow="2"     inkscape:window-width="753"     inkscape:window-height="480"          showgrid="false"     fit-margin-top="0"     fit-margin-left="0"     fit-margin-right="0"     fit-margin-bottom="0"     inkscape:zoom="2.36"     inkscape:cx="44.101509"     inkscape:cy="31.481481"     inkscape:window-x="287"     inkscape:window-y="249"     inkscape:window-maximized="0"     inkscape:current-layer="Layer_1" /><polygon     points="33,83 50,100 67,83 54,83 54,17 67,17 50,0 33,17 46,17 46,83 "          transform="translate(-7.962963,-10)" /><polygon     points="83,67 100,50 83,33 83,46 17,46 17,33 0,50 17,67 17,54 83,54 "          transform="translate(-7.962963,-10)" /></svg>',
+  fullscreen: '<svg   xmlns:dc="http://purl.org/dc/elements/1.1/"   xmlns:cc="http://creativecommons.org/ns#"   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"   xmlns:svg="http://www.w3.org/2000/svg"   xmlns="http://www.w3.org/2000/svg"   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"   version="1.1"      x="0px"   y="0px"   width="100%"   height="100%"   viewBox="5 -10 74.074074 100"   enable-background="new 0 0 100 100"   xml:space="preserve"   inkscape:version="0.48.4 r9939"   sodipodi:docname="noun_2186_cc.svg"><metadata     ><rdf:RDF><cc:Work         rdf:about=""><dc:format>image/svg+xml</dc:format><dc:type           rdf:resource="http://purl.org/dc/dcmitype/StillImage" /></cc:Work></rdf:RDF></metadata><defs      /><sodipodi:namedview     pagecolor="#ffffff"     bordercolor="#666666"     borderopacity="1"     objecttolerance="10"     gridtolerance="10"     guidetolerance="10"     inkscape:pageopacity="0"     inkscape:pageshadow="2"     inkscape:window-width="640"     inkscape:window-height="480"          showgrid="false"     fit-margin-top="0"     fit-margin-left="0"     fit-margin-right="0"     fit-margin-bottom="0"     inkscape:zoom="2.36"     inkscape:cx="44.101509"     inkscape:cy="31.481481"     inkscape:window-x="65"     inkscape:window-y="24"     inkscape:window-maximized="0"     inkscape:current-layer="Layer_1" /><path     d="m -7.962963,-10 v 38.889 l 16.667,-16.667 16.667,16.667 5.555,-5.555 -16.667,-16.667 16.667,-16.667 h -38.889 z"          inkscape:connector-curvature="0"     style="fill:#010101" /><path     d="m 92.037037,-10 v 38.889 l -16.667,-16.667 -16.666,16.667 -5.556,-5.555 16.666,-16.667 -16.666,-16.667 h 38.889 z"          inkscape:connector-curvature="0"     style="fill:#010101" /><path     d="M -7.962963,90 V 51.111 l 16.667,16.666 16.667,-16.666 5.555,5.556 -16.667,16.666 16.667,16.667 h -38.889 z"          inkscape:connector-curvature="0"     style="fill:#010101" /><path     d="M 92.037037,90 V 51.111 l -16.667,16.666 -16.666,-16.666 -5.556,5.556 16.666,16.666 -16.666,16.667 h 38.889 z"          inkscape:connector-curvature="0"     style="fill:#010101" /></svg>',
+  smallscreen: '<svg   xmlns:dc="http://purl.org/dc/elements/1.1/"   xmlns:cc="http://creativecommons.org/ns#"   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"   xmlns:svg="http://www.w3.org/2000/svg"   xmlns="http://www.w3.org/2000/svg"   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"   version="1.1"      x="0px"   y="0px"   width="100%"   height="100%"   viewBox="5 -10 74.074074 100"   enable-background="new 0 0 100 100"   xml:space="preserve"   inkscape:version="0.48.4 r9939"   sodipodi:docname="noun_2186_cc.svg"><metadata     ><rdf:RDF><cc:Work         rdf:about=""><dc:format>image/svg+xml</dc:format><dc:type           rdf:resource="http://purl.org/dc/dcmitype/StillImage" /></cc:Work></rdf:RDF></metadata><defs      /><sodipodi:namedview     pagecolor="#ffffff"     bordercolor="#666666"     borderopacity="1"     objecttolerance="10"     gridtolerance="10"     guidetolerance="10"     inkscape:pageopacity="0"     inkscape:pageshadow="2"     inkscape:window-width="1855"     inkscape:window-height="1056"          showgrid="false"     fit-margin-top="0"     fit-margin-left="0"     fit-margin-right="0"     fit-margin-bottom="0"     inkscape:zoom="2.36"     inkscape:cx="44.101509"     inkscape:cy="31.481481"     inkscape:window-x="65"     inkscape:window-y="24"     inkscape:window-maximized="1"     inkscape:current-layer="Layer_1" /><path     d="m 30.926037,28.889 0,-38.889 -16.667,16.667 -16.667,-16.667 -5.555,5.555 16.667,16.667 -16.667,16.667 38.889,0 z"          inkscape:connector-curvature="0"     style="fill:#010101" /><path     d="m 53.148037,28.889 0,-38.889 16.667,16.667 16.666,-16.667 5.556,5.555 -16.666,16.667 16.666,16.667 -38.889,0 z"          inkscape:connector-curvature="0"     style="fill:#010101" /><path     d="m 30.926037,51.111 0,38.889 -16.667,-16.666 -16.667,16.666 -5.555,-5.556 16.667,-16.666 -16.667,-16.667 38.889,0 z"          inkscape:connector-curvature="0"     style="fill:#010101" /><path     d="m 53.148037,51.111 0,38.889 16.667,-16.666 16.666,16.666 5.556,-5.556 -16.666,-16.666 16.666,-16.667 -38.889,0 z"          inkscape:connector-curvature="0"     style="fill:#010101" /></svg>',
+  marker: '<?xml version="1.0" encoding="UTF-8" standalone="no"?>  <svg     xmlns:dc="http://purl.org/dc/elements/1.1/"     xmlns:cc="http://creativecommons.org/ns#"     xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"     xmlns:svg="http://www.w3.org/2000/svg"     xmlns="http://www.w3.org/2000/svg"     xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"     width="1024"     height="1536"     viewBox="0 0 1070 1536"     id="svg2"     version="1.1"     sodipodi:docname="test.svg"    >    <metadata       id="metadata10">      <rdf:RDF>        <cc:Work           rdf:about="">          <dc:format>image/svg+xml</dc:format>          <dc:type             rdf:resource="http://purl.org/dc/dcmitype/StillImage" />          <dc:title></dc:title>        </cc:Work>      </rdf:RDF>    </metadata>    <defs       id="defs8" />       <filter id="dropshadow" height="130%">  		  <feGaussianBlur in="SourceAlpha" stdDeviation="18"/> <!-- stdDeviation is how much to blur -->  		  <feOffset dx="12" dy="12" result="offsetblur"/> <!-- how much to offset -->  		  <feMerge>   			<feMergeNode/> <!-- this contains the offset blurred image -->  			<feMergeNode in="SourceGraphic"/> <!-- this contains the element that the filter is applied to -->  		  </feMerge>  		</filter>    <sodipodi:namedview       pagecolor="#ffffff"       bordercolor="#666666"       borderopacity="1"       objecttolerance="10"       gridtolerance="10"       guidetolerance="10"       id="namedview6"       showgrid="false"       fit-margin-top="0"       fit-margin-left="0"       fit-margin-right="0"       fit-margin-bottom="0"   />    <rect       style="fill:#ffffff;fill-opacity:1"       id="rect3137"       width="592.27118"       height="611.79663"       x="214.77966"       y="182.23727" />    <path        d="m 768,512 q 0,-106 -75,-181 -75,-75 -181,-75 -106,0 -181,75 -75,75 -75,181 0,106 75,181 75,75 181,75 106,0 181,-75 75,-75 75,-181 z m 256,0 q 0,109 -33,179 l -364,774 q -16,33 -47.5,52 -31.5,19 -67.5,19 -36,0 -67.5,-19 Q 413,1498 398,1465 L 33,691 Q 0,621 0,512 0,300 150,150 300,0 512,0 q 212,0 362,150 150,150 150,362 z"       id="path4"       style="filter:url(#dropshadow);stroke:none;stroke-opacity:1;fill:#2b82cb;fill-opacity:1" />  </svg>  '
 };
 
 },{}],154:[function(require,module,exports){
-require('./tableToCsv.js');
-},{"./tableToCsv.js":155}],155:[function(require,module,exports){
-'use strict';
-var $ = require('jquery');
+require("./tableToCsv.js");
 
+},{"./tableToCsv.js":155}],155:[function(require,module,exports){
+"use strict";
+var $ = require("jquery");
 
 $.fn.tableToCsv = function(config) {
-	var csvString = "";
-	config = $.extend({
-		quote: "\"",
-		delimiter: ",",
-		lineBreak: "\n",
-	}, config)
+  var csvString = "";
+  config = $.extend(
+    {
+      quote: '"',
+      delimiter: ",",
+      lineBreak: "\n"
+    },
+    config
+  );
 
+  var needToQuoteString = function(value) {
+    //quote when it contains whitespace or the delimiter
+    var needQuoting = false;
+    if (value.match("[\\w|" + config.delimiter + "|" + config.quote + "]")) {
+      needQuoting = true;
+    }
+    return needQuoting;
+  };
+  var addValueToString = function(value) {
+    //Quotes in the string need to be escaped
+    value.replace(config.quote, config.quote + config.quote);
+    if (needToQuoteString(value)) {
+      value = config.quote + value + config.quote;
+    }
+    csvString += " " + value + " " + config.delimiter;
+  };
 
+  var addRowToString = function(rowArray) {
+    rowArray.forEach(function(val) {
+      addValueToString(val);
+    });
+    csvString += config.lineBreak;
+  };
 
+  var tableArrays = [];
+  var $el = $(this);
+  var rowspans = {};
 
-	var needToQuoteString = function(value) {
-		//quote when it contains whitespace or the delimiter
-		var needQuoting = false;
-		if (value.match("[\\w|" + config.delimiter + "|" + config.quote + "]")) {
-			needQuoting = true;
-		}
-		return needQuoting;
-	};
-	var addValueToString = function(value) {
-		//Quotes in the string need to be escaped
-		value.replace(config.quote, config.quote + config.quote);
-		if (needToQuoteString(value)) {
-			value = config.quote + value + config.quote;
-		}
-		csvString += " " + value + " " + config.delimiter;
-	};
+  var totalColCount = 0;
+  $el.find("tr:first *").each(function() {
+    if ($(this).attr("colspan")) {
+      totalColCount += +$(this).attr("colspan");
+    } else {
+      totalColCount++;
+    }
+  });
 
-	var addRowToString = function(rowArray) {
-		rowArray.forEach(function(val) {
-			addValueToString(val);
-		});
-		csvString += config.lineBreak;
-	}
+  $el.find("tr").each(function(rowId, tr) {
+    var $tr = $(tr);
+    var rowArray = [];
 
-	var tableArrays = [];
-	var $el = $(this);
-	var rowspans = {};
+    var htmlColId = 0;
+    var actualColId = 0;
+    while (actualColId < totalColCount) {
+      if (rowspans[actualColId]) {
+        rowArray.push(rowspans[actualColId].text);
+        rowspans[actualColId].rowSpan--;
+        if (!rowspans[actualColId].rowSpan) rowspans[actualColId] = null;
+        actualColId++;
+        continue;
+      }
 
+      var $cell = $tr.find(":nth-child(" + (htmlColId + 1) + ")");
+      if (!$cell) break;
+      var colspan = $cell.attr("colspan") || 1;
+      var rowspan = $cell.attr("rowspan") || 1;
 
+      for (var i = 0; i < colspan; i++) {
+        rowArray.push($cell.text());
+        if (rowspan > 1) {
+          rowspans[actualColId] = {
+            rowSpan: rowspan - 1,
+            text: $cell.text()
+          };
+        }
+        actualColId++;
+      }
+      htmlColId++;
+    }
+    addRowToString(rowArray);
+  });
 
-	var totalColCount = 0;
-	$el.find('tr:first *').each(function() {
-		if ($(this).attr('colspan')) {
-			totalColCount += +$(this).attr('colspan');
-		} else {
-			totalColCount++;
-		}
-	});
-
-	$el.find('tr').each(function(rowId, tr) {
-		var $tr = $(tr);
-		var rowArray = []
-
-		var htmlColId = 0;
-		var actualColId = 0;
-		while (actualColId < totalColCount) {
-			if (rowspans[actualColId]) {
-				rowArray.push(rowspans[actualColId].text);
-				rowspans[actualColId].rowSpan--;
-				if (!rowspans[actualColId].rowSpan) rowspans[actualColId] = null;
-				actualColId++;
-				continue;
-			}
-
-			var $cell = $tr.find(':nth-child(' + (htmlColId + 1) + ')');
-			if (!$cell) break;
-			var colspan = $cell.attr('colspan') || 1;
-			var rowspan = $cell.attr('rowspan') || 1;
-
-			for (var i = 0; i < colspan; i++) {
-				rowArray.push($cell.text());
-				if (rowspan > 1) {
-					rowspans[actualColId] = {
-						rowSpan: rowspan - 1,
-						text: $cell.text(),
-					}
-				}
-				actualColId++;
-			}
-			htmlColId++;
-		}
-		addRowToString(rowArray);
-
-
-	})
-
-	return csvString;
-}
+  return csvString;
+};
 
 },{"jquery":18}],156:[function(require,module,exports){
 (function (global){
-'use strict';
-var $ = require("jquery"),
-	CodeMirror = require("codemirror");
+"use strict";
+var $ = require("jquery"), CodeMirror = require("codemirror");
 
-require('codemirror/addon/fold/foldcode.js');
-require('codemirror/addon/fold/foldgutter.js');
-require('codemirror/addon/fold/xml-fold.js');
-require('codemirror/addon/fold/brace-fold.js');
+require("codemirror/addon/fold/foldcode.js");
+require("codemirror/addon/fold/foldgutter.js");
+require("codemirror/addon/fold/xml-fold.js");
+require("codemirror/addon/fold/brace-fold.js");
 
-require('codemirror/addon/edit/matchbrackets.js');
-require('codemirror/mode/xml/xml.js');
-require('codemirror/mode/javascript/javascript.js');
-var imgs = require('./imgs.js')
-var L = require('leaflet');
+require("codemirror/addon/edit/matchbrackets.js");
+require("codemirror/mode/xml/xml.js");
+require("codemirror/mode/javascript/javascript.js");
+var imgs = require("./imgs.js");
+var L = require("leaflet");
 //Ugly... need to set this global, as wicket-leaflet tries to access this global variable
-global.Wkt = require('wicket/wicket');
-require('wicket/wicket-leaflet');
+global.Wkt = require("wicket/wicket");
+require("wicket/wicket-leaflet");
 var root = module.exports = function(yasr) {
-	var plugin = {};
-	var options = $.extend(true, {}, root.defaults);
-	var cm = null;
-	var getOption = function(key) {
-		// if (!options[key]) return {};
-		if (options[key]) {
-			if (typeof options[key] === 'function') {
-				return options[key](yasr, L)
-			} else {
-				return options[key]
-			}
-		} else {
-			return undefined;
-		}
-	}
+  var plugin = {};
+  var options = $.extend(true, {}, root.defaults);
+  var cm = null;
+  var getOption = function(key) {
+    // if (!options[key]) return {};
+    if (options[key]) {
+      if (typeof options[key] === "function") {
+        return options[key](yasr, L);
+      } else {
+        return options[key];
+      }
+    } else {
+      return undefined;
+    }
+  };
 
-	var draw = function() {
-		var zoomToEl = function(e){map.setView(e.latlng, 15)}
-		var plotVariables = getGeoVariables();
-		if (plotVariables.length === 0) return $('<div class="leaflet">Nothing to draw</div>').appendTo(yasr.resultsContainer);
-		var mapWrapper = $('<div class="leaflet"/>').appendTo(yasr.resultsContainer);
-		var map = new L.Map(mapWrapper.get()[0], getOption('map'));
-		var features = [];
-		var bindings = yasr.results.getBindings();
-		var hasLabel = false;
-		for (var varId = 0; varId < plotVariables.length; varId++) {
-			var plotVariable = plotVariables[varId];
-			for (var i = 0; i < bindings.length; i++) {
+  var draw = function() {
+    var zoomToEl = function(e) {
+      map.setView(e.latlng, 15);
+    };
+    var plotVariables = getGeoVariables();
+    if (plotVariables.length === 0)
+      return $('<div class="leaflet">Nothing to draw</div>').appendTo(yasr.resultsContainer);
+    var mapWrapper = $('<div class="leaflet"/>').appendTo(yasr.resultsContainer);
+    var map = new L.Map(mapWrapper.get()[0], getOption("map"));
+    var features = [];
+    var bindings = yasr.results.getBindings();
+    var hasLabel = false;
+    for (var varId = 0; varId < plotVariables.length; varId++) {
+      var plotVariable = plotVariables[varId];
+      for (var i = 0; i < bindings.length; i++) {
+        var binding = bindings[i];
 
-				var binding = bindings[i];
+        if (!binding[plotVariable].value) continue;
+        var wicket = new Wkt.Wkt();
+        var svgURL = "data:image/svg+xml;base64," + btoa(imgs.marker);
+        var mySVGIcon = L.icon({
+          iconUrl: svgURL,
+          iconSize: [25, 41],
+          shadowSize: [25, 45],
+          iconAnchor: [12, 41],
+          popupAnchor: [0, -41]
+        });
+        var feature = wicket.read(binding[plotVariable].value).toObject({ icon: mySVGIcon });
 
-				if (!binding[plotVariable].value) continue;
-				var wicket = new Wkt.Wkt();
-				var svgURL = "data:image/svg+xml;base64," + btoa(imgs.marker);
-				var mySVGIcon = L.icon( {
-            iconUrl: svgURL,
-            iconSize: [25, 41],
-            shadowSize: [25, 45],
-            iconAnchor: [12, 41],
-            popupAnchor: [0, -41]
-        } );
-				var feature = wicket.read(binding[plotVariable].value).toObject({icon:mySVGIcon})
-				var markerPos;
-				if (feature.getBounds) {
-					//get center of polygon or something
-					markerPos = feature.getBounds().getCenter();
-				} else if (feature.getLatLng) {
-					//its a point, just get the lat/lng
-					markerPos = feature.getLatLng();
-				}
+        var popupContent = options.formatPopup && options.formatPopup(yasr, L, plotVariable, binding);
+        if (popupContent) {
+          function addPopupAndEventsToMarker(el) {
+            el.on("dblclick", zoomToEl);
+            var popupContent = options.formatPopup && options.formatPopup(yasr, L, plotVariable, binding);
+            if (popupContent) {
+              hasLabel = true;
+              el.bindPopup(popupContent);
+            }
+          }
 
-				function addPopupAndEventsToMarker(el) {
-					el.on('dblclick', zoomToEl);
-					var popupContent = options.formatPopup && options.formatPopup(yasr, L, plotVariable, binding);
-					if (popupContent) {
-						hasLabel = true;
-						el.bindPopup(popupContent)
-					}
-				}
+          var markerPos;
+          if (feature.getBounds) {
+            //get center of polygon or something
+            markerPos = feature.getBounds().getCenter();
+          } else if (feature.getLatLng) {
+            //its a point, just get the lat/lng
+            markerPos = feature.getLatLng();
+          }
+          if (markerPos) {
+            var shouldDrawSeparateMarker = !!feature.getBounds; //a lat/lng is already a marker
+            if (shouldDrawSeparateMarker) {
+              addPopupAndEventsToMarker(L.marker(markerPos, { icon: mySVGIcon }).addTo(map));
+            } else {
+              addPopupAndEventsToMarker(feature);
+            }
+          }
+        }
+        features.push(feature);
+      }
+    }
+    if (features.length) {
+      var group = new L.featureGroup(features).addTo(map);
+      map.fitBounds(group.getBounds());
+    }
 
-				if (markerPos) {
-					var shouldDrawSeparateMarker = !!feature.getBounds;//a lat/lng is already a marker
-					if (shouldDrawSeparateMarker) {
-						addPopupAndEventsToMarker(L.marker(markerPos, { icon: mySVGIcon }).addTo(map))
-					} else {
-						addPopupAndEventsToMarker(feature)
-					}
+    // missingPopupMsg: function(yasr, L, geoVariables, bindings) {
+    if (!hasLabel && options.missingPopupMsg) {
+      var msg = null;
+      if (typeof options.missingPopupMsg === "string") {
+        msg = options.missingPopupMsg;
+      } else if (typeof options.missingPopupMsg === "function") {
+        msg = options.missingPopupMsg(yasr, L, plotVariables);
+      }
+      if (msg) yasr.resultsContainer.prepend(msg);
+    }
+  };
 
-				}
-				features.push(feature)
-			}
-		}
-		if (features.length) {
-			var group = new L.featureGroup(features).addTo(map)
-			map.fitBounds(group.getBounds())
-		}
+  var geoKeywords = ["POINT", "POLYGON", "LINESTRING", "MULTIPOINT", "MULTILINESTRING", "MULTIPOLYGON"];
+  var valueIsGeometric = function(val) {
+    val = val.trim().toUpperCase();
+    for (var i = 0; i < geoKeywords.length; i++) {
+      if (val.indexOf(geoKeywords[i]) === 0) {
+        return true;
+      }
+    }
+    return false;
+  };
+  var getGeoVariables = function() {
+    if (!yasr.results) return [];
+    var bindings = yasr.results.getBindings();
+    if (!bindings || bindings.length === 0) {
+      return [];
+    }
+    var geoVars = [];
+    var checkedVars = [];
+    for (var i = 0; i < bindings.length; i++) {
+      //we'd like to have checked at least 1 value for all variables. So keep looping
+      //in case the first row does not contain values for all bound vars (e.g. optional)
+      var binding = bindings[i];
+      for (var bindingVar in binding) {
+        if (checkedVars.indexOf(bindingVar) === -1 && binding[bindingVar].value) {
+          checkedVars.push(bindingVar);
+          if (valueIsGeometric(binding[bindingVar].value)) geoVars.push(bindingVar);
+        }
+      }
+      if (checkedVars.length === yasr.results.getVariables().length) {
+        //checked all vars. can break now
+        break;
+      }
+    }
+    return geoVars;
+  };
+  var canHandleResults = function() {
+    return getGeoVariables().length > 0;
+  };
 
-		// missingPopupMsg: function(yasr, L, geoVariables, bindings) {
-		if (!hasLabel && options.missingPopupMsg) {
-			var msg = null;
-			if (typeof options.missingPopupMsg === 'string') {
-				msg = options.missingPopupMsg;
-			} else if (typeof options.missingPopupMsg === 'function') {
-				msg = options.missingPopupMsg(yasr, L, plotVariables);
-			}
-			if (msg) yasr.resultsContainer.prepend(msg);
-		}
-	};
-
-	var geoKeywords = ['POINT', 'POLYGON', 'LINESTRING', 'MULTIPOINT', 'MULTILINESTRING', 'MULTIPOLYGON']
-	var valueIsGeometric = function(val){
-		val = val.trim().toUpperCase();
-		for (var i = 0; i < geoKeywords.length; i++) {
-			if (val.indexOf(geoKeywords[i]) === 0) {
-				return true;
-			}
-		}
-		return false;
-	}
-	var getGeoVariables = function() {
-		if (!yasr.results) return [];
-		var bindings = yasr.results.getBindings();
-		if (!bindings || bindings.length === 0) {
-			return [];
-		}
-		var geoVars = [];
-		var checkedVars = [];
-		for (var i = 0; i < bindings.length; i++) {
-			//we'd like to have checked at least 1 value for all variables. So keep looping
-			//in case the first row does not contain values for all bound vars (e.g. optional)
-			var binding = bindings[i];
-			for (var bindingVar in binding) {
-				if (checkedVars.indexOf(bindingVar) === -1 && binding[bindingVar].value) {
-					checkedVars.push(bindingVar);
-					if (valueIsGeometric(binding[bindingVar].value)) geoVars.push(bindingVar);
-				}
-			}
-			if (checkedVars.length === yasr.results.getVariables().length) {
-				//checked all vars. can break now
-				break;
-			}
-		}
-		return geoVars;
-	}
-	var canHandleResults = function() {
-		return getGeoVariables().length > 0
-	};
-
-
-	return {
-		draw: draw,
-		name: "Geo",
-		canHandleResults: canHandleResults,
-		getPriority: 2,
-	}
+  return {
+    draw: draw,
+    name: "Geo",
+    canHandleResults: canHandleResults,
+    getPriority: 2
+  };
 };
 
-
 root.defaults = {
-	map: function(yasr, L) {
+  map: function(yasr, L) {
     return {
-				layers: [
-					new L.tileLayer('http://{s}.tile.osm.org/{z}/{x}/{y}.png', {
-		 		    attribution: '&copy; <a href="http://osm.org/copyright">OpenStreetMap</a> contributors'
-			 		})
-		 	 ]
+      layers: [
+        new L.tileLayer("http://{s}.tile.osm.org/{z}/{x}/{y}.png", {
+          attribution: '&copy; <a href="http://osm.org/copyright">OpenStreetMap</a> contributors'
+        })
+      ]
     };
- },
- formatPopup: function(yasr, L, forVariable, bindings) {
-  if (bindings[forVariable+'Label'] && bindings[forVariable+'Label'].value) {
-  	return bindings[forVariable+'Label'].value
-  }
- },
- missingPopupMsg: function(yasr, L, geoVariables) {
-	 if (geoVariables && geoVariables.length) {
-		 return '<small>Tip: Add a label variable prefixed with the geo variable name to show popups on the map. E.g. <code>'+ geoVariables[0] + 'Label</code></small>';
-	 }
- },
- disabledTitle: 'Query for geo variables in WKT format to plot them on a map',
+  },
+  formatPopup: function(yasr, L, forVariable, bindings) {
+    if (bindings[forVariable + "Label"] && bindings[forVariable + "Label"].value) {
+      return bindings[forVariable + "Label"].value;
+    }
+  },
+  missingPopupMsg: function(yasr, L, geoVariables) {
+    if (geoVariables && geoVariables.length) {
+      return "<small>Tip: Add a label variable prefixed with the geo variable name to show popups on the map. E.g. <code>" +
+        geoVariables[0] +
+        "Label</code></small>";
+    }
+  },
+  disabledTitle: "Query for geo variables in WKT format to plot them on a map"
 };
 
 root.version = {
-	leaflet: L.version
+  leaflet: L.version
 };
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
 
 },{"./imgs.js":153,"codemirror":8,"codemirror/addon/edit/matchbrackets.js":3,"codemirror/addon/fold/brace-fold.js":4,"codemirror/addon/fold/foldcode.js":5,"codemirror/addon/fold/foldgutter.js":6,"codemirror/addon/fold/xml-fold.js":7,"codemirror/mode/javascript/javascript.js":9,"codemirror/mode/xml/xml.js":10,"jquery":18,"leaflet":19,"wicket/wicket":139,"wicket/wicket-leaflet":138}],157:[function(require,module,exports){
-'use strict';
-var $ = require("jquery"),
-	EventEmitter = require('events').EventEmitter,
-	utils = require("yasgui-utils");
+"use strict";
+var $ = require("jquery"), EventEmitter = require("events").EventEmitter, utils = require("yasgui-utils");
 console = console || {
-	"log": function() {}
+  log: function() {}
 }; //make sure any console statements don't break in IE
 
-require('./jquery/extendJquery.js');
-
+require("./jquery/extendJquery.js");
 
 /**
  * Main YASR constructor
@@ -77080,440 +77079,433 @@ require('./jquery/extendJquery.js');
  * @return {doc} YASR document
  */
 var YASR = function(parent, options, queryResults) {
-	EventEmitter.call(this);
-	var yasr = this;
-	// console.log(EventEmitter.call(this));
+  EventEmitter.call(this);
+  var yasr = this;
+  // console.log(EventEmitter.call(this));
 
-	// var yasr = {};
-	// EventEmitter.call(yasr);
-	yasr.options = $.extend(true, {}, module.exports.defaults, options);
-	//the recursive copy does merge (overwrite) array values how we want it to. Do this manually
-	if (options && options.outputPlugins) yasr.options.outputPlugins = options.outputPlugins;
+  // var yasr = {};
+  // EventEmitter.call(yasr);
+  yasr.options = $.extend(true, {}, module.exports.defaults, options);
+  //the recursive copy does merge (overwrite) array values how we want it to. Do this manually
+  if (options && options.outputPlugins) yasr.options.outputPlugins = options.outputPlugins;
 
-	yasr.container = $("<div class='yasr'></div>").appendTo(parent);
-	yasr.header = $("<div class='yasr_header'></div>").appendTo(yasr.container);
-	yasr.resultsContainer = $("<div class='yasr_results'></div>").appendTo(yasr.container);
-	yasr.storage = utils.storage;
+  yasr.container = $("<div class='yasr'></div>").appendTo(parent);
+  yasr.header = $("<div class='yasr_header'></div>").appendTo(yasr.container);
+  yasr.resultsContainer = $("<div class='yasr_results'></div>").appendTo(yasr.container);
+  yasr.storage = utils.storage;
 
-	var prefix = null;
-	yasr.getPersistencyId = function(postfix) {
-		if (prefix === null) {
-			//instantiate prefix
-			if (yasr.options.persistency && yasr.options.persistency.prefix) {
-				prefix = (typeof yasr.options.persistency.prefix == 'string' ? yasr.options.persistency.prefix : yasr.options.persistency.prefix(yasr));
-			} else {
-				prefix = false;
-			}
-		}
-		if (prefix && postfix != null) {
-			return prefix + (typeof postfix == 'string' ? postfix : postfix(yasr));
-		} else {
-			return null;
-		}
-	};
+  var prefix = null;
+  yasr.getPersistencyId = function(postfix) {
+    if (prefix === null) {
+      //instantiate prefix
+      if (yasr.options.persistency && yasr.options.persistency.prefix) {
+        prefix = typeof yasr.options.persistency.prefix == "string"
+          ? yasr.options.persistency.prefix
+          : yasr.options.persistency.prefix(yasr);
+      } else {
+        prefix = false;
+      }
+    }
+    if (prefix && postfix != null) {
+      return prefix + (typeof postfix == "string" ? postfix : postfix(yasr));
+    } else {
+      return null;
+    }
+  };
 
-	if (yasr.options.useGoogleCharts) {
-		//pre-load google-loader
-		require('./gChartLoader.js')
-			.once('initError', function() {
-				yasr.options.useGoogleCharts = false
-			})
-			.init();
-	}
+  if (yasr.options.useGoogleCharts) {
+    //pre-load google-loader
+    require("./gChartLoader.js")
+      .once("initError", function() {
+        yasr.options.useGoogleCharts = false;
+      })
+      .init();
+  }
 
-	//first initialize plugins
-	yasr.plugins = {};
-	for (var pluginName in module.exports.plugins) {
-		if (!yasr.options.useGoogleCharts && pluginName == "gchart") continue;
-		yasr.plugins[pluginName] = new module.exports.plugins[pluginName](yasr);
-	}
+  //first initialize plugins
+  yasr.plugins = {};
+  for (var pluginName in module.exports.plugins) {
+    if (!yasr.options.useGoogleCharts && pluginName == "gchart") continue;
+    yasr.plugins[pluginName] = new module.exports.plugins[pluginName](yasr);
+  }
 
+  yasr.updateHeader = function() {
+    var downloadIcon = yasr.header.find(".yasr_downloadIcon").removeAttr("title"); //and remove previous titles
+    var embedButton = yasr.header.find(".yasr_embedBtn");
+    var outputPlugin = yasr.plugins[yasr.options.output];
+    if (outputPlugin) {
+      //Manage download link
+      var info = outputPlugin.getDownloadInfo ? outputPlugin.getDownloadInfo() : null;
+      if (info) {
+        if (info.buttonTitle) downloadIcon.attr("title", info.buttonTitle);
+        downloadIcon.prop("disabled", false);
+        downloadIcon.find("path").each(function() {
+          this.style.fill = "black";
+        });
+      } else {
+        downloadIcon.prop("disabled", true).prop("title", "Download not supported for this result representation");
+        downloadIcon.find("path").each(function() {
+          this.style.fill = "gray";
+        });
+      }
 
-	yasr.updateHeader = function() {
-		var downloadIcon = yasr.header.find(".yasr_downloadIcon")
-			.removeAttr("title"); //and remove previous titles
-		var embedButton = yasr.header.find(".yasr_embedBtn");
-		var outputPlugin = yasr.plugins[yasr.options.output];
-		if (outputPlugin) {
+      //Manage embed button
+      var link = null;
+      if (outputPlugin.getEmbedHtml) link = outputPlugin.getEmbedHtml();
+      if (link && link.length > 0) {
+        embedButton.show();
+      } else {
+        embedButton.hide();
+      }
+    }
+  };
+  yasr.draw = function(output) {
+    if (!yasr.results) return false;
+    if (!output) output = yasr.options.output;
 
-			//Manage download link
-			var info = (outputPlugin.getDownloadInfo ? outputPlugin.getDownloadInfo() : null);
-			if (info) {
-				if (info.buttonTitle) downloadIcon.attr('title', info.buttonTitle);
-				downloadIcon.prop("disabled", false);
-				downloadIcon.find("path").each(function() {
-					this.style.fill = "black";
-				});
-			} else {
-				downloadIcon.prop("disabled", true).prop("title", "Download not supported for this result representation");
-				downloadIcon.find("path").each(function() {
-					this.style.fill = "gray";
-				});
-			}
+    //ah, our default output does not take our current results. Try to autodetect
+    var selectedOutput = null;
+    var selectedOutputPriority = -1;
+    var unsupportedOutputs = [];
+    for (var tryOutput in yasr.plugins) {
+      if (yasr.plugins[tryOutput].canHandleResults(yasr)) {
+        var priority = yasr.plugins[tryOutput].getPriority;
+        if (typeof priority == "function") priority = priority(yasr);
+        if (priority != null && priority != undefined && priority > selectedOutputPriority) {
+          selectedOutputPriority = priority;
+          selectedOutput = tryOutput;
+        }
+      } else {
+        unsupportedOutputs.push(tryOutput);
+      }
+    }
+    disableOutputs(unsupportedOutputs);
+    var outputToDraw = null;
+    if (output in yasr.plugins && yasr.plugins[output].canHandleResults(yasr)) {
+      outputToDraw = output;
+    } else if (selectedOutput) {
+      outputToDraw = selectedOutput;
+    }
 
-			//Manage embed button
-			var link = null;
-			if (outputPlugin.getEmbedHtml) link = outputPlugin.getEmbedHtml();
-			if (link && link.length > 0) {
-				embedButton.show();
-			} else {
-				embedButton.hide();
-			}
-		}
-	};
-	yasr.draw = function(output) {
-		if (!yasr.results) return false;
-		if (!output) output = yasr.options.output;
+    if (outputToDraw) {
+      $(yasr.resultsContainer).empty();
+      yasr.emit("draw", yasr, yasr.plugins[outputToDraw]);
+      yasr.plugins[outputToDraw].draw();
+      yasr.emit("drawn", yasr, yasr.plugins[outputToDraw]);
+      yasr.updateHeader();
+      return true;
+    } else {
+      yasr.updateHeader();
+      return false;
+    }
+  };
 
+  var disableOutputs = function(outputs) {
+    //first enable everything.
+    yasr.header.find(".yasr_btnGroup .yasr_btn").removeClass("disabled");
 
-		//ah, our default output does not take our current results. Try to autodetect
-		var selectedOutput = null;
-		var selectedOutputPriority = -1;
-		var unsupportedOutputs = [];
-		for (var tryOutput in yasr.plugins) {
-			if (yasr.plugins[tryOutput].canHandleResults(yasr)) {
-				var priority = yasr.plugins[tryOutput].getPriority;
-				if (typeof priority == "function") priority = priority(yasr);
-				if (priority != null && priority != undefined && priority > selectedOutputPriority) {
-					selectedOutputPriority = priority;
-					selectedOutput = tryOutput;
-				}
-			} else {
-				unsupportedOutputs.push(tryOutput);
-			}
-		}
-		disableOutputs(unsupportedOutputs);
-		var outputToDraw = null;
-		if (output in yasr.plugins && yasr.plugins[output].canHandleResults(yasr)) {
-			outputToDraw = output;
-		} else if (selectedOutput) {
-			outputToDraw = selectedOutput;
-		}
+    //now disable the outputs passed as param
+    outputs.forEach(function(outputName) {
+      var disabledTitle, disabledMsg;
+      if (module.exports.plugins[outputName] && module.exports.plugins[outputName].defaults) {
+        disabledTitle = module.exports.plugins[outputName].defaults.disabledTitle;
+      }
+      yasr.header.find(".yasr_btnGroup .select_" + outputName).addClass("disabled").attr("title", disabledTitle || "");
+    });
+  };
+  yasr.somethingDrawn = function() {
+    return !yasr.resultsContainer.is(":empty");
+  };
 
-		if (outputToDraw) {
-			$(yasr.resultsContainer).empty();
-			yasr.emit('draw', yasr, yasr.plugins[outputToDraw]);
-			yasr.plugins[outputToDraw].draw();
-			yasr.emit('drawn', yasr, yasr.plugins[outputToDraw]);
-			yasr.updateHeader();
-			return true;
-		} else {
-			yasr.updateHeader();
-			return false;
-		}
-	};
+  yasr.setResponse = function(dataOrJqXhr, textStatus, jqXhrOrErrorString) {
+    try {
+      yasr.results = require("./parsers/wrapper.js")(dataOrJqXhr, textStatus, jqXhrOrErrorString);
+    } catch (exception) {
+      yasr.results = {
+        getException: function() {
+          return exception;
+        }
+      };
+    }
+    yasr.draw();
 
-	var disableOutputs = function(outputs) {
-		//first enable everything.
-		yasr.header.find('.yasr_btnGroup .yasr_btn').removeClass('disabled');
+    //store if needed
+    var resultsId = yasr.getPersistencyId(yasr.options.persistency.results.key);
+    if (resultsId) {
+      if (
+        yasr.results.getOriginalResponseAsString &&
+        yasr.results.getOriginalResponseAsString().length < yasr.options.persistency.results.maxSize
+      ) {
+        utils.storage.set(resultsId, yasr.results.getAsStoreObject(), "month");
+      } else {
+        //remove old string
+        utils.storage.remove(resultsId);
+      }
+    }
+  };
+  var $toggableWarning = null;
+  var $toggableWarningClose = null;
+  var $toggableWarningMsg = null;
+  yasr.warn = function(warning) {
+    if (!$toggableWarning) {
+      //first time instantiation
+      $toggableWarning = $("<div>", {
+        class: "toggableWarning"
+      })
+        .prependTo(yasr.container)
+        .hide();
+      $toggableWarningClose = $("<span>", {
+        class: "toggleWarning"
+      })
+        .html("&times;")
+        .click(function() {
+          $toggableWarning.hide(400);
+        })
+        .appendTo($toggableWarning);
+      $toggableWarningMsg = $("<span>", {
+        class: "toggableMsg"
+      }).appendTo($toggableWarning);
+    }
+    $toggableWarningMsg.empty();
+    if (warning instanceof $) {
+      $toggableWarningMsg.append(warning);
+    } else {
+      $toggableWarningMsg.html(warning);
+    }
+    $toggableWarning.show(400);
+  };
 
+  var blobDownloadSupported = null;
+  var checkBlobDownloadSupported = function() {
+    if (blobDownloadSupported === null) {
+      var windowUrl = window.URL || window.webkitURL || window.mozURL || window.msURL;
+      blobDownloadSupported = windowUrl && Blob;
+    }
+    return blobDownloadSupported;
+  };
+  var embedBtn = null;
+  var drawHeader = function(yasr) {
+    var drawOutputSelector = function() {
+      var btnGroup = $('<div class="yasr_btnGroup"></div>');
+      $.each(yasr.options.outputPlugins, function(i, pluginName) {
+        var plugin = yasr.plugins[pluginName];
+        if (!plugin) return; //plugin not loaded
 
-		//now disable the outputs passed as param
-		outputs.forEach(function(outputName) {
-			var disabledTitle, disabledMsg;
-			if (module.exports.plugins[outputName] && module.exports.plugins[outputName].defaults) {
-				disabledTitle = module.exports.plugins[outputName].defaults.disabledTitle;
-			}
-			yasr.header.find('.yasr_btnGroup .select_' + outputName)
-				.addClass('disabled')
-				.attr('title', disabledTitle || '');
-			
-		});
+        if (plugin.hideFromSelection) return;
+        var name = plugin.name || pluginName;
+        var button = $("<button class='yasr_btn'></button>")
+          .text(name)
+          .addClass("select_" + pluginName)
+          .click(function() {
+            //update buttons
+            btnGroup.find("button.selected").removeClass("selected");
+            $(this).addClass("selected");
+            //set and draw output
+            yasr.options.output = pluginName;
 
-	};
-	yasr.somethingDrawn = function() {
-		return !yasr.resultsContainer.is(":empty");
-	};
+            //store if needed
+            yasr.store();
 
-	yasr.setResponse = function(dataOrJqXhr, textStatus, jqXhrOrErrorString) {
-		try {
-			yasr.results = require("./parsers/wrapper.js")(dataOrJqXhr, textStatus, jqXhrOrErrorString);
-		} catch (exception) {
-			yasr.results = {
-				getException: function() {
-					return exception
-				}
-			};
-		}
-		yasr.draw();
+            //close warning if there is any
+            if ($toggableWarning) $toggableWarning.hide(400);
 
-		//store if needed
-		var resultsId = yasr.getPersistencyId(yasr.options.persistency.results.key);
-		if (resultsId) {
-			if (yasr.results.getOriginalResponseAsString && yasr.results.getOriginalResponseAsString().length < yasr.options.persistency.results.maxSize) {
-				utils.storage.set(resultsId, yasr.results.getAsStoreObject(), "month");
-			} else {
-				//remove old string
-				utils.storage.remove(resultsId);
-			}
-		}
-	};
-	var $toggableWarning = null;
-	var $toggableWarningClose = null;
-	var $toggableWarningMsg = null;
-	yasr.warn = function(warning) {
-		if (!$toggableWarning) {
-			//first time instantiation
-			$toggableWarning = $('<div>', {
-				class: 'toggableWarning'
-			}).prependTo(yasr.container).hide();
-			$toggableWarningClose = $('<span>', {
-					class: 'toggleWarning'
-				})
-				.html('&times;')
-				.click(function() {
-					$toggableWarning.hide(400);
-				})
-				.appendTo($toggableWarning);
-			$toggableWarningMsg = $('<span>', {
-				class: 'toggableMsg'
-			}).appendTo($toggableWarning);
-		}
-		$toggableWarningMsg.empty();
-		if (warning instanceof $) {
-			$toggableWarningMsg.append(warning);
-		} else {
-			$toggableWarningMsg.html(warning);
-		}
-		$toggableWarning.show(400);
-	};
+            yasr.draw();
+          })
+          .appendTo(btnGroup);
+        if (yasr.options.output == pluginName) button.addClass("selected");
+      });
 
-	var blobDownloadSupported = null;
-	var checkBlobDownloadSupported = function() {
-		if (blobDownloadSupported === null) {
-			var windowUrl = window.URL || window.webkitURL || window.mozURL || window.msURL;
-			blobDownloadSupported = windowUrl && Blob;
-		}
-		return blobDownloadSupported;
-	};
-	var embedBtn = null;
-	var drawHeader = function(yasr) {
-		var drawOutputSelector = function() {
-			var btnGroup = $('<div class="yasr_btnGroup"></div>');
-			$.each(yasr.options.outputPlugins, function(i, pluginName) {
-				var plugin = yasr.plugins[pluginName];
-				if (!plugin) return; //plugin not loaded
+      if (btnGroup.children().length > 1) yasr.header.append(btnGroup);
+    };
+    var drawDownloadIcon = function() {
+      var stringToUrl = function(string, contentType) {
+        var url = null;
+        var windowUrl = window.URL || window.webkitURL || window.mozURL || window.msURL;
+        if (windowUrl && Blob) {
+          var blob = new Blob([string], {
+            type: contentType
+          });
+          url = windowUrl.createObjectURL(blob);
+        }
+        return url;
+      };
+      var button = $("<button class='yasr_btn yasr_downloadIcon btn_icon'></button>")
+        .append(require("yasgui-utils").svg.getElement(require("./imgs.js").download))
+        .click(function() {
+          var currentPlugin = yasr.plugins[yasr.options.output];
+          if (currentPlugin && currentPlugin.getDownloadInfo) {
+            var downloadInfo = currentPlugin.getDownloadInfo();
+            var downloadUrl = stringToUrl(
+              downloadInfo.getContent(),
+              downloadInfo.contentType ? downloadInfo.contentType : "text/plain"
+            );
+            var downloadMockLink = $("<a></a>", {
+              href: downloadUrl,
+              download: downloadInfo.filename
+            });
+            require("./utils.js").fireClick(downloadMockLink);
+            //						downloadMockLink[0].click();
+          }
+        });
+      yasr.header.append(button);
+    };
+    var drawFullscreenButton = function() {
+      var button = $("<button class='yasr_btn btn_fullscreen btn_icon'></button>")
+        .append(require("yasgui-utils").svg.getElement(require("./imgs.js").fullscreen))
+        .click(function() {
+          yasr.container.addClass("yasr_fullscreen");
+        });
+      yasr.header.append(button);
+    };
+    var drawSmallscreenButton = function() {
+      var button = $("<button class='yasr_btn btn_smallscreen btn_icon'></button>")
+        .append(require("yasgui-utils").svg.getElement(require("./imgs.js").smallscreen))
+        .click(function() {
+          yasr.container.removeClass("yasr_fullscreen");
+        });
+      yasr.header.append(button);
+    };
+    var drawEmbedButton = function() {
+      embedBtn = $("<button>", {
+        class: "yasr_btn yasr_embedBtn",
+        title: "Get HTML snippet to embed results on a web page"
+      })
+        .text("</>")
+        .click(function(event) {
+          var currentPlugin = yasr.plugins[yasr.options.output];
+          if (currentPlugin && currentPlugin.getEmbedHtml) {
+            var embedLink = currentPlugin.getEmbedHtml();
 
-				if (plugin.hideFromSelection) return;
-				var name = plugin.name || pluginName;
-				var button = $("<button class='yasr_btn'></button>")
-					.text(name)
-					.addClass("select_" + pluginName)
-					.click(function() {
-						//update buttons
-						btnGroup.find("button.selected").removeClass("selected");
-						$(this).addClass("selected");
-						//set and draw output
-						yasr.options.output = pluginName;
+            event.stopPropagation();
+            var popup = $("<div class='yasr_embedPopup'></div>").appendTo(yasr.header);
+            $("html").click(function() {
+              if (popup) popup.remove();
+            });
 
-						//store if needed
-						yasr.store();
+            popup.click(function(event) {
+              event.stopPropagation();
+              //dont close when clicking on popup
+            });
+            var prePopup = $("<textarea>").val(embedLink);
+            prePopup.focus(function() {
+              var $this = $(this);
+              $this.select();
 
-						//close warning if there is any
-						if ($toggableWarning) $toggableWarning.hide(400);
+              // Work around Chrome's little problem
+              $this.mouseup(function() {
+                // Prevent further mouseup intervention
+                $this.unbind("mouseup");
+                return false;
+              });
+            });
 
-						yasr.draw();
-					})
-					.appendTo(btnGroup);
-				if (yasr.options.output == pluginName) button.addClass("selected");
-			});
+            popup.empty().append(prePopup);
+            var positions = embedBtn.position();
+            var top = positions.top + embedBtn.outerHeight() + "px";
+            var left = Math.max(positions.left + embedBtn.outerWidth() - popup.outerWidth(), 0) + "px";
 
-			if (btnGroup.children().length > 1) yasr.header.append(btnGroup);
-		};
-		var drawDownloadIcon = function() {
-			var stringToUrl = function(string, contentType) {
-				var url = null;
-				var windowUrl = window.URL || window.webkitURL || window.mozURL || window.msURL;
-				if (windowUrl && Blob) {
-					var blob = new Blob([string], {
-						type: contentType
-					});
-					url = windowUrl.createObjectURL(blob);
-				}
-				return url;
-			};
-			var button = $("<button class='yasr_btn yasr_downloadIcon btn_icon'></button>")
-				.append(require("yasgui-utils").svg.getElement(require('./imgs.js').download))
-				.click(function() {
-					var currentPlugin = yasr.plugins[yasr.options.output];
-					if (currentPlugin && currentPlugin.getDownloadInfo) {
-						var downloadInfo = currentPlugin.getDownloadInfo();
-						var downloadUrl = stringToUrl(downloadInfo.getContent(), (downloadInfo.contentType ? downloadInfo.contentType : "text/plain"));
-						var downloadMockLink = $("<a></a>", {
-							href: downloadUrl,
-							download: downloadInfo.filename
-						});
-						require('./utils.js').fireClick(downloadMockLink);
-						//						downloadMockLink[0].click();
-					}
-				});
-			yasr.header.append(button);
-		};
-		var drawFullscreenButton = function() {
-			var button = $("<button class='yasr_btn btn_fullscreen btn_icon'></button>")
-				.append(require("yasgui-utils").svg.getElement(require('./imgs.js').fullscreen))
-				.click(function() {
-					yasr.container.addClass('yasr_fullscreen');
-				});
-			yasr.header.append(button);
-		};
-		var drawSmallscreenButton = function() {
-			var button = $("<button class='yasr_btn btn_smallscreen btn_icon'></button>")
-				.append(require("yasgui-utils").svg.getElement(require('./imgs.js').smallscreen))
-				.click(function() {
-					yasr.container.removeClass('yasr_fullscreen');
-				});
-			yasr.header.append(button);
-		};
-		var drawEmbedButton = function() {
-			embedBtn = $("<button>", {
-					class: 'yasr_btn yasr_embedBtn',
-					title: 'Get HTML snippet to embed results on a web page'
-				})
-				.text('</>')
-				.click(function(event) {
-					var currentPlugin = yasr.plugins[yasr.options.output];
-					if (currentPlugin && currentPlugin.getEmbedHtml) {
-						var embedLink = currentPlugin.getEmbedHtml();
+            popup.css("top", top).css("left", left);
+          }
+        });
+      yasr.header.append(embedBtn);
+    };
+    drawFullscreenButton();
+    drawSmallscreenButton();
+    if (yasr.options.drawOutputSelector) drawOutputSelector();
+    if (yasr.options.drawDownloadIcon && checkBlobDownloadSupported()) drawDownloadIcon(); //only draw when it's supported
+    drawEmbedButton();
+  };
 
-						event.stopPropagation();
-						var popup = $("<div class='yasr_embedPopup'></div>").appendTo(yasr.header);
-						$('html').click(function() {
-							if (popup) popup.remove();
-						});
+  var persistentId = null;
+  //store persistent options (not results though. store these separately, as they are too large)
+  yasr.store = function() {
+    if (!persistentId) persistentId = yasr.getPersistencyId("main");
+    if (persistentId) {
+      utils.storage.set(persistentId, yasr.getPersistentSettings());
+    }
+  };
 
-						popup.click(function(event) {
-							event.stopPropagation();
-							//dont close when clicking on popup
-						});
-						var prePopup = $("<textarea>").val(embedLink);
-						prePopup.focus(function() {
-							var $this = $(this);
-							$this.select();
+  yasr.load = function() {
+    if (!persistentId) persistentId = yasr.getPersistencyId("main");
+    yasr.setPersistentSettings(utils.storage.get(persistentId));
+  };
 
-							// Work around Chrome's little problem
-							$this.mouseup(function() {
-								// Prevent further mouseup intervention
-								$this.unbind("mouseup");
-								return false;
-							});
-						});
+  yasr.setPersistentSettings = function(settings) {
+    if (settings) {
+      if (settings.output) {
+        yasr.options.output = settings.output;
+      }
+      for (var pluginName in settings.plugins) {
+        if (yasr.plugins[pluginName] && yasr.plugins[pluginName].setPersistentSettings) {
+          yasr.plugins[pluginName].setPersistentSettings(settings.plugins[pluginName]);
+        }
+      }
+    }
+  };
 
-						popup.empty().append(prePopup);
-						var positions = embedBtn.position();
-						var top = (positions.top + embedBtn.outerHeight()) + 'px';
-						var left = Math.max(((positions.left + embedBtn.outerWidth()) - popup.outerWidth()), 0) + 'px';
+  yasr.getPersistentSettings = function() {
+    var settings = {
+      output: yasr.options.output,
+      plugins: {}
+    };
+    for (var pluginName in yasr.plugins) {
+      if (yasr.plugins[pluginName].getPersistentSettings) {
+        settings.plugins[pluginName] = yasr.plugins[pluginName].getPersistentSettings();
+      }
+    }
+    return settings;
+  };
 
-						popup.css("top", top).css("left", left);
-
-					}
-				})
-			yasr.header.append(embedBtn);
-		};
-		drawFullscreenButton();
-		drawSmallscreenButton();
-		if (yasr.options.drawOutputSelector) drawOutputSelector();
-		if (yasr.options.drawDownloadIcon && checkBlobDownloadSupported()) drawDownloadIcon(); //only draw when it's supported
-		drawEmbedButton();
-	};
-
-	var persistentId = null;
-	//store persistent options (not results though. store these separately, as they are too large)
-	yasr.store = function() {
-		if (!persistentId) persistentId = yasr.getPersistencyId('main');
-		if (persistentId) {
-			utils.storage.set(persistentId, yasr.getPersistentSettings());
-		}
-	};
-
-
-	yasr.load = function() {
-		if (!persistentId) persistentId = yasr.getPersistencyId('main');
-		yasr.setPersistentSettings(utils.storage.get(persistentId));
-	};
-
-
-	yasr.setPersistentSettings = function(settings) {
-		if (settings) {
-			if (settings.output) {
-				yasr.options.output = settings.output;
-			}
-			for (var pluginName in settings.plugins) {
-				if (yasr.plugins[pluginName] && yasr.plugins[pluginName].setPersistentSettings) {
-					yasr.plugins[pluginName].setPersistentSettings(settings.plugins[pluginName]);
-				}
-			}
-		}
-	}
-
-	yasr.getPersistentSettings = function() {
-		var settings = {
-			output: yasr.options.output,
-			plugins: {}
-		};
-		for (var pluginName in yasr.plugins) {
-			if (yasr.plugins[pluginName].getPersistentSettings) {
-				settings.plugins[pluginName] = yasr.plugins[pluginName].getPersistentSettings();
-			}
-		}
-		return settings;
-	}
-
-
-	/**
+  /**
 	 * postprocess
 	 */
-	yasr.load();
-	drawHeader(yasr);
-	if (!queryResults && yasr.options.persistency && yasr.options.persistency.results) {
-		var resultsId = yasr.getPersistencyId(yasr.options.persistency.results.key)
-		var fromStorage;
-		if (resultsId) {
-			fromStorage = utils.storage.get(resultsId);
-		}
+  yasr.load();
+  drawHeader(yasr);
+  if (!queryResults && yasr.options.persistency && yasr.options.persistency.results) {
+    var resultsId = yasr.getPersistencyId(yasr.options.persistency.results.key);
+    var fromStorage;
+    if (resultsId) {
+      fromStorage = utils.storage.get(resultsId);
+    }
 
+    if (!fromStorage && yasr.options.persistency.results.id) {
+      //deprecated! But keep for backwards compatability
+      //if results are stored under old ID. Fetch the results, and delete that key (results can be large, and clutter space)
+      //setting the results, will automatically store it under the new key, so we don't have to worry about that here
+      var deprId = typeof yasr.options.persistency.results.id == "string"
+        ? yasr.options.persistency.results.id
+        : yasr.options.persistency.results.id(yasr);
+      if (deprId) {
+        fromStorage = utils.storage.get(deprId);
+        if (fromStorage) utils.storage.remove(deprId);
+      }
+    }
+    if (fromStorage) {
+      if ($.isArray(fromStorage)) {
+        yasr.setResponse.apply(this, fromStorage);
+      } else {
+        yasr.setResponse(fromStorage);
+      }
+    }
+  }
 
-		if (!fromStorage && yasr.options.persistency.results.id) {
-			//deprecated! But keep for backwards compatability
-			//if results are stored under old ID. Fetch the results, and delete that key (results can be large, and clutter space)
-			//setting the results, will automatically store it under the new key, so we don't have to worry about that here
-			var deprId = (typeof yasr.options.persistency.results.id == "string" ? yasr.options.persistency.results.id : yasr.options.persistency.results.id(yasr));
-			if (deprId) {
-				fromStorage = utils.storage.get(deprId);
-				if (fromStorage) utils.storage.remove(deprId);
-			}
-		}
-		if (fromStorage) {
-			if ($.isArray(fromStorage)) {
-				yasr.setResponse.apply(this, fromStorage);
-			} else {
-				yasr.setResponse(fromStorage);
-			}
-		}
-	}
+  if (queryResults) {
+    yasr.setResponse(queryResults);
+  }
+  yasr.updateHeader();
 
-	if (queryResults) {
-		yasr.setResponse(queryResults);
-	}
-	yasr.updateHeader();
-
-
-	return yasr;
+  return yasr;
 };
 
-YASR.prototype = new EventEmitter;
+YASR.prototype = new EventEmitter();
 module.exports = function(parent, options, queryResults) {
-	return new YASR(parent, options, queryResults);
-}
-
+  return new YASR(parent, options, queryResults);
+};
 
 module.exports.plugins = {};
 module.exports.registerOutput = function(name, constructor) {
-	module.exports.plugins[name] = constructor;
+  module.exports.plugins[name] = constructor;
 };
-
-
-
 
 /**
  * The default options of YASR. Either change the default options by setting YASR.defaults, or by
@@ -77521,230 +77513,247 @@ module.exports.registerOutput = function(name, constructor) {
  *
  * @attribute YASR.defaults
  */
-module.exports.defaults = require('./defaults.js');
+module.exports.defaults = require("./defaults.js");
 module.exports.version = {
-	"YASR": require("../package.json").version,
-	"jquery": $.fn.jquery,
-	"yasgui-utils": require("yasgui-utils").version
+  YASR: require("../package.json").version,
+  jquery: $.fn.jquery,
+  "yasgui-utils": require("yasgui-utils").version
 };
 module.exports.$ = $;
 
-
-
 //put these in a try-catch. When using the unbundled version, and when some dependencies are missing, then YASR as a whole will still function
 try {
-	module.exports.registerOutput('boolean', require("./boolean.js"))
+  module.exports.registerOutput("boolean", require("./boolean.js"));
 } catch (e) {
-	console.warn(e);
-};
+  console.warn(e);
+}
 try {
-	module.exports.registerOutput('rawResponse', require("./rawResponse.js"))
+  module.exports.registerOutput("rawResponse", require("./rawResponse.js"));
 } catch (e) {
-	console.warn(e);
-};
+  console.warn(e);
+}
 try {
-	module.exports.registerOutput('leaflet', require("./leaflet.js"))
+  module.exports.registerOutput("leaflet", require("./leaflet.js"));
 } catch (e) {
-	console.warn(e);
-};
+  console.warn(e);
+}
 try {
-	module.exports.registerOutput('table', require("./table.js"))
+  module.exports.registerOutput("table", require("./table.js"));
 } catch (e) {
-	console.warn(e);
-};
+  console.warn(e);
+}
 try {
-	module.exports.registerOutput('error', require("./error.js"))
+  module.exports.registerOutput("error", require("./error.js"));
 } catch (e) {
-	console.warn(e);
-};
+  console.warn(e);
+}
 try {
-	module.exports.registerOutput('pivot', require("./pivot.js"))
+  module.exports.registerOutput("pivot", require("./pivot.js"));
 } catch (e) {
-	console.warn(e);
-};
+  console.warn(e);
+}
 try {
-	module.exports.registerOutput('gchart', require("./gchart.js"))
+  module.exports.registerOutput("gchart", require("./gchart.js"));
 } catch (e) {
-	console.warn(e);
-};
+  console.warn(e);
+}
 
 },{"../package.json":144,"./boolean.js":146,"./defaults.js":147,"./error.js":149,"./gChartLoader.js":151,"./gchart.js":152,"./imgs.js":153,"./jquery/extendJquery.js":154,"./leaflet.js":156,"./parsers/wrapper.js":163,"./pivot.js":165,"./rawResponse.js":166,"./table.js":167,"./utils.js":168,"events":13,"jquery":18,"yasgui-utils":141}],158:[function(require,module,exports){
-'use strict';
+"use strict";
 var $ = require("jquery");
 var root = module.exports = function(queryResponse) {
-	return require("./dlv.js")(queryResponse, ",");
+  return require("./dlv.js")(queryResponse, ",");
 };
+
 },{"./dlv.js":159,"jquery":18}],159:[function(require,module,exports){
-'use strict';
-var $ = require('jquery');
+"use strict";
+var $ = require("jquery");
 require("../../lib/jquery.csv-0.71.js");
 var root = module.exports = function(queryResponse, separator) {
-	var json = {};
-	var arrays = $.csv.toArrays(queryResponse, {
-		separator: separator
-	});
-	var detectType = function(value) {
-		if (value.indexOf("http") == 0) {
-			return "uri";
-		} else {
-			return null;
-		}
-	};
+  var json = {};
+  var arrays = $.csv.toArrays(queryResponse, {
+    separator: separator
+  });
+  var detectType = function(value) {
+    if (value.indexOf("http") == 0) {
+      return "uri";
+    } else {
+      return null;
+    }
+  };
 
-	var getBoolean = function() {
-		if (arrays.length == 2 && arrays[0].length == 1 && arrays[1].length == 1 && arrays[0][0] == "boolean" && (arrays[1][0] == "1" || arrays[1][0] == "0")) {
-			json.boolean = (arrays[1][0] == "1" ? true : false);
-			return true;
-		}
-		return false;
-	};
+  var getBoolean = function() {
+    if (
+      arrays.length == 2 &&
+      arrays[0].length == 1 &&
+      arrays[1].length == 1 &&
+      arrays[0][0] == "boolean" &&
+      (arrays[1][0] == "1" || arrays[1][0] == "0")
+    ) {
+      json.boolean = arrays[1][0] == "1" ? true : false;
+      return true;
+    }
+    return false;
+  };
 
-	var getVariables = function() {
-		if (arrays.length > 0 && arrays[0].length > 0) {
-			json.head = {
-				vars: arrays[0]
-			};
-			return true;
-		}
-		return false;
-	};
+  var getVariables = function() {
+    if (arrays.length > 0 && arrays[0].length > 0) {
+      json.head = {
+        vars: arrays[0]
+      };
+      return true;
+    }
+    return false;
+  };
 
-	var getBindings = function() {
-		if (arrays.length > 1) {
-			json.results = {
-				bindings: []
-			};
-			for (var rowIt = 1; rowIt < arrays.length; rowIt++) {
-				var binding = {};
-				for (var colIt = 0; colIt < arrays[rowIt].length; colIt++) {
-					var varName = json.head.vars[colIt];
-					if (varName) {
-						var value = arrays[rowIt][colIt];
-						var detectedType = detectType(value);
-						binding[varName] = {
-							value: value
-						};
-						if (detectedType) binding[varName].type = detectedType;
-					}
-				}
+  var getBindings = function() {
+    if (arrays.length > 1) {
+      json.results = {
+        bindings: []
+      };
+      for (var rowIt = 1; rowIt < arrays.length; rowIt++) {
+        var binding = {};
+        for (var colIt = 0; colIt < arrays[rowIt].length; colIt++) {
+          var varName = json.head.vars[colIt];
+          if (varName) {
+            var value = arrays[rowIt][colIt];
+            var detectedType = detectType(value);
+            binding[varName] = {
+              value: value
+            };
+            if (detectedType) binding[varName].type = detectedType;
+          }
+        }
 
-				json.results.bindings.push(binding);
-			}
-			json.head = {
-				vars: arrays[0]
-			};
-			return true;
-		}
-		return false;
-	};
-	var isBoolean = getBoolean();
-	if (!isBoolean) {
-		var varsFetched = getVariables();
-		if (varsFetched) getBindings();
-	}
+        json.results.bindings.push(binding);
+      }
+      json.head = {
+        vars: arrays[0]
+      };
+      return true;
+    }
+    return false;
+  };
+  var isBoolean = getBoolean();
+  if (!isBoolean) {
+    var varsFetched = getVariables();
+    if (varsFetched) getBindings();
+  }
 
-	return json;
+  return json;
 };
+
 },{"../../lib/jquery.csv-0.71.js":2,"jquery":18}],160:[function(require,module,exports){
-'use strict';
+"use strict";
 var $ = require("jquery");
-var map = require('lodash/map');
-var reduce = require('lodash/reduce')
+var map = require("lodash/map");
+var reduce = require("lodash/reduce");
 
 var getAsObject = function(entity) {
-	if (typeof entity == "object") {
-		if ("bnode" == entity.type) {
-			entity.value = entity.value.slice(2);
-		}
-		return entity;
-	}
-	if (entity.indexOf("_:") == 0) {
-		return {
-			type: "bnode",
-			value: entity.slice(2)
-		}
-	}
-	return {
-			type: "uri",
-			value: entity
-		}
-}
+  if (typeof entity == "object") {
+    if ("bnode" == entity.type) {
+      entity.value = entity.value.slice(2);
+    }
+    return entity;
+  }
+  if (entity.indexOf("_:") == 0) {
+    return {
+      type: "bnode",
+      value: entity.slice(2)
+    };
+  }
+  return {
+    type: "uri",
+    value: entity
+  };
+};
 var root = module.exports = function(responseJson) {
-	if (responseJson) {
-		var hasContext = false;
-		var mapped = map(responseJson, function(value, subject) {
-			return map(value, function (value1, predicate) {
-				return map(value1, function(object) {
-					if (object.graphs) {
-						hasContext = true;
-						return map(object.graphs, function(context){
-							return [
-									getAsObject(subject),
-									getAsObject(predicate),
-									getAsObject(object),
-									getAsObject(context)
-								]
-						})
-					} else {
-						return [
-									getAsObject(subject),
-									getAsObject(predicate),
-									getAsObject(object)
-								]
-					}
-				})
-			})
-		});
-		var reduced = reduce(mapped, function(memo, el) {return memo.concat(el)}, []);
-		reduced = reduce(reduced, function(memo, el) {return memo.concat(el)}, []);
-		var bindings;
-		if (!hasContext) {
-			bindings = reduced.map(function(triple) {return {subject : triple[0], predicate: triple[1], object: triple[2]}});
-		} else {
-			reduced = reduce(reduced, function(memo, el) {return memo.concat(el)}, []);
-			bindings = reduced.map(function(triple) {return {subject : triple[0], predicate: triple[1], object: triple[2], context: triple[3]}});
-		}
-		var variables = (hasContext) ? [ "subject", "predicate", "object", "context" ] : [ "subject", "predicate", "object"];
-		return {
-			"head" : {
-				"vars" : variables
-				},
-				"results" : {
-					"bindings": bindings
-				}
-			};
-
-	}
-	return false;
-
+  if (responseJson) {
+    var hasContext = false;
+    var mapped = map(responseJson, function(value, subject) {
+      return map(value, function(value1, predicate) {
+        return map(value1, function(object) {
+          if (object.graphs) {
+            hasContext = true;
+            return map(object.graphs, function(context) {
+              return [getAsObject(subject), getAsObject(predicate), getAsObject(object), getAsObject(context)];
+            });
+          } else {
+            return [getAsObject(subject), getAsObject(predicate), getAsObject(object)];
+          }
+        });
+      });
+    });
+    var reduced = reduce(
+      mapped,
+      function(memo, el) {
+        return memo.concat(el);
+      },
+      []
+    );
+    reduced = reduce(
+      reduced,
+      function(memo, el) {
+        return memo.concat(el);
+      },
+      []
+    );
+    var bindings;
+    if (!hasContext) {
+      bindings = reduced.map(function(triple) {
+        return { subject: triple[0], predicate: triple[1], object: triple[2] };
+      });
+    } else {
+      reduced = reduce(
+        reduced,
+        function(memo, el) {
+          return memo.concat(el);
+        },
+        []
+      );
+      bindings = reduced.map(function(triple) {
+        return { subject: triple[0], predicate: triple[1], object: triple[2], context: triple[3] };
+      });
+    }
+    var variables = hasContext ? ["subject", "predicate", "object", "context"] : ["subject", "predicate", "object"];
+    return {
+      head: {
+        vars: variables
+      },
+      results: {
+        bindings: bindings
+      }
+    };
+  }
+  return false;
 };
 
 },{"jquery":18,"lodash/map":129,"lodash/reduce":132}],161:[function(require,module,exports){
-'use strict';
+"use strict";
 var $ = require("jquery");
 var root = module.exports = function(queryResponse) {
-
-	if (typeof queryResponse == "string") {
-		try {
-			return JSON.parse(queryResponse);
-		} catch (e) {
-			return false;
-		}
-	}
-	if (typeof queryResponse == "object" && queryResponse.constructor === {}.constructor) {
-		return queryResponse;
-	}
-	return false;
-
+  if (typeof queryResponse == "string") {
+    try {
+      return JSON.parse(queryResponse);
+    } catch (e) {
+      return false;
+    }
+  }
+  if (typeof queryResponse == "object" && queryResponse.constructor === ({}).constructor) {
+    return queryResponse;
+  }
+  return false;
 };
+
 },{"jquery":18}],162:[function(require,module,exports){
-'use strict';
+"use strict";
 var $ = require("jquery");
 var root = module.exports = function(queryResponse) {
-	return require("./dlv.js")(queryResponse, "\t");
+  return require("./dlv.js")(queryResponse, "\t");
 };
+
 },{"./dlv.js":159,"jquery":18}],163:[function(require,module,exports){
-'use strict';
+"use strict";
 var $ = require("jquery");
 
 /**
@@ -77760,700 +77769,685 @@ var $ = require("jquery");
  * - an 'errorThrown' string (
  */
 var root = module.exports = function(dataOrJqXhr, textStatus, jqXhrOrErrorString) {
-	var parsers = {
-		xml: require("./xml.js"),
-		json: require("./json.js"),
-		tsv: require("./tsv.js"),
-		csv: require("./csv.js"),
-		graphJson: require("./graphJson.js"),
-	};
-	var contentType = null;
-	var origResponse = null;
-	var json = null;
-	var type = null; //json, xml, csv, or tsv
-	var exception = null;
+  var parsers = {
+    xml: require("./xml.js"),
+    json: require("./json.js"),
+    tsv: require("./tsv.js"),
+    csv: require("./csv.js"),
+    graphJson: require("./graphJson.js")
+  };
+  var contentType = null;
+  var origResponse = null;
+  var json = null;
+  var type = null; //json, xml, csv, or tsv
+  var exception = null;
 
-	var init = function() {
-		if (typeof dataOrJqXhr == "object") {
-			/**
+  var init = function() {
+    if (typeof dataOrJqXhr == "object") {
+      /**
 			 * Extract exception info (if there is any)
 			 */
-			if (dataOrJqXhr.exception) {
-				//this object just has this exception string, nothing more. (here for backwards compatability)
-				exception = dataOrJqXhr.exception;
-			} else if (dataOrJqXhr.status != undefined && (dataOrJqXhr.status >= 300 || dataOrJqXhr.status === 0)) {
-				//this is an exception, and jquery response
-				exception = {
-					status: dataOrJqXhr.status
-				};
-				if (typeof jqXhrOrErrorString == "string") exception.errorString = jqXhrOrErrorString;
-				if (dataOrJqXhr.responseText) exception.responseText = dataOrJqXhr.responseText;
-				if (dataOrJqXhr.statusText) exception.statusText = dataOrJqXhr.statusText;
-			}
+      if (dataOrJqXhr.exception) {
+        //this object just has this exception string, nothing more. (here for backwards compatability)
+        exception = dataOrJqXhr.exception;
+      } else if (dataOrJqXhr.status != undefined && (dataOrJqXhr.status >= 300 || dataOrJqXhr.status === 0)) {
+        //this is an exception, and jquery response
+        exception = {
+          status: dataOrJqXhr.status
+        };
+        if (typeof jqXhrOrErrorString == "string") exception.errorString = jqXhrOrErrorString;
+        if (dataOrJqXhr.responseText) exception.responseText = dataOrJqXhr.responseText;
+        if (dataOrJqXhr.statusText) exception.statusText = dataOrJqXhr.statusText;
+      }
 
-			/**
+      /**
 			 * Extract content type info (if there is any)
 			 */
-			if (dataOrJqXhr.contentType) {
-				//this is not a jqXhr object, but a manually generated object (mostly for backwards compatability)
-				contentType = dataOrJqXhr.contentType.toLowerCase();
-			} else if (dataOrJqXhr.getResponseHeader && dataOrJqXhr.getResponseHeader("content-type")) {
-				var ct = dataOrJqXhr.getResponseHeader("content-type").trim().toLowerCase();
-				if (ct.length > 0) contentType = ct;
-			}
+      if (dataOrJqXhr.contentType) {
+        //this is not a jqXhr object, but a manually generated object (mostly for backwards compatability)
+        contentType = dataOrJqXhr.contentType.toLowerCase();
+      } else if (dataOrJqXhr.getResponseHeader && dataOrJqXhr.getResponseHeader("content-type")) {
+        var ct = dataOrJqXhr.getResponseHeader("content-type").trim().toLowerCase();
+        if (ct.length > 0) contentType = ct;
+      }
 
-			/**
+      /**
 			 * extract original response
 			 */
-			if (dataOrJqXhr.response) {
-				//this is not a jqXhr object, but a manually generated object (mostly for backwards compatability)
-				origResponse = dataOrJqXhr.response;
-			} else if (!textStatus && !jqXhrOrErrorString) {
-				//not called from jquery, as these other arguments are undefined.
-				//so, we can only assume the current object is a proper response (e.g. xml or json) object
-				origResponse = dataOrJqXhr;
-			}
-		}
-		if (!exception && !origResponse) {
-			//if this is called via a jquery complete callback, we should fetch the result for the jqXHR object
-			if (dataOrJqXhr.responseText) {
-				origResponse = dataOrJqXhr.responseText;
-			} else {
-				//if all else fails, assume first arg to be data object
-				//(which should be the case for most situations)
-				origResponse = dataOrJqXhr;
-			}
-		}
-	};
+      if (dataOrJqXhr.response) {
+        //this is not a jqXhr object, but a manually generated object (mostly for backwards compatability)
+        origResponse = dataOrJqXhr.response;
+      } else if (!textStatus && !jqXhrOrErrorString) {
+        //not called from jquery, as these other arguments are undefined.
+        //so, we can only assume the current object is a proper response (e.g. xml or json) object
+        origResponse = dataOrJqXhr;
+      }
+    }
+    if (!exception && !origResponse) {
+      //if this is called via a jquery complete callback, we should fetch the result for the jqXHR object
+      if (dataOrJqXhr.responseText) {
+        origResponse = dataOrJqXhr.responseText;
+      } else {
+        //if all else fails, assume first arg to be data object
+        //(which should be the case for most situations)
+        origResponse = dataOrJqXhr;
+      }
+    }
+  };
 
-	var getAsJson = function() {
-		if (json) return json;
-		if (json === false || exception) return false; //already tried parsing this, and failed. do not try again... 
-		var getParserFromContentType = function() {
-			if (contentType) {
-				if (contentType.indexOf("json") > -1) {
-					try {
-						if (contentType.indexOf("sparql-results+json") > -1) {
-							json = parsers.json(origResponse);
-						} else if (contentType.indexOf("application/rdf+json") > -1) {
-							json = parsers.graphJson(parsers.json(origResponse));	
-						}
-						
-					} catch (e) {
-						exception = e;
-					}
-					type = "json";
-				} else if (contentType.indexOf("xml") > -1) {
-					try {
-						json = parsers.xml(origResponse);
-					} catch (e) {
-						exception = e;
-					}
-					type = "xml";
-				} else if (contentType.indexOf("csv") > -1) {
-					try {
-						json = parsers.csv(origResponse);
-					} catch (e) {
-						exception = e;
-					}
-					type = "csv";
-				} else if (contentType.indexOf("tab-separated") > -1) {
-					try {
-						json = parsers.tsv(origResponse);
-					} catch (e) {
-						exception = e;
-					}
-					type = "tsv";
-				}
-			}
-		};
+  var getAsJson = function() {
+    if (json) return json;
+    if (json === false || exception) return false; //already tried parsing this, and failed. do not try again...
+    var getParserFromContentType = function() {
+      if (contentType) {
+        if (contentType.indexOf("json") > -1) {
+          try {
+            if (contentType.indexOf("sparql-results+json") > -1) {
+              json = parsers.json(origResponse);
+            } else if (contentType.indexOf("application/rdf+json") > -1) {
+              json = parsers.graphJson(parsers.json(origResponse));
+            }
+          } catch (e) {
+            exception = e;
+          }
+          type = "json";
+        } else if (contentType.indexOf("xml") > -1) {
+          try {
+            json = parsers.xml(origResponse);
+          } catch (e) {
+            exception = e;
+          }
+          type = "xml";
+        } else if (contentType.indexOf("csv") > -1) {
+          try {
+            json = parsers.csv(origResponse);
+          } catch (e) {
+            exception = e;
+          }
+          type = "csv";
+        } else if (contentType.indexOf("tab-separated") > -1) {
+          try {
+            json = parsers.tsv(origResponse);
+          } catch (e) {
+            exception = e;
+          }
+          type = "tsv";
+        }
+      }
+    };
 
+    var doLuckyGuess = function() {
+      json = parsers.json(origResponse);
+      if (json) {
+        type = "json";
+      } else {
+        try {
+          json = parsers.xml(origResponse);
+          if (json) type = "xml";
+        } catch (err) {}
+      }
+    };
 
-		var doLuckyGuess = function() {
-			json = parsers.json(origResponse);
-			if (json) {
-				type = "json";
-			} else {
-				try {
-					json = parsers.xml(origResponse);
-					if (json) type = "xml";
-				} catch (err) {};
-			}
-		};
+    getParserFromContentType();
+    if (!json) {
+      doLuckyGuess();
+    }
+    if (!json) json = false; //explicitly set to false, so we don't try to parse this thing again..
+    return json;
+  };
 
+  var getVariables = function() {
+    var json = getAsJson();
+    if (json && "head" in json) {
+      return json.head.vars;
+    } else {
+      return null;
+    }
+  };
 
-		getParserFromContentType();
-		if (!json) {
-			doLuckyGuess();
-		}
-		if (!json) json = false; //explicitly set to false, so we don't try to parse this thing again..
-		return json;
-	};
+  var getBindings = function() {
+    var json = getAsJson();
+    if (json && "results" in json) {
+      return json.results.bindings;
+    } else {
+      return null;
+    }
+  };
 
+  var getBoolean = function() {
+    var json = getAsJson();
+    if (json && "boolean" in json) {
+      return json.boolean;
+    } else {
+      return null;
+    }
+  };
+  var getOriginalResponse = function() {
+    return origResponse;
+  };
+  var getOriginalResponseAsString = function() {
+    var responseString = "";
+    if (typeof origResponse == "string") {
+      responseString = origResponse;
+    } else if (type == "json") {
+      responseString = JSON.stringify(origResponse, undefined, 2); //prettifies as well
+    } else if (type == "xml") {
+      responseString = new XMLSerializer().serializeToString(origResponse);
+    }
+    return responseString;
+  };
+  var getException = function() {
+    return exception;
+  };
+  var getType = function() {
+    if (type == null) getAsJson(); //detects type as well
+    return type;
+  };
 
-	var getVariables = function() {
-		var json = getAsJson();
-		if (json && "head" in json) {
-			return json.head.vars;
-		} else {
-			return null;
-		}
-	};
+  //process the input parameters in such a way that we can store it in local storage (i.e., no function)
+  //and, make sure we can easily pass it on back to this wrapper function when loading it again from storage
+  var getAsStoreObject = function() {
+    var storeArray = [];
+    var arg1 = {};
+    if (dataOrJqXhr.status) {
+      //jqXhr object
+      arg1.status = dataOrJqXhr.status;
+      arg1.responseText = dataOrJqXhr.responseText;
+      arg1.statusText = dataOrJqXhr.statusText;
+      arg1.contentType = contentType; //this is a function in a jqXhr object (problem for storing). but this wrapper will read it as string as well
+    } else {
+      //the other instances of this param (whether it is a json, xml, or exception object), we can normally store
+      arg1 = dataOrJqXhr;
+    }
 
-	var getBindings = function() {
-		var json = getAsJson();
-		if (json && "results" in json) {
-			return json.results.bindings;
-		} else {
-			return null;
-		}
-	};
+    var arg2 = textStatus;
+    var arg3 = undefined;
+    if (typeof jqXhrOrErrorString == "string") arg3 = jqXhrOrErrorString;
 
-	var getBoolean = function() {
-		var json = getAsJson();
-		if (json && "boolean" in json) {
-			return json.boolean;
-		} else {
-			return null;
-		}
-	};
-	var getOriginalResponse = function() {
-		return origResponse;
-	};
-	var getOriginalResponseAsString = function() {
-		var responseString = "";
-		if (typeof origResponse == "string") {
-			responseString = origResponse;
-		} else if (type == "json") {
-			responseString = JSON.stringify(origResponse, undefined, 2); //prettifies as well
-		} else if (type == "xml") {
-			responseString = new XMLSerializer().serializeToString(origResponse);
-		}
-		return responseString;
-	};
-	var getException = function() {
-		return exception;
-	};
-	var getType = function() {
-		if (type == null) getAsJson(); //detects type as well
-		return type;
-	};
+    return [arg1, arg2, arg3];
+  };
 
-	//process the input parameters in such a way that we can store it in local storage (i.e., no function)
-	//and, make sure we can easily pass it on back to this wrapper function when loading it again from storage
-	var getAsStoreObject = function() {
-		var storeArray = [];
-		var arg1 = {};
-		if (dataOrJqXhr.status) {
-			//jqXhr object
-			arg1.status = dataOrJqXhr.status;
-			arg1.responseText = dataOrJqXhr.responseText;
-			arg1.statusText = dataOrJqXhr.statusText;
-			arg1.contentType = contentType; //this is a function in a jqXhr object (problem for storing). but this wrapper will read it as string as well
-		} else {
-			//the other instances of this param (whether it is a json, xml, or exception object), we can normally store
-			arg1 = dataOrJqXhr;
-		}
+  init();
+  json = getAsJson();
 
-
-		var arg2 = textStatus;
-		var arg3 = undefined;
-		if (typeof jqXhrOrErrorString == "string") arg3 = jqXhrOrErrorString;
-
-		return [arg1, arg2, arg3];
-	};
-
-
-
-	init();
-	json = getAsJson();
-
-	return {
-		getAsStoreObject: getAsStoreObject,
-		getAsJson: getAsJson,
-		getOriginalResponse: getOriginalResponse,
-		getOriginalResponseAsString: getOriginalResponseAsString,
-		getOriginalContentType: function() {
-			return contentType;
-		},
-		getVariables: getVariables,
-		getBindings: getBindings,
-		getBoolean: getBoolean,
-		getType: getType,
-		getException: getException
-	};
+  return {
+    getAsStoreObject: getAsStoreObject,
+    getAsJson: getAsJson,
+    getOriginalResponse: getOriginalResponse,
+    getOriginalResponseAsString: getOriginalResponseAsString,
+    getOriginalContentType: function() {
+      return contentType;
+    },
+    getVariables: getVariables,
+    getBindings: getBindings,
+    getBoolean: getBoolean,
+    getType: getType,
+    getException: getException
+  };
 };
+
 },{"./csv.js":158,"./graphJson.js":160,"./json.js":161,"./tsv.js":162,"./xml.js":164,"jquery":18}],164:[function(require,module,exports){
-'use strict';
+"use strict";
 var $ = require("jquery");
 var root = module.exports = function(xml) {
-
-
-
-	/**
+  /**
 	 * head
 	 */
-	var parseHead = function(node) {
-		json.head = {};
-		for (var headNodeIt = 0; headNodeIt < node.childNodes.length; headNodeIt++) {
-			var headNode = node.childNodes[headNodeIt];
-			if (headNode.nodeName == "variable") {
-				if (!json.head.vars) json.head.vars = [];
-				var name = headNode.getAttribute("name");
-				if (name) json.head.vars.push(name);
-			}
-		}
-	};
+  var parseHead = function(node) {
+    json.head = {};
+    for (var headNodeIt = 0; headNodeIt < node.childNodes.length; headNodeIt++) {
+      var headNode = node.childNodes[headNodeIt];
+      if (headNode.nodeName == "variable") {
+        if (!json.head.vars) json.head.vars = [];
+        var name = headNode.getAttribute("name");
+        if (name) json.head.vars.push(name);
+      }
+    }
+  };
 
-	var parseResults = function(node) {
-		json.results = {};
-		json.results.bindings = [];
-		for (var resultIt = 0; resultIt < node.childNodes.length; resultIt++) {
-			var resultNode = node.childNodes[resultIt];
-			var jsonResult = null;
+  var parseResults = function(node) {
+    json.results = {};
+    json.results.bindings = [];
+    for (var resultIt = 0; resultIt < node.childNodes.length; resultIt++) {
+      var resultNode = node.childNodes[resultIt];
+      var jsonResult = null;
 
-			for (var bindingIt = 0; bindingIt < resultNode.childNodes.length; bindingIt++) {
-				var bindingNode = resultNode.childNodes[bindingIt];
-				if (bindingNode.nodeName == "binding") {
-					var varName = bindingNode.getAttribute("name");
-					if (varName) {
-						jsonResult = jsonResult || {};
-						jsonResult[varName] = {};
-						for (var bindingInfIt = 0; bindingInfIt < bindingNode.childNodes.length; bindingInfIt++) {
-							var bindingInf = bindingNode.childNodes[bindingInfIt];
-							var type = bindingInf.nodeName;
-							if (type == "#text") continue;
-							jsonResult[varName].type = type;
-							jsonResult[varName].value = bindingInf.innerHTML;
-							var dataType = bindingInf.getAttribute("datatype");
-							if (dataType) jsonResult[varName].datatype = dataType;
+      for (var bindingIt = 0; bindingIt < resultNode.childNodes.length; bindingIt++) {
+        var bindingNode = resultNode.childNodes[bindingIt];
+        if (bindingNode.nodeName == "binding") {
+          var varName = bindingNode.getAttribute("name");
+          if (varName) {
+            jsonResult = jsonResult || {};
+            jsonResult[varName] = {};
+            for (var bindingInfIt = 0; bindingInfIt < bindingNode.childNodes.length; bindingInfIt++) {
+              var bindingInf = bindingNode.childNodes[bindingInfIt];
+              var type = bindingInf.nodeName;
+              if (type == "#text") continue;
+              jsonResult[varName].type = type;
+              jsonResult[varName].value = bindingInf.innerHTML;
+              var dataType = bindingInf.getAttribute("datatype");
+              if (dataType) jsonResult[varName].datatype = dataType;
+            }
+          }
+        }
+      }
+      if (jsonResult) json.results.bindings.push(jsonResult);
+    }
+  };
 
-						}
-					}
-				}
-			}
-			if (jsonResult) json.results.bindings.push(jsonResult);
-		}
-	};
+  var parseBoolean = function(node) {
+    if (node.innerHTML == "true") {
+      json.boolean = true;
+    } else {
+      json.boolean = false;
+    }
+  };
+  var mainXml = null;
+  if (typeof xml == "string") {
+    mainXml = $.parseXML(xml);
+  } else if ($.isXMLDoc(xml)) {
+    mainXml = xml;
+  }
+  var xml = null;
+  if (mainXml.childNodes.length > 0) {
+    //enter the main 'sparql' node
+    xml = mainXml.childNodes[0];
+  } else {
+    return null;
+  }
+  var json = {};
 
-	var parseBoolean = function(node) {
-		if (node.innerHTML == "true") {
-			json.boolean = true;
-		} else {
-			json.boolean = false;
-		}
-	};
-	var mainXml = null;
-	if (typeof xml == "string") {
-		mainXml = $.parseXML(xml);
-	} else if ($.isXMLDoc(xml)) {
-		mainXml = xml;
-	}
-	var xml = null;
-	if (mainXml.childNodes.length > 0) {
-		//enter the main 'sparql' node
-		xml = mainXml.childNodes[0];
-	} else {
-		return null;
-	}
-	var json = {};
+  for (var i = 0; i < xml.childNodes.length; i++) {
+    var node = xml.childNodes[i];
+    if (node.nodeName == "head") parseHead(node);
+    if (node.nodeName == "results") parseResults(node);
+    if (node.nodeName == "boolean") parseBoolean(node);
+  }
 
-
-	for (var i = 0; i < xml.childNodes.length; i++) {
-		var node = xml.childNodes[i];
-		if (node.nodeName == "head") parseHead(node);
-		if (node.nodeName == "results") parseResults(node);
-		if (node.nodeName == "boolean") parseBoolean(node);
-	}
-
-	return json;
+  return json;
 };
+
 },{"jquery":18}],165:[function(require,module,exports){
-'use strict';
-var $ = require("jquery"),
-	utils = require('./utils.js'),
-	yUtils = require('yasgui-utils'),
-	imgs = require('./imgs.js');
-require('jquery-ui/sortable');
-require('pivottable');
+"use strict";
+var $ = require("jquery"), utils = require("./utils.js"), yUtils = require("yasgui-utils"), imgs = require("./imgs.js");
+require("jquery-ui/sortable");
+require("pivottable");
 
 if (!$.fn.pivotUI) throw new Error("Pivot lib not loaded");
 var root = module.exports = function(yasr) {
-	var plugin = {};
-	var options = $.extend(true, {}, root.defaults);
+  var plugin = {};
+  var options = $.extend(true, {}, root.defaults);
 
-	if (options.useD3Chart) {
-		try {
-			var d3 = require('d3');
-			if (d3) require('pivottable/dist/d3_renderers.js');
-		} catch (e) {
-			//do nothing. just make sure we don't use this renderer
-		}
-		if ($.pivotUtilities.d3_renderers) $.extend(true, $.pivotUtilities.renderers, $.pivotUtilities.d3_renderers);
-	}
+  if (options.useD3Chart) {
+    try {
+      var d3 = require("d3");
+      if (d3) require("pivottable/dist/d3_renderers.js");
+    } catch (e) {
+      //do nothing. just make sure we don't use this renderer
+    }
+    if ($.pivotUtilities.d3_renderers) $.extend(true, $.pivotUtilities.renderers, $.pivotUtilities.d3_renderers);
+  }
 
+  var $pivotWrapper;
+  var mergeLabelPostfix = null;
+  var getShownVariables = function() {
+    var variables = yasr.results.getVariables();
+    if (!options.mergeLabelsWithUris) return variables;
+    var shownVariables = [];
 
+    mergeLabelPostfix = typeof options.mergeLabelsWithUris == "string" ? options.mergeLabelsWithUris : "Label";
+    variables.forEach(function(variable) {
+      if (variable.indexOf(mergeLabelPostfix, variable.length - mergeLabelPostfix.length) !== -1) {
+        //this one ends with a postfix
+        if (variables.indexOf(variable.substring(0, variable.length - mergeLabelPostfix.length)) >= 0) {
+          //we have a shorter version of this variable. So, do not include the ..<postfix> variable in the table
+          return;
+        }
+      }
+      shownVariables.push(variable);
+    });
+    return shownVariables;
+  };
 
-	var $pivotWrapper;
-	var mergeLabelPostfix = null;
-	var getShownVariables = function() {
-		var variables = yasr.results.getVariables();
-		if (!options.mergeLabelsWithUris) return variables;
-		var shownVariables = [];
+  var formatForPivot = function(callback) {
+    var vars = getShownVariables();
+    var usedPrefixes = null;
+    if (yasr.options.getUsedPrefixes) {
+      usedPrefixes = typeof yasr.options.getUsedPrefixes == "function"
+        ? yasr.options.getUsedPrefixes(yasr)
+        : yasr.options.getUsedPrefixes;
+    }
+    yasr.results.getBindings().forEach(function(binding) {
+      var rowObj = {};
+      vars.forEach(function(variable) {
+        if (variable in binding) {
+          var val = binding[variable].value;
+          if (mergeLabelPostfix && binding[variable + mergeLabelPostfix]) {
+            val = binding[variable + mergeLabelPostfix].value;
+          } else if (binding[variable].type == "uri") {
+            val = utils.uriToPrefixed(usedPrefixes, val);
+          }
+          rowObj[variable] = val;
+        } else {
+          rowObj[variable] = null;
+        }
+      });
+      callback(rowObj);
+    });
+  };
 
-		mergeLabelPostfix = (typeof options.mergeLabelsWithUris == "string" ? options.mergeLabelsWithUris : "Label");
-		variables.forEach(function(variable) {
-			if (variable.indexOf(mergeLabelPostfix, variable.length - mergeLabelPostfix.length) !== -1) {
-				//this one ends with a postfix
-				if (variables.indexOf(variable.substring(0, variable.length - mergeLabelPostfix.length)) >= 0) {
-					//we have a shorter version of this variable. So, do not include the ..<postfix> variable in the table
-					return;
-				}
-			}
-			shownVariables.push(variable);
-		});
-		return shownVariables;
-	};
+  var validatePivotTableOptions = function(pivotOptions) {
+    //validate settings. we may have different variables, or renderers might be gone
+    if (pivotOptions) {
+      if (yasr.results) {
+        var vars = yasr.results.getVariables();
+        var keepColsAndRows = true;
+        pivotOptions.cols.forEach(function(variable) {
+          if (vars.indexOf(variable) < 0) keepColsAndRows = false;
+        });
+        if (keepColsAndRows) {
+          pivotOptionse.rows.forEach(function(variable) {
+            if (vars.indexOf(variable) < 0) keepColsAndRows = false;
+          });
+        }
+        if (!keepColsAndRows) {
+          pivotOptions.cols = [];
+          pivotOptions.rows = [];
+        }
+        if (!$.pivotUtilities.renderers[settings.rendererName]) delete pivotOptions.rendererName;
+      }
+    } else {
+      pivotOptions = {};
+    }
+    return pivotOptions;
+  };
+  var draw = function() {
+    var doDraw = function() {
+      var onRefresh = function(pivotObj) {
+        options.pivotTable.cols = pivotObj.cols;
+        options.pivotTable.rows = pivotObj.rows;
+        options.pivotTable.rendererName = pivotObj.rendererName;
+        options.pivotTable.aggregatorName = pivotObj.aggregatorName;
+        options.pivotTable.vals = pivotObj.vals;
+        yasr.store();
 
-	var formatForPivot = function(callback) {
+        if (pivotObj.rendererName.toLowerCase().indexOf(" chart") >= 0) {
+          openGchartBtn.show();
+        } else {
+          openGchartBtn.hide();
+        }
+        yasr.updateHeader();
+      };
 
-		var vars = getShownVariables();
-		var usedPrefixes = null;
-		if (yasr.options.getUsedPrefixes) {
-			usedPrefixes = (typeof yasr.options.getUsedPrefixes == "function" ? yasr.options.getUsedPrefixes(yasr) : yasr.options.getUsedPrefixes);
-		}
-		yasr.results.getBindings().forEach(function(binding) {
-			var rowObj = {};
-			vars.forEach(function(variable) {
-				if (variable in binding) {
-					var val = binding[variable].value;
-					if (mergeLabelPostfix && binding[variable + mergeLabelPostfix]) {
-						val = binding[variable + mergeLabelPostfix].value;
-					} else if (binding[variable].type == "uri") {
-						val = utils.uriToPrefixed(usedPrefixes, val);
-					}
-					rowObj[variable] = val;
-				} else {
-					rowObj[variable] = null;
-				}
-			});
-			callback(rowObj);
-		});
-	}
+      var openGchartBtn = $("<button>", {
+        class: "openPivotGchart yasr_btn"
+      })
+        .text("Chart Config")
+        .click(function() {
+          $pivotWrapper.find('div[dir="ltr"]').dblclick();
+        })
+        .appendTo(yasr.resultsContainer);
+      $pivotWrapper = $("<div>", {
+        class: "pivotTable"
+      }).appendTo($(yasr.resultsContainer));
 
+      options.pivotTable.onRefresh = (function() {
+        var originalRefresh = options.pivotTable.onRefresh;
+        return function(pivotObj) {
+          onRefresh(pivotObj);
+          if (originalRefresh) originalRefresh(pivotObj);
+        };
+      })();
 
-	var validatePivotTableOptions = function(pivotOptions) {
-		//validate settings. we may have different variables, or renderers might be gone
-		if (pivotOptions) {
-			if (yasr.results) {
-				var vars = yasr.results.getVariables();
-				var keepColsAndRows = true;
-				pivotOptions.cols.forEach(function(variable) {
-					if (vars.indexOf(variable) < 0) keepColsAndRows = false;
-				});
-				if (keepColsAndRows) {
-					pivotOptionse.rows.forEach(function(variable) {
-						if (vars.indexOf(variable) < 0) keepColsAndRows = false;
-					});
-				}
-				if (!keepColsAndRows) {
-					pivotOptions.cols = [];
-					pivotOptions.rows = [];
-				}
-				if (!$.pivotUtilities.renderers[settings.rendererName]) delete pivotOptions.rendererName;
-			}
-		} else {
-			pivotOptions = {};
-		}
-		return pivotOptions;
-	};
-	var draw = function() {
-		var doDraw = function() {
-			var onRefresh = function(pivotObj) {
-				options.pivotTable.cols = pivotObj.cols;
-				options.pivotTable.rows = pivotObj.rows;
-				options.pivotTable.rendererName = pivotObj.rendererName;
-				options.pivotTable.aggregatorName = pivotObj.aggregatorName;
-				options.pivotTable.vals = pivotObj.vals;
-				yasr.store();
+      window.pivot = $pivotWrapper.pivotUI(formatForPivot, options.pivotTable);
 
-				if (pivotObj.rendererName.toLowerCase().indexOf(' chart') >= 0) {
-					openGchartBtn.show();
-				} else {
-					openGchartBtn.hide();
-				}
-				yasr.updateHeader();
-			};
-
-
-			var openGchartBtn = $('<button>', {
-					class: 'openPivotGchart yasr_btn'
-				})
-				.text('Chart Config')
-				.click(function() {
-					$pivotWrapper.find('div[dir="ltr"]').dblclick();
-				}).appendTo(yasr.resultsContainer);
-			$pivotWrapper = $('<div>', {
-				class: 'pivotTable'
-			}).appendTo($(yasr.resultsContainer));
-
-			options.pivotTable.onRefresh = (function() {
-				var originalRefresh = options.pivotTable.onRefresh;
-				return function(pivotObj) {
-					onRefresh(pivotObj);
-					if (originalRefresh) originalRefresh(pivotObj);
-				};
-			})();
-
-			window.pivot = $pivotWrapper.pivotUI(formatForPivot, options.pivotTable);
-
-			/**
+      /**
 			 * post process
 			 */
-			//use 'move' handler for variables. This removes the 'filter' button though. Might want to re-enable this in the future
-			var icon = $(yUtils.svg.getElement(imgs.move));
-			$pivotWrapper.find('.pvtTriangle').replaceWith(icon);
+      //use 'move' handler for variables. This removes the 'filter' button though. Might want to re-enable this in the future
+      var icon = $(yUtils.svg.getElement(imgs.move));
+      $pivotWrapper.find(".pvtTriangle").replaceWith(icon);
 
-			//add headers to selector rows
-			$('.pvtCols').prepend($('<div>', {
-				class: 'containerHeader'
-			}).text("Columns"));
-			$('.pvtRows').prepend($('<div>', {
-				class: 'containerHeader'
-			}).text("Rows"));
-			$('.pvtUnused').prepend($('<div>', {
-				class: 'containerHeader'
-			}).text("Available Variables"));
-			$('.pvtVals').prepend($('<div>', {
-				class: 'containerHeader'
-			}).text("Cells"));
+      //add headers to selector rows
+      $(".pvtCols").prepend(
+        $("<div>", {
+          class: "containerHeader"
+        }).text("Columns")
+      );
+      $(".pvtRows").prepend(
+        $("<div>", {
+          class: "containerHeader"
+        }).text("Rows")
+      );
+      $(".pvtUnused").prepend(
+        $("<div>", {
+          class: "containerHeader"
+        }).text("Available Variables")
+      );
+      $(".pvtVals").prepend(
+        $("<div>", {
+          class: "containerHeader"
+        }).text("Cells")
+      );
 
-			//hmmm, directly after the callback finishes (i.e., directly after this line), the svg is draw.
-			//just use a short timeout to update the header
-			setTimeout(yasr.updateHeader, 400);
-		}
+      //hmmm, directly after the callback finishes (i.e., directly after this line), the svg is draw.
+      //just use a short timeout to update the header
+      setTimeout(yasr.updateHeader, 400);
+    };
 
-		if (yasr.options.useGoogleCharts && options.useGoogleCharts && !$.pivotUtilities.gchart_renderers) {
-			require('./gChartLoader.js')
-				.on('done', function() {
-					try {
-						require('pivottable/dist/gchart_renderers.js');
-						$.extend(true, $.pivotUtilities.renderers, $.pivotUtilities.gchart_renderers);
-					} catch (e) {
-						//hmm, still something went wrong. forget about it;
-						options.useGoogleCharts = false;
-					}
-					doDraw();
-				})
-				.on('error', function() {
-					console.log('could not load gchart');
-					options.useGoogleCharts = false;
-					doDraw();
-				})
-				.googleLoad();
-		} else {
-			//everything is already loaded. just draw
-			doDraw();
-		}
-	};
-	var canHandleResults = function() {
-		return yasr.results && yasr.results.getVariables && yasr.results.getVariables() && yasr.results.getVariables().length > 0;
-	};
+    if (yasr.options.useGoogleCharts && options.useGoogleCharts && !$.pivotUtilities.gchart_renderers) {
+      require("./gChartLoader.js")
+        .on("done", function() {
+          try {
+            require("pivottable/dist/gchart_renderers.js");
+            $.extend(true, $.pivotUtilities.renderers, $.pivotUtilities.gchart_renderers);
+          } catch (e) {
+            //hmm, still something went wrong. forget about it;
+            options.useGoogleCharts = false;
+          }
+          doDraw();
+        })
+        .on("error", function() {
+          console.log("could not load gchart");
+          options.useGoogleCharts = false;
+          doDraw();
+        })
+        .googleLoad();
+    } else {
+      //everything is already loaded. just draw
+      doDraw();
+    }
+  };
+  var canHandleResults = function() {
+    return yasr.results &&
+      yasr.results.getVariables &&
+      yasr.results.getVariables() &&
+      yasr.results.getVariables().length > 0;
+  };
 
-	var getDownloadInfo = function() {
-		if (!yasr.results) return null;
-		var svgEl = yasr.resultsContainer.find('.pvtRendererArea svg');
-		if (svgEl.length > 0) {
+  var getDownloadInfo = function() {
+    if (!yasr.results) return null;
+    var svgEl = yasr.resultsContainer.find(".pvtRendererArea svg");
+    if (svgEl.length > 0) {
+      return {
+        getContent: function() {
+          if (svgEl[0].outerHTML) {
+            return svgEl[0].outerHTML;
+          } else {
+            //outerHTML not supported. use workaround
+            return $("<div>").append(svgEl.clone()).html();
+          }
+        },
 
-			return {
-				getContent: function() {
-					if (svgEl[0].outerHTML) {
-						return svgEl[0].outerHTML;
-					} else {
-						//outerHTML not supported. use workaround
-						return $('<div>').append(svgEl.clone()).html();
-					}
-				},
+        filename: "queryResults.svg",
+        contentType: "image/svg+xml",
+        buttonTitle: "Download SVG Image"
+      };
+    }
 
-				filename: "queryResults.svg",
-				contentType: "image/svg+xml",
-				buttonTitle: "Download SVG Image"
-			};
-		}
+    //ok, not a svg. is it a table?
+    var $table = yasr.resultsContainer.find(".pvtRendererArea table");
+    if ($table.length > 0) {
+      return {
+        getContent: function() {
+          return $table.tableToCsv();
+        },
+        filename: "queryResults.csv",
+        contentType: "text/csv",
+        buttonTitle: "Download as CSV"
+      };
+    }
+  };
+  var getEmbedHtml = function() {
+    if (!yasr.results) return null;
 
-		//ok, not a svg. is it a table?
-		var $table = yasr.resultsContainer.find('.pvtRendererArea table');
-		if ($table.length > 0) {
-			return {
-				getContent: function() {
-					return $table.tableToCsv();
-				},
-				filename: "queryResults.csv",
-				contentType: "text/csv",
-				buttonTitle: "Download as CSV"
-			};
-		}
+    var svgEl = yasr.resultsContainer
+      .find(".pvtRendererArea svg")
+      .clone() //create clone, as we'd like to remove height/width attributes
+      .removeAttr("height")
+      .removeAttr("width")
+      .css("height", "")
+      .css("width", "");
+    if (svgEl.length == 0) return null;
 
-	};
-	var getEmbedHtml = function() {
-		if (!yasr.results) return null;
-
-		var svgEl = yasr.resultsContainer.find('.pvtRendererArea svg')
-			.clone() //create clone, as we'd like to remove height/width attributes
-			.removeAttr('height').removeAttr('width')
-			.css('height', '').css('width', '');
-		if (svgEl.length == 0) return null;
-
-		var htmlString = svgEl[0].outerHTML;
-		if (!htmlString) {
-			//outerHTML not supported. use workaround
-			htmlString = $('<div>').append(svgEl.clone()).html();
-		}
-		//wrap in div, so users can more easily tune width/height
-		//don't use jquery, so we can easily influence indentation
-		return '<div style="width: 800px; height: 600px;">\n' + htmlString + '\n</div>';
-	};
-	return {
-		getPersistentSettings: function() {
-			return {
-				pivotTable: options.pivotTable
-			};
-		},
-		setPersistentSettings: function(newSettings) {
-			if (newSettings.pivotTable) {
-				options.pivotTable = validatePivotTableOptions(newSettings.pivotTable);
-			}
-
-		},
-		getDownloadInfo: getDownloadInfo,
-		getEmbedHtml: getEmbedHtml,
-		options: options,
-		draw: draw,
-		name: "Pivot Table",
-		canHandleResults: canHandleResults,
-		getPriority: 4,
-	}
+    var htmlString = svgEl[0].outerHTML;
+    if (!htmlString) {
+      //outerHTML not supported. use workaround
+      htmlString = $("<div>").append(svgEl.clone()).html();
+    }
+    //wrap in div, so users can more easily tune width/height
+    //don't use jquery, so we can easily influence indentation
+    return '<div style="width: 800px; height: 600px;">\n' + htmlString + "\n</div>";
+  };
+  return {
+    getPersistentSettings: function() {
+      return {
+        pivotTable: options.pivotTable
+      };
+    },
+    setPersistentSettings: function(newSettings) {
+      if (newSettings.pivotTable) {
+        options.pivotTable = validatePivotTableOptions(newSettings.pivotTable);
+      }
+    },
+    getDownloadInfo: getDownloadInfo,
+    getEmbedHtml: getEmbedHtml,
+    options: options,
+    draw: draw,
+    name: "Pivot Table",
+    canHandleResults: canHandleResults,
+    getPriority: 4
+  };
 };
 
-
-
 root.defaults = {
-	mergeLabelsWithUris: false,
-	useGoogleCharts: true,
-	useD3Chart: true,
-	persistencyId: 'pivot',
-	pivotTable: {}
+  mergeLabelsWithUris: false,
+  useGoogleCharts: true,
+  useD3Chart: true,
+  persistencyId: "pivot",
+  pivotTable: {}
 };
 
 root.version = {
-	"YASR-rawResponse": require("../package.json").version,
-	"jquery": $.fn.jquery,
+  "YASR-rawResponse": require("../package.json").version,
+  jquery: $.fn.jquery
 };
 
 },{"../package.json":144,"./gChartLoader.js":151,"./imgs.js":153,"./utils.js":168,"d3":11,"jquery":18,"jquery-ui/sortable":16,"pivottable":136,"pivottable/dist/d3_renderers.js":134,"pivottable/dist/gchart_renderers.js":135,"yasgui-utils":141}],166:[function(require,module,exports){
-'use strict';
-var $ = require("jquery"),
-	CodeMirror = require("codemirror");
+"use strict";
+var $ = require("jquery"), CodeMirror = require("codemirror");
 
-require('codemirror/addon/fold/foldcode.js');
-require('codemirror/addon/fold/foldgutter.js');
-require('codemirror/addon/fold/xml-fold.js');
-require('codemirror/addon/fold/brace-fold.js');
+require("codemirror/addon/fold/foldcode.js");
+require("codemirror/addon/fold/foldgutter.js");
+require("codemirror/addon/fold/xml-fold.js");
+require("codemirror/addon/fold/brace-fold.js");
 
-require('codemirror/addon/edit/matchbrackets.js');
-require('codemirror/mode/xml/xml.js');
-require('codemirror/mode/javascript/javascript.js');
+require("codemirror/addon/edit/matchbrackets.js");
+require("codemirror/mode/xml/xml.js");
+require("codemirror/mode/javascript/javascript.js");
 
 var root = module.exports = function(yasr) {
-	var plugin = {};
-	var options = $.extend(true, {}, root.defaults);
-	var cm = null;
-	var draw = function() {
-		var cmOptions = options.CodeMirror;
-		cmOptions.value = yasr.results.getOriginalResponseAsString();
+  var plugin = {};
+  var options = $.extend(true, {}, root.defaults);
+  var cm = null;
+  var draw = function() {
+    var cmOptions = options.CodeMirror;
+    cmOptions.value = yasr.results.getOriginalResponseAsString();
 
-		var mode = yasr.results.getType();
-		if (mode) {
-			if (mode == "json") {
-				mode = {
-					name: "javascript",
-					json: true
-				};
-			}
-			cmOptions.mode = mode;
-		}
+    var mode = yasr.results.getType();
+    if (mode) {
+      if (mode == "json") {
+        mode = {
+          name: "javascript",
+          json: true
+        };
+      }
+      cmOptions.mode = mode;
+    }
 
-		cm = CodeMirror(yasr.resultsContainer.get()[0], cmOptions);
+    cm = CodeMirror(yasr.resultsContainer.get()[0], cmOptions);
 
-		//CM has some issues with folding and unfolding (blank parts in the codemirror area, which are only filled after clicking it)
-		//so, refresh cm after folding/unfolding
-		cm.on('fold', function() {
-			cm.refresh();
-		});
-		cm.on('unfold', function() {
-			cm.refresh();
-		});
+    //CM has some issues with folding and unfolding (blank parts in the codemirror area, which are only filled after clicking it)
+    //so, refresh cm after folding/unfolding
+    cm.on("fold", function() {
+      cm.refresh();
+    });
+    cm.on("unfold", function() {
+      cm.refresh();
+    });
+  };
+  var canHandleResults = function() {
+    if (!yasr.results) return false;
+    if (!yasr.results.getOriginalResponseAsString) return false;
+    var response = yasr.results.getOriginalResponseAsString();
+    if ((!response || response.length == 0) && yasr.results.getException()) return false; //in this case, show exception instead, as we have nothing to show anyway
+    return true;
+  };
 
-	};
-	var canHandleResults = function() {
-		if (!yasr.results) return false;
-		if (!yasr.results.getOriginalResponseAsString) return false;
-		var response = yasr.results.getOriginalResponseAsString();
-		if ((!response || response.length == 0) && yasr.results.getException()) return false; //in this case, show exception instead, as we have nothing to show anyway
-		return true;
-	};
+  var getDownloadInfo = function() {
+    if (!yasr.results) return null;
+    var contentType = yasr.results.getOriginalContentType();
+    var type = yasr.results.getType();
+    return {
+      getContent: function() {
+        return yasr.results.getOriginalResponse();
+      },
+      filename: "queryResults" + (type ? "." + type : ""),
+      contentType: contentType ? contentType : "text/plain",
+      buttonTitle: "Download raw response"
+    };
+  };
 
-	var getDownloadInfo = function() {
-		if (!yasr.results) return null;
-		var contentType = yasr.results.getOriginalContentType();
-		var type = yasr.results.getType();
-		return {
-			getContent: function() {
-				return yasr.results.getOriginalResponse();
-			},
-			filename: "queryResults" + (type ? "." + type : ""),
-			contentType: (contentType ? contentType : "text/plain"),
-			buttonTitle: "Download raw response"
-		};
-	};
-
-	return {
-		draw: draw,
-		name: "Raw Response",
-		canHandleResults: canHandleResults,
-		getPriority: 2,
-		getDownloadInfo: getDownloadInfo,
-
-	}
+  return {
+    draw: draw,
+    name: "Raw Response",
+    canHandleResults: canHandleResults,
+    getPriority: 2,
+    getDownloadInfo: getDownloadInfo
+  };
 };
 
-
-
 root.defaults = {
-	CodeMirror: {
-		readOnly: true,
-		lineNumbers: true,
-		lineWrapping: true,
-		foldGutter: true,
-		gutters: ["CodeMirror-linenumbers", "CodeMirror-foldgutter"]
-	}
+  CodeMirror: {
+    readOnly: true,
+    lineNumbers: true,
+    lineWrapping: true,
+    foldGutter: true,
+    gutters: ["CodeMirror-linenumbers", "CodeMirror-foldgutter"]
+  }
 };
 
 root.version = {
-	"YASR-rawResponse": require("../package.json").version,
-	"jquery": $.fn.jquery,
-	"CodeMirror": CodeMirror.version
+  "YASR-rawResponse": require("../package.json").version,
+  jquery: $.fn.jquery,
+  CodeMirror: CodeMirror.version
 };
+
 },{"../package.json":144,"codemirror":8,"codemirror/addon/edit/matchbrackets.js":3,"codemirror/addon/fold/brace-fold.js":4,"codemirror/addon/fold/foldcode.js":5,"codemirror/addon/fold/foldgutter.js":6,"codemirror/addon/fold/xml-fold.js":7,"codemirror/mode/javascript/javascript.js":9,"codemirror/mode/xml/xml.js":10,"jquery":18}],167:[function(require,module,exports){
-'use strict';
-var $ = require("jquery"),
-	yutils = require("yasgui-utils"),
-	utils = require('./utils.js'),
-	imgs = require('./imgs.js');
+"use strict";
+var $ = require("jquery"), yutils = require("yasgui-utils"), utils = require("./utils.js"), imgs = require("./imgs.js");
 require("datatables.net")();
 require("../lib/colResizable-1.4.js");
-
-
 
 /**
  * Constructor of plugin which displays results as a table
@@ -78466,219 +78460,228 @@ require("../lib/colResizable-1.4.js");
  *
  */
 var root = module.exports = function(yasr) {
-	var table = null;
-	var plugin = {
-		name: "Table",
-		getPriority: 10,
-	};
-	var options = plugin.options = $.extend(true, {}, root.defaults);
-	var tableLengthPersistencyId = (options.persistency ? yasr.getPersistencyId(options.persistency.tableLength) : null);
+  var table = null;
+  var plugin = {
+    name: "Table",
+    getPriority: 10
+  };
+  var options = plugin.options = $.extend(true, {}, root.defaults);
+  var tableLengthPersistencyId = options.persistency ? yasr.getPersistencyId(options.persistency.tableLength) : null;
 
-	var getRows = function() {
-		var rows = [];
-		var bindings = yasr.results.getBindings();
-		var vars = yasr.results.getVariables();
-		var usedPrefixes = null;
-		if (yasr.options.getUsedPrefixes) {
-			usedPrefixes = (typeof yasr.options.getUsedPrefixes == "function" ? yasr.options.getUsedPrefixes(yasr) : yasr.options.getUsedPrefixes);
-		}
-		for (var rowId = 0; rowId < bindings.length; rowId++) {
-			var row = [];
-			row.push(""); //row numbers
-			var binding = bindings[rowId];
-			for (var colId = 0; colId < vars.length; colId++) {
-				var sparqlVar = vars[colId];
-				if (sparqlVar in binding) {
-					if (options.getCellContent) {
-						row.push(options.getCellContent(yasr, plugin, binding, sparqlVar, {
-							'rowId': rowId,
-							'colId': colId,
-							'usedPrefixes': usedPrefixes
-						}));
-					} else {
-						row.push("");
-					}
-				} else {
-					row.push("");
-				}
-			}
-			rows.push(row);
-		}
-		return rows;
-	};
+  var getRows = function() {
+    var rows = [];
+    var bindings = yasr.results.getBindings();
+    var vars = yasr.results.getVariables();
+    var usedPrefixes = null;
+    if (yasr.options.getUsedPrefixes) {
+      usedPrefixes = typeof yasr.options.getUsedPrefixes == "function"
+        ? yasr.options.getUsedPrefixes(yasr)
+        : yasr.options.getUsedPrefixes;
+    }
+    for (var rowId = 0; rowId < bindings.length; rowId++) {
+      var row = [];
+      row.push(""); //row numbers
+      var binding = bindings[rowId];
+      for (var colId = 0; colId < vars.length; colId++) {
+        var sparqlVar = vars[colId];
+        if (sparqlVar in binding) {
+          if (options.getCellContent) {
+            row.push(
+              options.getCellContent(yasr, plugin, binding, sparqlVar, {
+                rowId: rowId,
+                colId: colId,
+                usedPrefixes: usedPrefixes
+              })
+            );
+          } else {
+            row.push("");
+          }
+        } else {
+          row.push("");
+        }
+      }
+      rows.push(row);
+    }
+    return rows;
+  };
 
-	var eventId = yasr.getPersistencyId('eventId') || "yasr_" + $(yasr.container).closest('[id]').attr('id');
-	var addEvents = function() {
-		table.on('order.dt', function() {
-			drawSvgIcons();
-		});
-		if (tableLengthPersistencyId) {
-			table.on('length.dt', function(e, settings, len) {
-				yutils.storage.set(tableLengthPersistencyId, len, "month");
-			});
-		}
-		$.extend(true, options.callbacks, options.handlers);
-		table.delegate("td", "click", function(event) {
-			if (options.callbacks && options.callbacks.onCellClick) {
-				var result = options.callbacks.onCellClick(this, event);
-				if (result === false) return false;
-			}
-		}).delegate("td", 'mouseenter', function(event) {
-			if (options.callbacks && options.callbacks.onCellMouseEnter) {
-				options.callbacks.onCellMouseEnter(this, event);
-			}
-			var tdEl = $(this);
-			if (options.fetchTitlesFromPreflabel && tdEl.attr("title") === undefined && tdEl.text().trim().indexOf("http") == 0) {
-				addPrefLabel(tdEl);
-			}
-		}).delegate("td", 'mouseleave', function(event) {
-			if (options.callbacks && options.callbacks.onCellMouseLeave) {
-				options.callbacks.onCellMouseLeave(this, event);
+  var eventId = yasr.getPersistencyId("eventId") || "yasr_" + $(yasr.container).closest("[id]").attr("id");
+  var addEvents = function() {
+    table.on("order.dt", function() {
+      drawSvgIcons();
+    });
+    if (tableLengthPersistencyId) {
+      table.on("length.dt", function(e, settings, len) {
+        yutils.storage.set(tableLengthPersistencyId, len, "month");
+      });
+    }
+    $.extend(true, options.callbacks, options.handlers);
+    table
+      .delegate("td", "click", function(event) {
+        if (options.callbacks && options.callbacks.onCellClick) {
+          var result = options.callbacks.onCellClick(this, event);
+          if (result === false) return false;
+        }
+      })
+      .delegate("td", "mouseenter", function(event) {
+        if (options.callbacks && options.callbacks.onCellMouseEnter) {
+          options.callbacks.onCellMouseEnter(this, event);
+        }
+        var tdEl = $(this);
+        if (
+          options.fetchTitlesFromPreflabel &&
+          tdEl.attr("title") === undefined &&
+          tdEl.text().trim().indexOf("http") == 0
+        ) {
+          addPrefLabel(tdEl);
+        }
+      })
+      .delegate("td", "mouseleave", function(event) {
+        if (options.callbacks && options.callbacks.onCellMouseLeave) {
+          options.callbacks.onCellMouseLeave(this, event);
+        }
+      });
+  };
 
-			}
-		});
-	};
+  plugin.draw = function() {
+    table = $('<table cellpadding="0" cellspacing="0" border="0" class="resultsTable"></table>');
+    $(yasr.resultsContainer).html(table);
 
-	plugin.draw = function() {
-		table = $('<table cellpadding="0" cellspacing="0" border="0" class="resultsTable"></table>');
-		$(yasr.resultsContainer).html(table);
+    var dataTableConfig = options.datatable;
+    dataTableConfig.data = getRows();
+    dataTableConfig.columns = options.getColumns(yasr, plugin);
 
-		var dataTableConfig = options.datatable;
-		dataTableConfig.data = getRows();
-		dataTableConfig.columns = options.getColumns(yasr, plugin);
+    //fetch stored datatables length value
+    var pLength = yutils.storage.get(tableLengthPersistencyId);
+    if (pLength) dataTableConfig.pageLength = pLength;
 
-		//fetch stored datatables length value
-		var pLength = yutils.storage.get(tableLengthPersistencyId);
-		if (pLength) dataTableConfig.pageLength = pLength;
+    table.DataTable($.extend(true, {}, dataTableConfig)); //make copy. datatables adds properties for backwards compatability reasons, and don't want this cluttering our own
 
+    drawSvgIcons();
 
+    addEvents();
 
-		table.DataTable($.extend(true, {}, dataTableConfig)); //make copy. datatables adds properties for backwards compatability reasons, and don't want this cluttering our own
+    //finally, make the columns dragable:
+    table.colResizable();
+  };
 
-
-		drawSvgIcons();
-
-		addEvents();
-
-		//finally, make the columns dragable:
-		table.colResizable();
-	};
-
-	var drawSvgIcons = function() {
-		var sortings = {
-			"sorting": "unsorted",
-			"sorting_asc": "sortAsc",
-			"sorting_desc": "sortDesc"
-		};
-		table.find(".sortIcons").remove();
-		for (var sorting in sortings) {
-			var svgDiv = $("<div class='sortIcons'></div>");
-			yutils.svg.draw(svgDiv, imgs[sortings[sorting]]);
-			table.find("th." + sorting).append(svgDiv);
-		}
-	};
-	/**
+  var drawSvgIcons = function() {
+    var sortings = {
+      sorting: "unsorted",
+      sorting_asc: "sortAsc",
+      sorting_desc: "sortDesc"
+    };
+    table.find(".sortIcons").remove();
+    for (var sorting in sortings) {
+      var svgDiv = $("<div class='sortIcons'></div>");
+      yutils.svg.draw(svgDiv, imgs[sortings[sorting]]);
+      table.find("th." + sorting).append(svgDiv);
+    }
+  };
+  /**
 	 * Check whether this plugin can handler the current results
 	 *
 	 * @property canHandleResults
 	 * @type function
 	 * @default If resultset contains variables in the resultset, return true
 	 */
-	plugin.canHandleResults = function() {
-		return yasr.results && yasr.results.getVariables && yasr.results.getVariables() && yasr.results.getVariables().length > 0;
-	};
+  plugin.canHandleResults = function() {
+    return yasr.results &&
+      yasr.results.getVariables &&
+      yasr.results.getVariables() &&
+      yasr.results.getVariables().length > 0;
+  };
 
+  plugin.getDownloadInfo = function() {
+    if (!yasr.results) return null;
+    return {
+      getContent: function() {
+        return require("./bindingsToCsv.js")(yasr.results.getAsJson());
+      },
+      filename: "queryResults.csv",
+      contentType: "text/csv",
+      buttonTitle: "Download as CSV"
+    };
+  };
 
-	plugin.getDownloadInfo = function() {
-		if (!yasr.results) return null;
-		return {
-			getContent: function() {
-				return require("./bindingsToCsv.js")(yasr.results.getAsJson());
-			},
-			filename: "queryResults.csv",
-			contentType: "text/csv",
-			buttonTitle: "Download as CSV"
-		};
-	};
-
-
-	return plugin;
+  return plugin;
 };
-
 
 var formatLiteral = function(yasr, plugin, literalBinding) {
-	var stringRepresentation = utils.escapeHtmlEntities(literalBinding.value);
-	if (literalBinding["xml:lang"]) {
-		stringRepresentation = '"' + stringRepresentation + '"<sup>@' + literalBinding["xml:lang"] + '</sup>';
-	} else if (literalBinding.datatype) {
-		var xmlSchemaNs = "http://www.w3.org/2001/XMLSchema#";
-		var dataType = literalBinding.datatype;
-		if (dataType.indexOf(xmlSchemaNs) === 0) {
-			dataType = "xsd:" + dataType.substring(xmlSchemaNs.length);
-		} else {
-			dataType = "&lt;" + dataType + "&gt;";
-		}
+  var stringRepresentation = utils.escapeHtmlEntities(literalBinding.value);
+  if (literalBinding["xml:lang"]) {
+    stringRepresentation = '"' + stringRepresentation + '"<sup>@' + literalBinding["xml:lang"] + "</sup>";
+  } else if (literalBinding.datatype) {
+    var xmlSchemaNs = "http://www.w3.org/2001/XMLSchema#";
+    var dataType = literalBinding.datatype;
+    if (dataType.indexOf(xmlSchemaNs) === 0) {
+      dataType = "xsd:" + dataType.substring(xmlSchemaNs.length);
+    } else {
+      dataType = "&lt;" + dataType + "&gt;";
+    }
 
-		stringRepresentation = '"' + stringRepresentation + '"<sup>^^' + dataType + '</sup>';
-	}
-	return stringRepresentation;
+    stringRepresentation = '"' + stringRepresentation + '"<sup>^^' + dataType + "</sup>";
+  }
+  return stringRepresentation;
 };
 var getCellContent = function(yasr, plugin, bindings, sparqlVar, context) {
-	var binding = bindings[sparqlVar];
-	var value = null;
-	if (binding.type == "uri") {
-		var title = null;
-		var href = binding.value;
-		var visibleString = href;
-		if (context.usedPrefixes) {
-			for (var prefix in context.usedPrefixes) {
-				if (visibleString.indexOf(context.usedPrefixes[prefix]) == 0) {
-					visibleString = prefix + ':' + href.substring(context.usedPrefixes[prefix].length);
-					break;
-				}
-			}
-		}
-		if (plugin.options.mergeLabelsWithUris) {
-			var postFix = (typeof plugin.options.mergeLabelsWithUris == "string" ? plugin.options.mergeLabelsWithUris : "Label");
-			if (bindings[sparqlVar + postFix]) {
-				visibleString = formatLiteral(yasr, plugin, bindings[sparqlVar + postFix]);
-				title = href;
-			}
-		}
-		value = "<a " + (title ? "title='" + href + "' " : "") + "class='uri' target='_blank' href='" + href + "'>" + visibleString + "</a>";
-	} else {
-		value = "<span class='nonUri'>" + formatLiteral(yasr, plugin, binding) + "</span>";
-	}
-	return "<div>" + value + "</div>";
+  var binding = bindings[sparqlVar];
+  var value = null;
+  if (binding.type == "uri") {
+    var title = null;
+    var href = binding.value;
+    var visibleString = href;
+    if (context.usedPrefixes) {
+      for (var prefix in context.usedPrefixes) {
+        if (visibleString.indexOf(context.usedPrefixes[prefix]) == 0) {
+          visibleString = prefix + ":" + href.substring(context.usedPrefixes[prefix].length);
+          break;
+        }
+      }
+    }
+    if (plugin.options.mergeLabelsWithUris) {
+      var postFix = typeof plugin.options.mergeLabelsWithUris == "string"
+        ? plugin.options.mergeLabelsWithUris
+        : "Label";
+      if (bindings[sparqlVar + postFix]) {
+        visibleString = formatLiteral(yasr, plugin, bindings[sparqlVar + postFix]);
+        title = href;
+      }
+    }
+    value = "<a " +
+      (title ? "title='" + href + "' " : "") +
+      "class='uri' target='" + yasr.options.uriTarget + "' href='" +
+      href +
+      "'>" +
+      visibleString +
+      "</a>";
+  } else {
+    value = "<span class='nonUri'>" + formatLiteral(yasr, plugin, binding) + "</span>";
+  }
+  return "<div>" + value + "</div>";
 };
 
-
-
-
-
-
 var addPrefLabel = function(td) {
-	var addEmptyTitle = function() {
-		td.attr("title", ""); //this avoids trying to fetch the label again on next hover
-	};
-	$.get("//preflabel.org/api/v1/label/" + encodeURIComponent(td.text()) + "?silent=true")
-		.success(function(data) {
-			if (typeof data == "object" && data.label) {
-				td.attr("title", data.label);
-			} else if (typeof data == "string" && data.length > 0) {
-				td.attr("title", data);
-			} else {
-				addEmptyTitle();
-			}
-
-		})
-		.fail(addEmptyTitle);
+  var addEmptyTitle = function() {
+    td.attr("title", ""); //this avoids trying to fetch the label again on next hover
+  };
+  $.get("//preflabel.org/api/v1/label/" + encodeURIComponent(td.text()) + "?silent=true")
+    .success(function(data) {
+      if (typeof data == "object" && data.label) {
+        td.attr("title", data.label);
+      } else if (typeof data == "string" && data.length > 0) {
+        td.attr("title", data);
+      } else {
+        addEmptyTitle();
+      }
+    })
+    .fail(addEmptyTitle);
 };
 
 var openCellUriInNewWindow = function(cell) {
-	if (cell.className.indexOf("uri") >= 0) {
-		window.open(this.innerHTML);
-	}
+  if (cell.className.indexOf("uri") >= 0) {
+    window.open(this.innerHTML);
+  }
 };
 
 /**
@@ -78688,8 +78691,7 @@ var openCellUriInNewWindow = function(cell) {
  * @attribute YASR.plugins.table.defaults
  */
 root.defaults = {
-
-	/**
+  /**
 	 * Draw the cell content, from a given binding
 	 *
 	 * @property drawCellContent
@@ -78698,57 +78700,62 @@ root.defaults = {
 	 * @return string
 	 * @default YASR.plugins.table.getFormattedValueFromBinding
 	 */
-	getCellContent: getCellContent,
+  getCellContent: getCellContent,
 
-	persistency: {
-		tableLength: "tableLength",
-	},
+  persistency: {
+    tableLength: "tableLength"
+  },
 
-	getColumns: function(yasr, plugin) {
-		var includeVariable = function(variableToCheck) {
-			if (!plugin.options.mergeLabelsWithUris) return true;
-			var postFix = (typeof plugin.options.mergeLabelsWithUris == "string" ? plugin.options.mergeLabelsWithUris : "Label");
-			if (variableToCheck.indexOf(postFix, variableToCheck.length - postFix.length) !== -1) {
-				//this one ends with a postfix
-				if (yasr.results.getVariables().indexOf(variableToCheck.substring(0, variableToCheck.length - postFix.length)) >= 0) {
-					//we have a shorter version of this variable. So, do not include the ..<postfix> variable in the table
-					return false;
-				}
-			}
-			return true;
-		};
+  getColumns: function(yasr, plugin) {
+    var includeVariable = function(variableToCheck) {
+      if (!plugin.options.mergeLabelsWithUris) return true;
+      var postFix = typeof plugin.options.mergeLabelsWithUris == "string"
+        ? plugin.options.mergeLabelsWithUris
+        : "Label";
+      if (variableToCheck.indexOf(postFix, variableToCheck.length - postFix.length) !== -1) {
+        //this one ends with a postfix
+        if (
+          yasr.results.getVariables().indexOf(variableToCheck.substring(0, variableToCheck.length - postFix.length)) >=
+          0
+        ) {
+          //we have a shorter version of this variable. So, do not include the ..<postfix> variable in the table
+          return false;
+        }
+      }
+      return true;
+    };
 
-		var cols = [];
-		cols.push({
-			"title": ""
-		}); //row numbers column
-		yasr.results.getVariables().forEach(function(variable) {
-			cols.push({
-				"title": "<span>" + variable + "</span>",
-				"visible": includeVariable(variable)
-			});
-		});
-		return cols;
-	},
-	/**
+    var cols = [];
+    cols.push({
+      title: ""
+    }); //row numbers column
+    yasr.results.getVariables().forEach(function(variable) {
+      cols.push({
+        title: "<span>" + variable + "</span>",
+        visible: includeVariable(variable)
+      });
+    });
+    return cols;
+  },
+  /**
 	 * Try to fetch the label representation for each URI, using the preflabel.org services. (fetching occurs when hovering over the cell)
 	 *
 	 * @property fetchTitlesFromPreflabel
 	 * @type boolean
 	 * @default false, if YASR is served via https
 	 */
-	//important to keep supporting serving yasr via file:// protocol
-	fetchTitlesFromPreflabel: (window.location.protocol === "https:" ? false: true),
+  //important to keep supporting serving yasr via file:// protocol
+  fetchTitlesFromPreflabel: window.location.protocol === "https:" ? false : true,
 
-	mergeLabelsWithUris: false,
-	/**
+  mergeLabelsWithUris: false,
+  /**
 	 * Set a number of handlers for the table
 	 *
 	 * @property handlers
 	 * @type object
 	 */
-	callbacks: {
-		/**
+  callbacks: {
+    /**
 		 * Mouse-enter-cell event
 		 *
 		 * @property handlers.onCellMouseEnter
@@ -78756,8 +78763,8 @@ root.defaults = {
 		 * @param td-element
 		 * @default null
 		 */
-		onCellMouseEnter: null,
-		/**
+    onCellMouseEnter: null,
+    /**
 		 * Mouse-leave-cell event
 		 *
 		 * @property handlers.onCellMouseLeave
@@ -78765,8 +78772,8 @@ root.defaults = {
 		 * @param td-element
 		 * @default null
 		 */
-		onCellMouseLeave: null,
-		/**
+    onCellMouseLeave: null,
+    /**
 		 * Cell clicked event
 		 *
 		 * @property handlers.onCellClick
@@ -78774,190 +78781,189 @@ root.defaults = {
 		 * @param td-element
 		 * @default null
 		 */
-		onCellClick: null
-	},
-	/**
+    onCellClick: null
+  },
+  /**
 	 * This plugin uses the datatables jquery plugin (See datatables.net). For any datatables specific defaults, change this object.
 	 * See the datatables reference for more information
 	 *
 	 * @property datatable
 	 * @type object
 	 */
-	datatable: {
-		"autoWidth": false,
-		"dom": '<"dtTopHeader"ilf>rtip',
-		"order": [], //disable initial sorting
-		"pageLength": 50, //default page length
-		"lengthMenu": [
-			[10, 50, 100, 1000, -1],
-			[10, 50, 100, 1000, "All"]
-		], //possible page lengths
-		"lengthChange": true, //allow changing page length
-		"pagingType": "full_numbers", //how to show the pagination options
-		"drawCallback": function(oSettings) {
-			//trick to show row numbers
-			for (var i = 0; i < oSettings.aiDisplay.length; i++) {
-				$('td:eq(0)', oSettings.aoData[oSettings.aiDisplay[i]].nTr).html(i + 1);
-			}
+  datatable: {
+    autoWidth: true,
+    dom: '<"dtTopHeader"ilf>rtip',
+    order: [], //disable initial sorting
+    pageLength: 50, //default page length
+    lengthMenu: [[10, 50, 100, 1000, -1], [10, 50, 100, 1000, "All"]], //possible page lengths
+    lengthChange: true, //allow changing page length
+    pagingType: "full_numbers", //how to show the pagination options
+    drawCallback: function(oSettings) {
+      //trick to show row numbers
+      for (var i = 0; i < oSettings.aiDisplay.length; i++) {
+        $("td:eq(0)", oSettings.aoData[oSettings.aiDisplay[i]].nTr).html(i + 1);
+      }
 
-			//Hide pagination when we have a single page
-			var activePaginateButton = false;
-			$(oSettings.nTableWrapper).find(".paginate_button").each(function() {
-				if ($(this).attr("class").indexOf("current") == -1 && $(this).attr("class").indexOf("disabled") == -1) {
-					activePaginateButton = true;
-				}
-			});
-			if (activePaginateButton) {
-				$(oSettings.nTableWrapper).find(".dataTables_paginate").show();
-			} else {
-				$(oSettings.nTableWrapper).find(".dataTables_paginate").hide();
-			}
-		},
-		"columnDefs": [{
-				"width": "32px",
-				"orderable": false,
-				"targets": 0
-			} //disable row sorting for first col
-		],
-	},
+      //Hide pagination when we have a single page
+      var activePaginateButton = false;
+      $(oSettings.nTableWrapper).find(".paginate_button").each(function() {
+        if ($(this).attr("class").indexOf("current") == -1 && $(this).attr("class").indexOf("disabled") == -1) {
+          activePaginateButton = true;
+        }
+      });
+      if (activePaginateButton) {
+        $(oSettings.nTableWrapper).find(".dataTables_paginate").show();
+      } else {
+        $(oSettings.nTableWrapper).find(".dataTables_paginate").hide();
+      }
+    },
+    columnDefs: [
+      {
+        width: "32px",
+        orderable: false,
+        targets: 0
+      } //disable row sorting for first col
+    ]
+  }
 };
 root.version = {
-	"YASR-table": require("../package.json").version,
-	"jquery": $.fn.jquery,
-	"jquery-datatables": $.fn.DataTable.version
+  "YASR-table": require("../package.json").version,
+  jquery: $.fn.jquery,
+  "jquery-datatables": $.fn.DataTable.version
 };
 
 },{"../lib/colResizable-1.4.js":1,"../package.json":144,"./bindingsToCsv.js":145,"./imgs.js":153,"./utils.js":168,"datatables.net":12,"jquery":18,"yasgui-utils":141}],168:[function(require,module,exports){
-'use strict';
-var $ = require('jquery'),
-	GoogleTypeException = require('./exceptions.js').GoogleTypeException;
+"use strict";
+var $ = require("jquery"), GoogleTypeException = require("./exceptions.js").GoogleTypeException;
 
 module.exports = {
-	escapeHtmlEntities: function(unescaped) {
-		//taken from http://stackoverflow.com/questions/5499078/fastest-method-to-escape-html-tags-as-html-entities
-		//cast to string first, to avoid problems with e.g. integers
-		return ("" + unescaped).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
-	},
-	uriToPrefixed: function(prefixes, uri) {
-		if (prefixes) {
-			for (var prefix in prefixes) {
-				if (uri.indexOf(prefixes[prefix]) == 0) {
-					uri = prefix + ':' + uri.substring(prefixes[prefix].length);
-					break;
-				}
-			}
-		}
-		return uri;
-	},
-	getGoogleTypeForBinding: function(binding) {
-		if (binding == null) return null;
-		if (binding.type != null && (binding.type === 'typed-literal' || binding.type === 'literal')) {
-			switch (binding.datatype) {
-				case 'http://www.w3.org/2001/XMLSchema#double':
-				case 'http://www.w3.org/2001/XMLSchema#float':
-				case 'http://www.w3.org/2001/XMLSchema#decimal':
-				case 'http://www.w3.org/2001/XMLSchema#int':
-				case 'http://www.w3.org/2001/XMLSchema#integer':
-				case 'http://www.w3.org/2001/XMLSchema#long':
-				case 'http://www.w3.org/2001/XMLSchema#gYearMonth':
-				case 'http://www.w3.org/2001/XMLSchema#gYear':
-				case 'http://www.w3.org/2001/XMLSchema#gMonthDay':
-				case 'http://www.w3.org/2001/XMLSchema#gDay':
-				case 'http://www.w3.org/2001/XMLSchema#gMonth':
-					return "number";
-				case 'http://www.w3.org/2001/XMLSchema#date':
-					return "date";
-				case 'http://www.w3.org/2001/XMLSchema#dateTime':
-					return "datetime";
-				case 'http://www.w3.org/2001/XMLSchema#time':
-					return "timeofday";
-				default:
-					return "string";
-			}
-		} else {
-			return "string";
-		}
-	},
-	getGoogleTypeForBindings: function(bindings, varName) {
-		var types = {};
-		var typeCount = 0;
-		bindings.forEach(function(binding) {
-			var type = module.exports.getGoogleTypeForBinding(binding[varName]);
-			if (type != null) {
-				if (!(type in types)) {
-					types[type] = 0;
-					typeCount++;
-				}
-				types[type]++;
-			}
-		});
-		if (typeCount == 0) {
-			return 'string';
-		} else if (typeCount == 1) {
-			for (var type in types) {
-				return type; //just return this one
-			}
-		} else {
-			//we have conflicting types. Throw error
-			throw new GoogleTypeException(types, varName);
-		}
-	},
+  escapeHtmlEntities: function(unescaped) {
+    //taken from http://stackoverflow.com/questions/5499078/fastest-method-to-escape-html-tags-as-html-entities
+    //cast to string first, to avoid problems with e.g. integers
+    return ("" + unescaped).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+  },
+  uriToPrefixed: function(prefixes, uri) {
+    if (prefixes) {
+      for (var prefix in prefixes) {
+        if (uri.indexOf(prefixes[prefix]) == 0) {
+          uri = prefix + ":" + uri.substring(prefixes[prefix].length);
+          break;
+        }
+      }
+    }
+    return uri;
+  },
+  getGoogleTypeForBinding: function(binding) {
+    if (binding == null) return null;
+    if (binding.type != null && (binding.type === "typed-literal" || binding.type === "literal")) {
+      switch (binding.datatype) {
+        case "http://www.w3.org/2001/XMLSchema#double":
+        case "http://www.w3.org/2001/XMLSchema#float":
+        case "http://www.w3.org/2001/XMLSchema#decimal":
+        case "http://www.w3.org/2001/XMLSchema#int":
+        case "http://www.w3.org/2001/XMLSchema#integer":
+        case "http://www.w3.org/2001/XMLSchema#long":
+        case "http://www.w3.org/2001/XMLSchema#gYearMonth":
+        case "http://www.w3.org/2001/XMLSchema#gYear":
+        case "http://www.w3.org/2001/XMLSchema#gMonthDay":
+        case "http://www.w3.org/2001/XMLSchema#gDay":
+        case "http://www.w3.org/2001/XMLSchema#gMonth":
+          return "number";
+        case "http://www.w3.org/2001/XMLSchema#date":
+          return "date";
+        case "http://www.w3.org/2001/XMLSchema#dateTime":
+          return "datetime";
+        case "http://www.w3.org/2001/XMLSchema#time":
+          return "timeofday";
+        default:
+          return "string";
+      }
+    } else {
+      return "string";
+    }
+  },
+  getGoogleTypeForBindings: function(bindings, varName) {
+    var types = {};
+    var typeCount = 0;
+    bindings.forEach(function(binding) {
+      var type = module.exports.getGoogleTypeForBinding(binding[varName]);
+      if (type != null) {
+        if (!(type in types)) {
+          types[type] = 0;
+          typeCount++;
+        }
+        types[type]++;
+      }
+    });
+    if (typeCount == 0) {
+      return "string";
+    } else if (typeCount == 1) {
+      for (var type in types) {
+        return type; //just return this one
+      }
+    } else {
+      //we have conflicting types. Throw error
+      throw new GoogleTypeException(types, varName);
+    }
+  },
 
-	castGoogleType: function(binding, prefixes, googleType) {
-		if (binding == null) {
-			return null;
-		}
+  castGoogleType: function(binding, prefixes, googleType) {
+    if (binding == null) {
+      return null;
+    }
 
-		if (googleType != 'string' && binding.type != null && (binding.type === 'typed-literal' || binding.type === 'literal')) {
-			switch (binding.datatype) {
-				case 'http://www.w3.org/2001/XMLSchema#float':
-				case 'http://www.w3.org/2001/XMLSchema#decimal':
-				case 'http://www.w3.org/2001/XMLSchema#int':
-				case 'http://www.w3.org/2001/XMLSchema#integer':
-				case 'http://www.w3.org/2001/XMLSchema#long':
-				case 'http://www.w3.org/2001/XMLSchema#gYearMonth':
-				case 'http://www.w3.org/2001/XMLSchema#gYear':
-				case 'http://www.w3.org/2001/XMLSchema#gMonthDay':
-				case 'http://www.w3.org/2001/XMLSchema#gDay':
-				case 'http://www.w3.org/2001/XMLSchema#gMonth':
-					return Number(binding.value);
-				case 'http://www.w3.org/2001/XMLSchema#double':
-					return Number(parseFloat(binding.value));
-				case 'http://www.w3.org/2001/XMLSchema#date':
-					//grrr, the date function does not parse -any- date (including most xsd dates!)
-					//datetime and time seem to be fine though.
-					//so, first try our custom parser. if that does not work, try the regular date parser anyway
-					var date = parseXmlSchemaDate(binding.value);
-					if (date) return date;
-				case 'http://www.w3.org/2001/XMLSchema#dateTime':
-				case 'http://www.w3.org/2001/XMLSchema#time':
-					return new Date(binding.value);
-				default:
-					return binding.value;
-			}
-		} else {
-			if (binding.type = 'uri') {
-				return module.exports.uriToPrefixed(prefixes, binding.value);
-			} else {
-				return binding.value;
-			}
-		}
-	},
-	fireClick: function($els) {
-		if (!$els)
-			return;
-		$els.each(function(i, el) {
-			var $el = $(el);
-			if (document.dispatchEvent) { // W3C
-				var oEvent = document.createEvent("MouseEvents");
-				oEvent.initMouseEvent("click", true, true, window, 1, 1, 1, 1, 1,
-					false, false, false, false, 0, $el[0]);
-				$el[0].dispatchEvent(oEvent);
-			} else if (document.fireEvent) { // IE
-				$el[0].click();
-			}
-		});
-	}
+    if (
+      googleType != "string" && binding.type != null && (binding.type === "typed-literal" || binding.type === "literal")
+    ) {
+      switch (binding.datatype) {
+        case "http://www.w3.org/2001/XMLSchema#float":
+        case "http://www.w3.org/2001/XMLSchema#decimal":
+        case "http://www.w3.org/2001/XMLSchema#int":
+        case "http://www.w3.org/2001/XMLSchema#integer":
+        case "http://www.w3.org/2001/XMLSchema#long":
+        case "http://www.w3.org/2001/XMLSchema#gYearMonth":
+        case "http://www.w3.org/2001/XMLSchema#gYear":
+        case "http://www.w3.org/2001/XMLSchema#gMonthDay":
+        case "http://www.w3.org/2001/XMLSchema#gDay":
+        case "http://www.w3.org/2001/XMLSchema#gMonth":
+          return Number(binding.value);
+        case "http://www.w3.org/2001/XMLSchema#double":
+          return Number(parseFloat(binding.value));
+        case "http://www.w3.org/2001/XMLSchema#date":
+          //grrr, the date function does not parse -any- date (including most xsd dates!)
+          //datetime and time seem to be fine though.
+          //so, first try our custom parser. if that does not work, try the regular date parser anyway
+          var date = parseXmlSchemaDate(binding.value);
+          if (date) return date;
+        case "http://www.w3.org/2001/XMLSchema#dateTime":
+        case "http://www.w3.org/2001/XMLSchema#time":
+          return new Date(binding.value);
+        default:
+          return binding.value;
+      }
+    } else {
+      if (binding.type = "uri") {
+        return module.exports.uriToPrefixed(prefixes, binding.value);
+      } else {
+        return binding.value;
+      }
+    }
+  },
+  fireClick: function($els) {
+    if (!$els) return;
+    $els.each(function(i, el) {
+      var $el = $(el);
+      if (document.dispatchEvent) {
+        // W3C
+        var oEvent = document.createEvent("MouseEvents");
+        oEvent.initMouseEvent("click", true, true, window, 1, 1, 1, 1, 1, false, false, false, false, 0, $el[0]);
+        $el[0].dispatchEvent(oEvent);
+      } else if (document.fireEvent) {
+        // IE
+        $el[0].click();
+      }
+    });
+  }
 };
 //There are no PROPER xml schema to js date parsers
 //A few libraries exist: moment, jsdate, Xdate, but none of them parse valid xml schema dates (e.g. 1999-11-05+02:00).
@@ -78965,10 +78971,10 @@ module.exports = {
 //There are other hacky solutions (regular expressions based on trial/error) such as http://stackoverflow.com/questions/2731579/convert-an-xml-schema-date-string-to-a-javascript-date
 //But if we're doing hacky stuff, I at least want to do it MYSELF!
 var parseXmlSchemaDate = function(dateString) {
-	//change +02:00 to Z+02:00 (something which is parseable by js date)
-	var date = new Date(dateString.replace(/(\d)([\+-]\d{2}:\d{2})/, '$1Z$2'));
-	if (isNaN(date)) return null;
-	return date;
+  //change +02:00 to Z+02:00 (something which is parseable by js date)
+  var date = new Date(dateString.replace(/(\d)([\+-]\d{2}:\d{2})/, "$1Z$2"));
+  if (isNaN(date)) return null;
+  return date;
 };
 
 },{"./exceptions.js":150,"jquery":18}]},{},[148])(148)
