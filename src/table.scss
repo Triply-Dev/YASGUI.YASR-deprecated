@@ -8,10 +8,15 @@
 		}
 	}
 }
+table.dataTable.no-footer.resultsTable {
+	border-bottom: 1px solid #ddd;
+}
 table.dataTable thead th {
 	&:first-child, &:last-child {
 		border-right: 0;
-	} 
+	}
+
+	border-bottom: 2px solid #ddd;
 	//hide icons (we use svg)
 	background:none !important;
 	border-right: 1px dotted gray;
@@ -20,18 +25,24 @@ table.dataTable thead th {
 		margin-left: 5px;
 	}
 }
-table.dataTable td div {
-	-ms-word-break: break-all;
-     word-break: break-all;
+table.dataTable {
+	tr:nth-child(even) {background-color: #f9f9f9;}
+}
+table.dataTable td {
+	border-top: 1px solid #ddd;
+	div {
+		-ms-word-break: break-all;
+	     word-break: break-all;
 
-     /* Non standard for webkit */
-     word-break: break-word;
+	     /* Non standard for webkit */
+	     word-break: break-word;
 
--webkit-hyphens: auto;
-   -moz-hyphens: auto;
-    -ms-hyphens: auto;
-        hyphens: auto;
-   	padding: 0px 5px;
+	-webkit-hyphens: auto;
+	   -moz-hyphens: auto;
+	    -ms-hyphens: auto;
+	        hyphens: auto;
+	   	padding: 0px 5px;
+		}
 }
 
 
