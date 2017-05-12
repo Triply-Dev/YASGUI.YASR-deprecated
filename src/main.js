@@ -1,5 +1,7 @@
 "use strict";
-var $ = require("jquery"), EventEmitter = require("events").EventEmitter, utils = require("yasgui-utils");
+var $ = require("jquery"),
+  EventEmitter = require("events").EventEmitter,
+  utils = require("yasgui-utils");
 console = console || {
   log: function() {}
 }; //make sure any console statements don't break in IE
@@ -24,11 +26,14 @@ var YASR = function(parent, options, queryResults) {
   // EventEmitter.call(yasr);
   yasr.options = $.extend(true, {}, module.exports.defaults, options);
   //the recursive copy does merge (overwrite) array values how we want it to. Do this manually
-  if (options && options.outputPlugins) yasr.options.outputPlugins = options.outputPlugins;
+  if (options && options.outputPlugins)
+    yasr.options.outputPlugins = options.outputPlugins;
 
   yasr.container = $("<div class='yasr'></div>").appendTo(parent);
   yasr.header = $("<div class='yasr_header'></div>").appendTo(yasr.container);
-  yasr.resultsContainer = $("<div class='yasr_results'></div>").appendTo(yasr.container);
+  yasr.resultsContainer = $("<div class='yasr_results'></div>").appendTo(
+    yasr.container
+  );
   yasr.storage = utils.storage;
 
   var prefix = null;
@@ -67,12 +72,16 @@ var YASR = function(parent, options, queryResults) {
   }
 
   yasr.updateHeader = function() {
-    var downloadIcon = yasr.header.find(".yasr_downloadIcon").removeAttr("title"); //and remove previous titles
+    var downloadIcon = yasr.header
+      .find(".yasr_downloadIcon")
+      .removeAttr("title"); //and remove previous titles
     var embedButton = yasr.header.find(".yasr_embedBtn");
     var outputPlugin = yasr.plugins[yasr.options.output];
     if (outputPlugin) {
       //Manage download link
-      var info = outputPlugin.getDownloadInfo ? outputPlugin.getDownloadInfo() : null;
+      var info = outputPlugin.getDownloadInfo
+        ? outputPlugin.getDownloadInfo()
+        : null;
       if (info) {
         if (info.buttonTitle) downloadIcon.attr("title", info.buttonTitle);
         downloadIcon.prop("disabled", false);
@@ -80,7 +89,12 @@ var YASR = function(parent, options, queryResults) {
           this.style.fill = "black";
         });
       } else {
-        downloadIcon.prop("disabled", true).prop("title", "Download not supported for this result representation");
+        downloadIcon
+          .prop("disabled", true)
+          .prop(
+            "title",
+            "Download not supported for this result representation"
+          );
         downloadIcon.find("path").each(function() {
           this.style.fill = "gray";
         });
@@ -108,7 +122,11 @@ var YASR = function(parent, options, queryResults) {
       if (yasr.plugins[tryOutput].canHandleResults(yasr)) {
         var priority = yasr.plugins[tryOutput].getPriority;
         if (typeof priority == "function") priority = priority(yasr);
-        if (priority != null && priority != undefined && priority > selectedOutputPriority) {
+        if (
+          priority != null &&
+          priority != undefined &&
+          priority > selectedOutputPriority
+        ) {
           selectedOutputPriority = priority;
           selectedOutput = tryOutput;
         }
@@ -144,10 +162,17 @@ var YASR = function(parent, options, queryResults) {
     //now disable the outputs passed as param
     outputs.forEach(function(outputName) {
       var disabledTitle, disabledMsg;
-      if (module.exports.plugins[outputName] && module.exports.plugins[outputName].defaults) {
-        disabledTitle = module.exports.plugins[outputName].defaults.disabledTitle;
+      if (
+        module.exports.plugins[outputName] &&
+        module.exports.plugins[outputName].defaults
+      ) {
+        disabledTitle =
+          module.exports.plugins[outputName].defaults.disabledTitle;
       }
-      yasr.header.find(".yasr_btnGroup .select_" + outputName).addClass("disabled").attr("title", disabledTitle || "");
+      yasr.header
+        .find(".yasr_btnGroup .select_" + outputName)
+        .addClass("disabled")
+        .attr("title", disabledTitle || "");
     });
   };
   yasr.somethingDrawn = function() {
@@ -156,7 +181,11 @@ var YASR = function(parent, options, queryResults) {
 
   yasr.setResponse = function(dataOrJqXhr, textStatus, jqXhrOrErrorString) {
     try {
-      yasr.results = require("./parsers/wrapper.js")(dataOrJqXhr, textStatus, jqXhrOrErrorString);
+      yasr.results = require("./parsers/wrapper.js")(
+        dataOrJqXhr,
+        textStatus,
+        jqXhrOrErrorString
+      );
     } catch (exception) {
       yasr.results = {
         getException: function() {
@@ -170,8 +199,10 @@ var YASR = function(parent, options, queryResults) {
     var resultsId = yasr.getPersistencyId(yasr.options.persistency.results.key);
     if (resultsId) {
       if (
+        !yasr.results.getException() &&
         yasr.results.getOriginalResponseAsString &&
-        yasr.results.getOriginalResponseAsString().length < yasr.options.persistency.results.maxSize
+        yasr.results.getOriginalResponseAsString().length <
+          yasr.options.persistency.results.maxSize
       ) {
         utils.storage.set(resultsId, yasr.results.getAsStoreObject(), "month");
       } else {
@@ -215,7 +246,8 @@ var YASR = function(parent, options, queryResults) {
   var blobDownloadSupported = null;
   var checkBlobDownloadSupported = function() {
     if (blobDownloadSupported === null) {
-      var windowUrl = window.URL || window.webkitURL || window.mozURL || window.msURL;
+      var windowUrl =
+        window.URL || window.webkitURL || window.mozURL || window.msURL;
       blobDownloadSupported = windowUrl && Blob;
     }
     return blobDownloadSupported;
@@ -257,7 +289,8 @@ var YASR = function(parent, options, queryResults) {
     var drawDownloadIcon = function() {
       var stringToUrl = function(string, contentType) {
         var url = null;
-        var windowUrl = window.URL || window.webkitURL || window.mozURL || window.msURL;
+        var windowUrl =
+          window.URL || window.webkitURL || window.mozURL || window.msURL;
         if (windowUrl && Blob) {
           var blob = new Blob([string], {
             type: contentType
@@ -266,8 +299,12 @@ var YASR = function(parent, options, queryResults) {
         }
         return url;
       };
-      var button = $("<button class='yasr_btn yasr_downloadIcon btn_icon'></button>")
-        .append(require("yasgui-utils").svg.getElement(require("./imgs.js").download))
+      var button = $(
+        "<button class='yasr_btn yasr_downloadIcon btn_icon'></button>"
+      )
+        .append(
+          require("yasgui-utils").svg.getElement(require("./imgs.js").download)
+        )
         .click(function() {
           var currentPlugin = yasr.plugins[yasr.options.output];
           if (currentPlugin && currentPlugin.getDownloadInfo) {
@@ -287,16 +324,28 @@ var YASR = function(parent, options, queryResults) {
       yasr.header.append(button);
     };
     var drawFullscreenButton = function() {
-      var button = $("<button class='yasr_btn btn_fullscreen btn_icon'></button>")
-        .append(require("yasgui-utils").svg.getElement(require("./imgs.js").fullscreen))
+      var button = $(
+        "<button class='yasr_btn btn_fullscreen btn_icon'></button>"
+      )
+        .append(
+          require("yasgui-utils").svg.getElement(
+            require("./imgs.js").fullscreen
+          )
+        )
         .click(function() {
           yasr.container.addClass("yasr_fullscreen");
         });
       yasr.header.append(button);
     };
     var drawSmallscreenButton = function() {
-      var button = $("<button class='yasr_btn btn_smallscreen btn_icon'></button>")
-        .append(require("yasgui-utils").svg.getElement(require("./imgs.js").smallscreen))
+      var button = $(
+        "<button class='yasr_btn btn_smallscreen btn_icon'></button>"
+      )
+        .append(
+          require("yasgui-utils").svg.getElement(
+            require("./imgs.js").smallscreen
+          )
+        )
         .click(function() {
           yasr.container.removeClass("yasr_fullscreen");
         });
@@ -314,7 +363,9 @@ var YASR = function(parent, options, queryResults) {
             var embedLink = currentPlugin.getEmbedHtml();
 
             event.stopPropagation();
-            var popup = $("<div class='yasr_embedPopup'></div>").appendTo(yasr.header);
+            var popup = $("<div class='yasr_embedPopup'></div>").appendTo(
+              yasr.header
+            );
             $("html").click(function() {
               if (popup) popup.remove();
             });
@@ -339,7 +390,11 @@ var YASR = function(parent, options, queryResults) {
             popup.empty().append(prePopup);
             var positions = embedBtn.position();
             var top = positions.top + embedBtn.outerHeight() + "px";
-            var left = Math.max(positions.left + embedBtn.outerWidth() - popup.outerWidth(), 0) + "px";
+            var left =
+              Math.max(
+                positions.left + embedBtn.outerWidth() - popup.outerWidth(),
+                0
+              ) + "px";
 
             popup.css("top", top).css("left", left);
           }
@@ -349,7 +404,8 @@ var YASR = function(parent, options, queryResults) {
     drawFullscreenButton();
     drawSmallscreenButton();
     if (yasr.options.drawOutputSelector) drawOutputSelector();
-    if (yasr.options.drawDownloadIcon && checkBlobDownloadSupported()) drawDownloadIcon(); //only draw when it's supported
+    if (yasr.options.drawDownloadIcon && checkBlobDownloadSupported())
+      drawDownloadIcon(); //only draw when it's supported
     drawEmbedButton();
   };
 
@@ -373,8 +429,13 @@ var YASR = function(parent, options, queryResults) {
         yasr.options.output = settings.output;
       }
       for (var pluginName in settings.plugins) {
-        if (yasr.plugins[pluginName] && yasr.plugins[pluginName].setPersistentSettings) {
-          yasr.plugins[pluginName].setPersistentSettings(settings.plugins[pluginName]);
+        if (
+          yasr.plugins[pluginName] &&
+          yasr.plugins[pluginName].setPersistentSettings
+        ) {
+          yasr.plugins[pluginName].setPersistentSettings(
+            settings.plugins[pluginName]
+          );
         }
       }
     }
@@ -387,7 +448,9 @@ var YASR = function(parent, options, queryResults) {
     };
     for (var pluginName in yasr.plugins) {
       if (yasr.plugins[pluginName].getPersistentSettings) {
-        settings.plugins[pluginName] = yasr.plugins[pluginName].getPersistentSettings();
+        settings.plugins[pluginName] = yasr.plugins[
+          pluginName
+        ].getPersistentSettings();
       }
     }
     return settings;
@@ -398,7 +461,11 @@ var YASR = function(parent, options, queryResults) {
 	 */
   yasr.load();
   drawHeader(yasr);
-  if (!queryResults && yasr.options.persistency && yasr.options.persistency.results) {
+  if (
+    !queryResults &&
+    yasr.options.persistency &&
+    yasr.options.persistency.results
+  ) {
     var resultsId = yasr.getPersistencyId(yasr.options.persistency.results.key);
     var fromStorage;
     if (resultsId) {
