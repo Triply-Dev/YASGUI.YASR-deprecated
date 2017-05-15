@@ -87,7 +87,7 @@ var root = (module.exports = function(yasr) {
           popupAnchor: [0, -41],
           html: getSvgMarker(colors)
         });
-        var feature = wicket.read(binding[plotVariable].value).toObject({ icon: mySVGIcon });
+        var feature = wicket.read(binding[plotVariable].value).toObject({ icon: mySVGIcon, color: colors.fill });
 
         var popupContent = options.formatPopup && options.formatPopup(yasr, L, plotVariable, binding);
         if (popupContent) {
