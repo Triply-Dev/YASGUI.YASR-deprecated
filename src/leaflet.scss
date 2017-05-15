@@ -5,5 +5,10 @@
 		height:800px;
 		width:100%;
 		margin-top:10px;
+		.leaflet-marker-icon.leaflet-div-icon {
+			background-color:transparent;
+			border:0;
+		}
 	}
+
 }

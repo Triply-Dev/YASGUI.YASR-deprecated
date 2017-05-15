@@ -70,6 +70,7 @@
   "dependencies": {
     "browserify-shim": "^3.8.12",
     "codemirror": "^5.17.0",
+    "color": "^1.0.3",
     "d3": "^4.1.1",
     "datatables.net": "^1.10.12",
     "datatables.net-dt": "^1.10.12",

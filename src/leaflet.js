@@ -10,13 +10,15 @@ require("codemirror/addon/edit/matchbrackets.js");
 require("codemirror/mode/xml/xml.js");
 require("codemirror/mode/javascript/javascript.js");
 var imgs = require("./imgs.js");
+var Color = require("color");
 var L = require("leaflet");
 //Ugly... need to set this global, as wicket-leaflet tries to access this global variable
 global.Wkt = require("wicket/wicket");
 require("wicket/wicket-leaflet");
-var root = module.exports = function(yasr) {
+var root = (module.exports = function(yasr) {
   var plugin = {};
   var options = $.extend(true, {}, root.defaults);
+  var defaultColor = Color(options.defaultColor);
   var cm = null;
   var getOption = function(key) {
     // if (!options[key]) return {};
@@ -30,7 +32,21 @@ var root = module.exports = function(yasr) {
       return undefined;
     }
   };
-
+  var getSvgMarker = function(colors) {
+    var fillColor2 = colors.fill.lighten(0.3);
+    var borderColor2 = colors.border.lighten(0.3);
+    return (
+      '<svg xmlns="http://www.w3.org/2000/svg" width="25" height="40"><defs><linearGradient id="c"><stop offset="0" stop-color="' +
+      colors.fill +
+      '"/><stop offset="1" stop-color="' +
+      fillColor2 +
+      '"/></linearGradient><linearGradient id="d"><stop offset="0" stop-color="' +
+      colors.border +
+      '"/><stop offset="1" stop-color="' +
+      borderColor2 +
+      '"/></linearGradient><linearGradient xlink:href="#a" x1="351.1" y1="551.6" x2="351.1" y2="512.9" gradientUnits="userSpaceOnUse" gradientTransform="translate(-2.715)"/><linearGradient xlink:href="#a" x1="318.6" y1="550.1" x2="318.6" y2="512.4" gradientUnits="userSpaceOnUse" gradientTransform="translate(94.732,2.054)"/><linearGradient xlink:href="#a" gradientUnits="userSpaceOnUse" gradientTransform="matrix(-1,0,0,1,731.268,2.054)" x1="318.6" y1="550.1" x2="318.6" y2="512.4"/><linearGradient xlink:href="#a" gradientUnits="userSpaceOnUse" gradientTransform="translate(94.232,2.054)" x1="318.6" y1="550.1" x2="318.6" y2="512.4"/><linearGradient xlink:href="#a" gradientUnits="userSpaceOnUse" gradientTransform="translate(-28.58,-0.437)" x1="445.3" y1="541.3" x2="445.3" y2="503.7"/><linearGradient xlink:href="#b" gradientUnits="userSpaceOnUse" gradientTransform="translate(63,-0.438)" x1="351.7" y1="522.8" x2="351.7" y2="503.7"/><linearGradient xlink:href="#a" gradientUnits="userSpaceOnUse" gradientTransform="translate(-28.58,-0.437)" x1="445.3" y1="541.3" x2="445.3" y2="503.7"/><linearGradient xlink:href="#b" gradientUnits="userSpaceOnUse" gradientTransform="translate(63,-0.438)" x1="351.7" y1="522.8" x2="351.7" y2="503.7"/><linearGradient xlink:href="#a" gradientUnits="userSpaceOnUse" gradientTransform="translate(-28.58,-0.437)" x1="445.3" y1="541.3" x2="445.3" y2="503.7"/><linearGradient xlink:href="#b" gradientUnits="userSpaceOnUse" gradientTransform="translate(63,-0.438)" x1="351.7" y1="522.8" x2="351.7" y2="503.7"/><linearGradient xlink:href="#a" gradientUnits="userSpaceOnUse" gradientTransform="translate(-432.796,-503.349)" x1="445.3" y1="541.3" x2="445.3" y2="503.7"/><linearGradient xlink:href="#b" gradientUnits="userSpaceOnUse" gradientTransform="translate(-341.216,-503.35)" x1="351.7" y1="522.8" x2="351.7" y2="503.7"/><linearGradient xlink:href="#a" gradientUnits="userSpaceOnUse" gradientTransform="translate(-28.846,-0.287)" x1="445.3" y1="541.3" x2="445.3" y2="503.7"/><linearGradient xlink:href="#b" gradientUnits="userSpaceOnUse" gradientTransform="translate(62.734,-0.288)" x1="351.7" y1="522.8" x2="351.7" y2="503.7"/></defs><rect y="4.5" x="6.3" height="14.5" width="12.6" fill="#fff"/><path d="M12.6 0.6C6 0.6 0.6 6.2 0.6 12.4c0 2.8 1.6 6.3 2.7 8.7l9.3 17.9 9.3-17.9c1.1-2.4 2.7-5.8 2.7-8.7 0-6.2-5.4-11.9-12-11.9zm0 7.2c2.6 0 4.7 2.1 4.7 4.7 0 2.6-2.1 4.7-4.7 4.7-2.6 0-4.7-2.1-4.7-4.7 0-2.6 2.1-4.7 4.7-4.7z" style="fill:url(#c);stroke:url(#d)"/><path d="m12.6 1.7c-5.9 0-10.9 5.2-10.9 10.8 0 2.4 1.4 5.8 2.6 8.3l0 0 8.3 16 8.3-16 0 0c1.1-2.4 2.6-5.7 2.6-8.2 0-5.5-4.9-10.7-10.9-10.7zm0 5c3.2 0 5.8 2.6 5.8 5.8 0 3.2-2.6 5.8-5.8 5.8-3.2 0-5.7-2.6-5.7-5.8 0-3.2 2.6-5.8 5.8-5.8z" style="fill:none;stroke-opacity:0.1;stroke:#fff"/></svg>'
+    );
+  };
   var draw = function() {
     var zoomToEl = function(e) {
       map.setView(e.latlng, 15);
@@ -45,18 +61,27 @@ var root = module.exports = function(yasr) {
     var hasLabel = false;
     for (var varId = 0; varId < plotVariables.length; varId++) {
       var plotVariable = plotVariables[varId];
+
       for (var i = 0; i < bindings.length; i++) {
         var binding = bindings[i];
 
         if (!binding[plotVariable].value) continue;
+        var getColor = function() {
+          var colorBinding = binding[plotVariable + "Color"];
+          if (colorBinding) return Color(colorBinding.value);
+          return defaultColor;
+        };
+        var colors = {
+          fill: getColor()
+        };
+        colors.border = colors.fill.saturate(0.2);
         var wicket = new Wkt.Wkt();
-        var svgURL = "data:image/svg+xml;base64," + btoa(imgs.marker);
-        var mySVGIcon = L.icon({
-          iconUrl: svgURL,
+        var mySVGIcon = L.divIcon({
           iconSize: [25, 41],
-          shadowSize: [25, 45],
+          // shadowSize: [25, 45],
           iconAnchor: [12, 41],
-          popupAnchor: [0, -41]
+          popupAnchor: [0, -41],
+          html: getSvgMarker(colors)
         });
         var feature = wicket.read(binding[plotVariable].value).toObject({ icon: mySVGIcon });
 
@@ -153,7 +178,7 @@ var root = module.exports = function(yasr) {
     canHandleResults: canHandleResults,
     getPriority: 2
   };
-};
+});
 
 root.defaults = {
   map: function(yasr, L) {
@@ -172,12 +197,15 @@ root.defaults = {
   },
   missingPopupMsg: function(yasr, L, geoVariables) {
     if (geoVariables && geoVariables.length) {
-      return "<small>Tip: Add a label variable prefixed with the geo variable name to show popups on the map. E.g. <code>" +
+      return (
+        "<small>Tip: Add a label variable prefixed with the geo variable name to show popups on the map. E.g. <code>" +
         geoVariables[0] +
-        "Label</code></small>";
+        "Label</code>. Or, append <code>Color</code> to change the color of the shape or marker.</small>"
+      );
     }
   },
-  disabledTitle: "Query for geo variables in WKT format to plot them on a map"
+  disabledTitle: "Query for geo variables in WKT format to plot them on a map",
+  defaultColor: "#2e6c97"
 };
 
 root.version = {
