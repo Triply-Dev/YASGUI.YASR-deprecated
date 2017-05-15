@@ -1,7 +1,9 @@
 "use strict";
 var $ = require("jquery");
 require("../../lib/jquery.csv-0.71.js");
-var root = module.exports = function(queryResponse, separator) {
+var root = (module.exports = function(queryResponse, separator, opts) {
+  opts = opts || {};
+
   var json = {};
   var arrays = $.csv.toArrays(queryResponse, {
     separator: separator
@@ -31,7 +33,10 @@ var root = module.exports = function(queryResponse, separator) {
   var getVariables = function() {
     if (arrays.length > 0 && arrays[0].length > 0) {
       json.head = {
-        vars: arrays[0]
+        vars: arrays[0].map(function(v) {
+          if (opts.mapVariable) return opts.mapVariable(v);
+          return v;
+        })
       };
       return true;
     }
@@ -48,7 +53,7 @@ var root = module.exports = function(queryResponse, separator) {
         for (var colIt = 0; colIt < arrays[rowIt].length; colIt++) {
           var varName = json.head.vars[colIt];
           if (varName) {
-            var value = arrays[rowIt][colIt];
+            var value = opts.mapValue ? opts.mapValue(arrays[rowIt][colIt]) : arrays[rowIt][colIt];
             var detectedType = detectType(value);
             binding[varName] = {
               value: value
@@ -59,9 +64,6 @@ var root = module.exports = function(queryResponse, separator) {
 
         json.results.bindings.push(binding);
       }
-      json.head = {
-        vars: arrays[0]
-      };
       return true;
     }
     return false;
@@ -73,4 +75,4 @@ var root = module.exports = function(queryResponse, separator) {
   }
 
   return json;
-};
+});

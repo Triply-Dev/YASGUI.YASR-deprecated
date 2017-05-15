@@ -13,7 +13,7 @@ var $ = require("jquery");
  * - a jqXHR object (when this function is used as 'done/success' callback for jquery)
  * - an 'errorThrown' string (
  */
-var root = module.exports = function(dataOrJqXhr, textStatus, jqXhrOrErrorString) {
+var root = (module.exports = function(dataOrJqXhr, textStatus, jqXhrOrErrorString) {
   var parsers = {
     xml: require("./xml.js"),
     json: require("./json.js"),
@@ -229,4 +229,4 @@ var root = module.exports = function(dataOrJqXhr, textStatus, jqXhrOrErrorString
     getType: getType,
     getException: getException
   };
-};
+});
