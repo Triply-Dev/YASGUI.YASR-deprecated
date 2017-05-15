@@ -1507,6 +1507,9 @@
       height: 800px;
       width: 100%;
       margin-top: 10px; }
+      .yasr .yasr_results .leaflet .leaflet-marker-icon.leaflet-div-icon {
+        background-color: transparent;
+        border: 0; }
 
 /**need to reset this: the modal-dialog class conflicts with bootstrap**/
 .modal-dialog.google-visualization-charteditor-dialog {

@@ -192,53 +192,53 @@
 <!-- endbuild -->
 <script src="doc/doc.min.js"></script>
 <script type="text/javascript">
-	var yasr, yasqe = {};
-	YASQE.defaults.value = "PREFIX foaf: <http://xmlns.com/foaf/0.1/>\n"+
-	"PREFIX dbpedia: <http://dbpedia.org/resource/>\n"+
-	"SELECT DISTINCT ?person WHERE {\n"+
-	"  ?person a foaf:Person .\n"+
-	"}\n"+
-	"LIMIT 10";
+var yasr, yasqe = {};
+YASQE.defaults.value =
+  "PREFIX foaf: <http://xmlns.com/foaf/0.1/>\n" +
+  "PREFIX dbpedia: <http://dbpedia.org/resource/>\n" +
+  "SELECT DISTINCT ?person WHERE {\n" +
+  "  ?person a foaf:Person .\n" +
+  "}\n" +
+  "LIMIT 10";
 
-	yasr = YASR(document.getElementById("showcase"));
-    yasqe = YASQE(document.getElementById("yasqe"), {
-    	sparql: {
-    		showQueryButton: true,
-    		endpoint: 'http://dbpedia.org/sparql',
-        acceptHeaderGraph: "application/sparql-results+json",
-        // requestMethod: 'POST',
-        callbacks: {
-          beforeSend: function(xhr) {
-            xhr.setRequestHeader('Accept', 'application/sparql-results+json');
-          }
-        }
-    	}
-    });
+yasr = YASR(document.getElementById("showcase"));
+yasqe = YASQE(document.getElementById("yasqe"), {
+  sparql: {
+    showQueryButton: true,
+    endpoint: "http://data.pdok.nl/sparql",
+    acceptHeaderSelect: "text/tab-separated-values",
+    requestMethod: "GET"
+    // callbacks: {
+    //   beforeSend: function(xhr) {
+    //     xhr.setRequestHeader("Accept", "application/sparql-results+json");
+    //   }
+    // }
+  }
+});
 
-    /**
+/**
     * Set some of the hooks to link YASR and YASQE
     */
-    yasr.options.getUsedPrefixes = yasqe.getPrefixesFromQuery;
-	yasqe.options.sparql.callbacks.complete = yasr.setResponse;
+yasr.options.getUsedPrefixes = yasqe.getPrefixesFromQuery;
+yasqe.options.sparql.callbacks.complete = yasr.setResponse;
 
-	if (!yasr.storage.get("yasr_showcase_results"))  yasqe.query();
-	/**
+if (!yasr.storage.get("yasr_showcase_results")) yasqe.query();
+/**
 	* A function to do some quick testing
 	*/
-	function testFile(testFile) {
-	    var xhr = new XMLHttpRequest();
-	    xhr.open('GET', testFile);
-	    xhr.onload = function() {
-		if (xhr.status === 200) {
-		    yasr.setResponse(xhr.responseText);
-		}
-		else {
-		    console.error('Request failed.  Returned status of ' + xhr.status);
-		}
-	    };
-	    xhr.send();
-	}
-  testFile('queryResults.json')
+function testFile(testFile) {
+  var xhr = new XMLHttpRequest();
+  xhr.open("GET", testFile);
+  xhr.onload = function() {
+    if (xhr.status === 200) {
+      yasr.setResponse(xhr.responseText);
+    } else {
+      console.error("Request failed.  Returned status of " + xhr.status);
+    }
+  };
+  xhr.send();
+}
+// testFile("queryResults.tsv");
 </script>
   </body>
 </html>
