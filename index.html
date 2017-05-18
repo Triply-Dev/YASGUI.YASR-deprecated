@@ -8,7 +8,7 @@
   <link rel="icon"  type="image/png" href="doc/imgs/favicon.png">
   <link href="dist/yasr.min.css" rel="stylesheet" type="text/css" />
 <!-- build:css -->
-<link rel="stylesheet" href="//cdn.jsdelivr.net/yasqe/2.11.10/yasqe.min.css">
+<link rel="stylesheet" href="//cdn.jsdelivr.net/yasqe/2.11.11/yasqe.min.css">
 <!-- endbuild -->
   <link href="doc/doc.min.css" rel="stylesheet" type="text/css" />
 
@@ -188,7 +188,7 @@
 
 <script src="dist/yasr.bundled.min.js"></script>
 <!-- build:js -->
-<script src="//cdn.jsdelivr.net/yasqe/2.11.10/yasqe.bundled.min.js"></script>
+<script src="//cdn.jsdelivr.net/yasqe/2.11.11/yasqe.bundled.min.js"></script>
 <!-- endbuild -->
 <script src="doc/doc.min.js"></script>
 <script type="text/javascript">
@@ -205,9 +205,9 @@ yasr = YASR(document.getElementById("showcase"));
 yasqe = YASQE(document.getElementById("yasqe"), {
   sparql: {
     showQueryButton: true,
-    endpoint: "http://dbpedia.org/sparql"
+    endpoint: "http://data.pdok.nl/sparql",
     // acceptHeaderSelect: "text/tab-separated-values",
-    // requestMethod: "GET"
+    requestMethod: "GET"
     // callbacks: {
     //   beforeSend: function(xhr) {
     //     xhr.setRequestHeader("Accept", "application/sparql-results+json");

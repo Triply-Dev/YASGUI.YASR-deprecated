@@ -83788,45 +83788,50 @@ module.exports={
   "_args": [
     [
       {
-        "raw": "yasgui-utils@^1.6.0",
+        "raw": "yasgui-utils@1.6.4",
         "scope": null,
         "escapedName": "yasgui-utils",
         "name": "yasgui-utils",
-        "rawSpec": "^1.6.0",
-        "spec": ">=1.6.0 <2.0.0",
-        "type": "range"
+        "rawSpec": "1.6.4",
+        "spec": "1.6.4",
+        "type": "version"
       },
       "/home/lrd900/yasgui/yasr"
     ]
   ],
-  "_from": "yasgui-utils@>=1.6.0 <2.0.0",
-  "_id": "yasgui-utils@1.6.0",
+  "_from": "yasgui-utils@1.6.4",
+  "_id": "yasgui-utils@1.6.4",
   "_inCache": true,
-  "_installable": true,
   "_location": "/yasgui-utils",
+  "_nodeVersion": "7.10.0",
+  "_npmOperationalInternal": {
+    "host": "packages-12-west.internal.npmjs.com",
+    "tmp": "tmp/yasgui-utils-1.6.4.tgz_1495118339480_0.5133819875773042"
+  },
   "_npmUser": {
     "name": "laurens.rietveld",
     "email": "laurens.rietveld@gmail.com"
   },
-  "_npmVersion": "1.4.3",
+  "_npmVersion": "4.2.0",
   "_phantomChildren": {},
   "_requested": {
-    "raw": "yasgui-utils@^1.6.0",
+    "raw": "yasgui-utils@1.6.4",
     "scope": null,
     "escapedName": "yasgui-utils",
     "name": "yasgui-utils",
-    "rawSpec": "^1.6.0",
-    "spec": ">=1.6.0 <2.0.0",
-    "type": "range"
+    "rawSpec": "1.6.4",
+    "spec": "1.6.4",
+    "type": "version"
   },
   "_requiredBy": [
+    "#USER",
     "/",
     "/yasgui-yasqe"
   ],
-  "_resolved": "https://registry.npmjs.org/yasgui-utils/-/yasgui-utils-1.6.0.tgz",
-  "_shasum": "bcb9091109c233e3e82737c94c202e6512389c47",
+  "_resolved": "https://registry.npmjs.org/yasgui-utils/-/yasgui-utils-1.6.4.tgz",
+  "_shasum": "6d99d35c903cb00212ef57f024ff079901c2c73b",
   "_shrinkwrap": null,
-  "_spec": "yasgui-utils@^1.6.0",
+  "_spec": "yasgui-utils@1.6.4",
   "_where": "/home/lrd900/yasgui/yasr",
   "author": {
     "name": "Laurens Rietveld"
@@ -83841,9 +83846,10 @@ module.exports={
   "devDependencies": {},
   "directories": {},
   "dist": {
-    "shasum": "bcb9091109c233e3e82737c94c202e6512389c47",
-    "tarball": "https://registry.npmjs.org/yasgui-utils/-/yasgui-utils-1.6.0.tgz"
+    "shasum": "6d99d35c903cb00212ef57f024ff079901c2c73b",
+    "tarball": "https://registry.npmjs.org/yasgui-utils/-/yasgui-utils-1.6.4.tgz"
   },
+  "gitHead": "7437285878000b4007ca9381c179f9e1fbe3cf3a",
   "homepage": "https://github.com/YASGUI/Utils",
   "licenses": [
     {
@@ -83865,7 +83871,8 @@ module.exports={
     "type": "git",
     "url": "git://github.com/YASGUI/Utils.git"
   },
-  "version": "1.6.0"
+  "scripts": {},
+  "version": "1.6.4"
 }
 
 },{}],151:[function(require,module,exports){
@@ -83892,62 +83899,92 @@ module.exports = {
 },{"../package.json":150,"./storage.js":152,"./svg.js":153}],152:[function(require,module,exports){
 var store = require("store");
 var times = {
-	day: function() {
-		return 1000 * 3600 * 24;//millis to day
-	},
-	month: function() {
-		times.day() * 30;
-	},
-	year: function() {
-		times.month() * 12;
-	}
+  day: function() {
+    return 1000 * 3600 * 24; //millis to day
+  },
+  month: function() {
+    times.day() * 30;
+  },
+  year: function() {
+    times.month() * 12;
+  }
 };
-
-var root = module.exports = {
-	set : function(key, val, exp) {
-    if (!store.enabled) return;//this is probably in private mode. Don't run, as we might get Js errors
-		if (key && val !== undefined) {
-			if (typeof exp == "string") {
-				exp = times[exp]();
-			}
-			//try to store string for dom objects (e.g. XML result). Otherwise, we might get a circular reference error when stringifying this
-			if (val.documentElement) val = new XMLSerializer().serializeToString(val.documentElement);
-			store.set(key, {
-				val : val,
-				exp : exp,
-				time : new Date().getTime()
-			});
-		}
-	},
-	remove: function(key) {
-		if (!store.enabled) return;//this is probably in private mode. Don't run, as we might get Js errors
-		if (key) store.remove(key)
-	},
-	removeAll: function(filter) {
-		if (!store.enabled) return;//this is probably in private mode. Don't run, as we might get Js errors
-		if (typeof filter === 'function') {
-			for (var key in store.getAll()) {
-				if (filter(key, root.get(key))) root.remove(key);
-			}
-		}
-	},
-	get : function(key) {
-    if (!store.enabled) return null;//this is probably in private mode. Don't run, as we might get Js errors
-		if (key) {
-			var info = store.get(key);
-			if (!info) {
-				return null;
-			}
-			if (info.exp && new Date().getTime() - info.time > info.exp) {
-				return null;
-			}
-			return info.val;
-		} else {
-			return null;
-		}
-	}
-
-};
+function isQuotaExceeded(e) {
+  var quotaExceeded = false;
+  if (e) {
+    if (e.code) {
+      switch (e.code) {
+        case 22:
+          quotaExceeded = true;
+          break;
+        case 1014:
+          // Firefox
+          if (e.name === "NS_ERROR_DOM_QUOTA_REACHED") {
+            quotaExceeded = true;
+          }
+          break;
+      }
+    } else if (e.number === -2147024882) {
+      // Internet Explorer 8
+      quotaExceeded = true;
+    }
+  }
+}
+var root = (module.exports = {
+  set: function(key, val, exp, onQuotaExceeded) {
+    if (!store.enabled) return; //this is probably in private mode. Don't run, as we might get Js errors
+    if (key && val !== undefined) {
+      if (typeof exp == "string") {
+        exp = times[exp]();
+      }
+      //try to store string for dom objects (e.g. XML result). Otherwise, we might get a circular reference error when stringifying this
+      if (val.documentElement) val = new XMLSerializer().serializeToString(val.documentElement);
+      try {
+        store.set(key, {
+          val: val,
+          exp: exp,
+          time: new Date().getTime()
+        });
+      } catch (e) {
+        e.quotaExceeded = isQuotaExceeded(e);
+        if (e.quotaExceeded && onQuotaExceeded) {
+          onQuotaExceeded(e);
+        } else {
+          throw e;
+        }
+      }
+    }
+  },
+  remove: function(key) {
+    if (!store.enabled) return; //this is probably in private mode. Don't run, as we might get Js errors
+    if (key) store.remove(key);
+  },
+  removeAll: function(filter) {
+    if (!store.enabled) return; //this is probably in private mode. Don't run, as we might get Js errors
+    if (!filter) {
+      store.clearAll();
+    } else if (typeof filter === "function") {
+      for (var key in store.getAll()) {
+        if (filter(key, root.get(key))) root.remove(key);
+      }
+    }
+  },
+  get: function(key) {
+    if (!store.enabled) return null; //this is probably in private mode. Don't run, as we might get Js errors
+    if (key) {
+      var info = store.get(key);
+      if (!info) {
+        return null;
+      }
+      if (info.exp && new Date().getTime() - info.time > info.exp) {
+        return null;
+      }
+      return info.val;
+    } else {
+      return null;
+    }
+  }
+});
 
 },{"store":147}],153:[function(require,module,exports){
 module.exports = {
@@ -83982,7 +84019,7 @@ module.exports = {
 module.exports={
   "name": "yasgui-yasr",
   "description": "Yet Another SPARQL Resultset GUI",
-  "version": "2.11.0",
+  "version": "2.11.1",
   "main": "src/main.js",
   "license": "MIT",
   "author": "Laurens Rietveld",
@@ -84063,7 +84100,7 @@ module.exports={
     "proj4": "^2.4.3",
     "proj4leaflet": "^1.0.1",
     "wicket": "https://github.com/arthur-e/Wicket.git",
-    "yasgui-utils": "^1.6.0"
+    "yasgui-utils": "^1.6.4"
   },
   "browserify-shim": {
     "google": "global:google"
@@ -84264,8 +84301,10 @@ module.exports = {
 	 * @type string ('_blank' | '_self')
 	 * @default '_blank'
 	 */
-  uriTarget: '_blank',
-
+  uriTarget: "_blank",
+  onQuotaExceeded: function() {
+    //fail silently
+  },
   getUsedPrefixes: null,
   /**
 	 * Make certain settings and values of YASR persistent. Setting a key
@@ -85442,7 +85481,7 @@ var YASR = function(parent, options, queryResults) {
         yasr.results.getOriginalResponseAsString &&
         yasr.results.getOriginalResponseAsString().length < yasr.options.persistency.results.maxSize
       ) {
-        utils.storage.set(resultsId, yasr.results.getAsStoreObject(), "month");
+        utils.storage.set(resultsId, yasr.results.getAsStoreObject(), "month", yasr.options.onQuotaExceeded);
       } else {
         //remove old string
         utils.storage.remove(resultsId);
@@ -85627,7 +85666,7 @@ var YASR = function(parent, options, queryResults) {
   yasr.store = function() {
     if (!persistentId) persistentId = yasr.getPersistencyId("main");
     if (persistentId) {
-      utils.storage.set(persistentId, yasr.getPersistentSettings());
+      utils.storage.set(persistentId, yasr.getPersistentSettings(), null, yasr.options.onQuotaExceeded);
     }
   };
 
@@ -86676,13 +86715,13 @@ require("../lib/colResizable-1.4.js");
  * @return yasr-table (doc)
  *
  */
-var root = module.exports = function(yasr) {
+var root = (module.exports = function(yasr) {
   var table = null;
   var plugin = {
     name: "Table",
     getPriority: 10
   };
-  var options = plugin.options = $.extend(true, {}, root.defaults);
+  var options = (plugin.options = $.extend(true, {}, root.defaults));
   var tableLengthPersistencyId = options.persistency ? yasr.getPersistencyId(options.persistency.tableLength) : null;
 
   var getRows = function() {
@@ -86729,7 +86768,7 @@ var root = module.exports = function(yasr) {
     });
     if (tableLengthPersistencyId) {
       table.on("length.dt", function(e, settings, len) {
-        yutils.storage.set(tableLengthPersistencyId, len, "month");
+        yutils.storage.set(tableLengthPersistencyId, len, "month", yasr.options.onQuotaExceeded);
       });
     }
     $.extend(true, options.callbacks, options.handlers);
@@ -86803,10 +86842,9 @@ var root = module.exports = function(yasr) {
 	 * @default If resultset contains variables in the resultset, return true
 	 */
   plugin.canHandleResults = function() {
-    return yasr.results &&
-      yasr.results.getVariables &&
-      yasr.results.getVariables() &&
-      yasr.results.getVariables().length > 0;
+    return (
+      yasr.results && yasr.results.getVariables && yasr.results.getVariables() && yasr.results.getVariables().length > 0
+    );
   };
 
   plugin.getDownloadInfo = function() {
@@ -86822,7 +86860,7 @@ var root = module.exports = function(yasr) {
   };
 
   return plugin;
-};
+});
 
 var formatLiteral = function(yasr, plugin, literalBinding) {
   var stringRepresentation = utils.escapeHtmlEntities(literalBinding.value);
@@ -86865,9 +86903,12 @@ var getCellContent = function(yasr, plugin, bindings, sparqlVar, context) {
         title = href;
       }
     }
-    value = "<a " +
+    value =
+      "<a " +
       (title ? "title='" + href + "' " : "") +
-      "class='uri' target='" + yasr.options.uriTarget + "' href='" +
+      "class='uri' target='" +
+      yasr.options.uriTarget +
+      "' href='" +
       href +
       "'>" +
       visibleString +
