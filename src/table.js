@@ -13,13 +13,13 @@ require("../lib/colResizable-1.4.js");
  * @return yasr-table (doc)
  *
  */
-var root = module.exports = function(yasr) {
+var root = (module.exports = function(yasr) {
   var table = null;
   var plugin = {
     name: "Table",
     getPriority: 10
   };
-  var options = plugin.options = $.extend(true, {}, root.defaults);
+  var options = (plugin.options = $.extend(true, {}, root.defaults));
   var tableLengthPersistencyId = options.persistency ? yasr.getPersistencyId(options.persistency.tableLength) : null;
 
   var getRows = function() {
@@ -66,7 +66,7 @@ var root = module.exports = function(yasr) {
     });
     if (tableLengthPersistencyId) {
       table.on("length.dt", function(e, settings, len) {
-        yutils.storage.set(tableLengthPersistencyId, len, "month");
+        yutils.storage.set(tableLengthPersistencyId, len, "month", yasr.options.onQuotaExceeded);
       });
     }
     $.extend(true, options.callbacks, options.handlers);
@@ -140,10 +140,9 @@ var root = module.exports = function(yasr) {
 	 * @default If resultset contains variables in the resultset, return true
 	 */
   plugin.canHandleResults = function() {
-    return yasr.results &&
-      yasr.results.getVariables &&
-      yasr.results.getVariables() &&
-      yasr.results.getVariables().length > 0;
+    return (
+      yasr.results && yasr.results.getVariables && yasr.results.getVariables() && yasr.results.getVariables().length > 0
+    );
   };
 
   plugin.getDownloadInfo = function() {
@@ -159,7 +158,7 @@ var root = module.exports = function(yasr) {
   };
 
   return plugin;
-};
+});
 
 var formatLiteral = function(yasr, plugin, literalBinding) {
   var stringRepresentation = utils.escapeHtmlEntities(literalBinding.value);
@@ -202,9 +201,12 @@ var getCellContent = function(yasr, plugin, bindings, sparqlVar, context) {
         title = href;
       }
     }
-    value = "<a " +
+    value =
+      "<a " +
       (title ? "title='" + href + "' " : "") +
-      "class='uri' target='" + yasr.options.uriTarget + "' href='" +
+      "class='uri' target='" +
+      yasr.options.uriTarget +
+      "' href='" +
       href +
       "'>" +
       visibleString +

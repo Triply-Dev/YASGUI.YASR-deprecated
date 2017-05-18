@@ -175,7 +175,7 @@ var YASR = function(parent, options, queryResults) {
         yasr.results.getOriginalResponseAsString &&
         yasr.results.getOriginalResponseAsString().length < yasr.options.persistency.results.maxSize
       ) {
-        utils.storage.set(resultsId, yasr.results.getAsStoreObject(), "month");
+        utils.storage.set(resultsId, yasr.results.getAsStoreObject(), "month", yasr.options.onQuotaExceeded);
       } else {
         //remove old string
         utils.storage.remove(resultsId);
@@ -360,7 +360,7 @@ var YASR = function(parent, options, queryResults) {
   yasr.store = function() {
     if (!persistentId) persistentId = yasr.getPersistencyId("main");
     if (persistentId) {
-      utils.storage.set(persistentId, yasr.getPersistentSettings());
+      utils.storage.set(persistentId, yasr.getPersistentSettings(), null, yasr.options.onQuotaExceeded);
     }
   };
 

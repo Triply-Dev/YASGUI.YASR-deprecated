@@ -82,7 +82,7 @@
     "proj4": "^2.4.3",
     "proj4leaflet": "^1.0.1",
     "wicket": "https://github.com/arthur-e/Wicket.git",
-    "yasgui-utils": "^1.6.0"
+    "yasgui-utils": "^1.6.4"
   },
   "browserify-shim": {
     "google": "global:google"

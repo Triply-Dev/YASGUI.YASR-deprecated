@@ -36,8 +36,10 @@ module.exports = {
 	 * @type string ('_blank' | '_self')
 	 * @default '_blank'
 	 */
-  uriTarget: '_blank',
-
+  uriTarget: "_blank",
+  onQuotaExceeded: function() {
+    //fail silently
+  },
   getUsedPrefixes: null,
   /**
 	 * Make certain settings and values of YASR persistent. Setting a key
