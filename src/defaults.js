@@ -37,8 +37,9 @@ module.exports = {
 	 * @default '_blank'
 	 */
   uriTarget: "_blank",
-  onQuotaExceeded: function() {
+  onQuotaExceeded: function(e) {
     //fail silently
+    console.warn("Could not store in localstorage. Skipping..", e);
   },
   getUsedPrefixes: null,
   /**
