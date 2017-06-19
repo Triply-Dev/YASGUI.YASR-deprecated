@@ -1,7 +1,7 @@
 {
   "name": "yasgui-yasr",
   "description": "Yet Another SPARQL Resultset GUI",
-  "version": "2.11.4",
+  "version": "2.11.5",
   "main": "src/main.js",
   "license": "MIT",
   "author": "Laurens Rietveld",
