@@ -2,6 +2,7 @@ var gulp = require("gulp"),
   concat = require("gulp-concat"),
   paths = require("./paths.js"),
   connect = require("gulp-connect"),
+  deleteLines = require('gulp-delete-lines'),
   sourcemaps = require("gulp-sourcemaps");
 sass = require("gulp-sass"), autoprefixer = require("gulp-autoprefixer"), cssImport = require(
   "gulp-cssimport"
@@ -48,6 +49,11 @@ var cssDeps = [
 gulp.task("copyCssDeps", function() {
   return gulp
     .src(cssDeps)
+    .pipe(deleteLines({
+      'filters': [
+        /url\("\./i
+      ]
+    }))
     .pipe(
       rename({
         prefix: "_",
