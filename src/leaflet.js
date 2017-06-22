@@ -221,6 +221,18 @@ var maps = {
         })
       ]
     };
+  },
+  chmaps: function(yasr, L) {
+    var url = 'https://wmts10.geo.admin.ch/1.0.0/ch.swisstopo.pixelkarte-farbe/default/current/3857/{z}/{x}/{y}.jpeg';
+    var stopoAttr = 'Map data &copy; <a href="https://www.swisstopo.admin.ch/">swisstopo</a> , ';
+    var tilelayer = new L.tileLayer(url,{id: 'stopo.light', attribution: stopoAttr, minZoom: 4, maxZoom: 19});
+
+    return {
+      layers: [tilelayer] ,
+      crs: L.CRS.EPSG3857,
+          continuousWorld: true,
+          worldCopyJump: false
+    };
   }
 };
 root.defaults = {
