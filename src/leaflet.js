@@ -60,11 +60,6 @@ var root = (module.exports = function(yasr) {
     var mapConstructor = options.map;
     if (!mapConstructor) mapConstructor = options.maps[options.defaultMap || "osm"];
 
-    /*osm overlay*/
-    var mbAttr = 'Map data &copy; <a href="http://openstreetmap.org">OpenStreetMap</a> contributors ';
-    var mbUrl = 'https://api.tiles.mapbox.com/v4/{id}/{z}/{x}/{y}.png?access_token=pk.eyJ1IjoibWFwYm94IiwiYSI6ImNpejY4NXVycTA2emYycXBndHRqcmZ3N3gifQ.rJcFIG214AriISLbB6B5aw';
-    var streets   = L.tileLayer(mbUrl, {id: 'mapbox.streets', attribution: mbAttr});
-
     var map = new L.Map(mapWrapper.get()[0], mapConstructor(yasr, L));
 
     var mapLayers = options.defaultOverlay;
