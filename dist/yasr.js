@@ -47825,8 +47825,18 @@ var root = (module.exports = function(yasr) {
       return $('<div class="leaflet">Nothing to draw</div>').appendTo(yasr.resultsContainer);
     var mapWrapper = $('<div class="leaflet"/>').appendTo(yasr.resultsContainer);
     var mapConstructor = options.map;
-    if (!mapConstructor) mapConstructor = options.maps[options.defaultMap || "osm"];
+    if (!mapConstructor) mapConstructor = options.maps[options.defaultMap || "chmaps"];
+
+    /*osm overlay*/
+    var mbAttr = 'Map data &copy; <a href="http://openstreetmap.org">OpenStreetMap</a> contributors ';
+    var mbUrl = 'https://api.tiles.mapbox.com/v4/{id}/{z}/{x}/{y}.png?access_token=pk.eyJ1IjoibWFwYm94IiwiYSI6ImNpejY4NXVycTA2emYycXBndHRqcmZ3N3gifQ.rJcFIG214AriISLbB6B5aw';
+    var streets   = L.tileLayer(mbUrl, {id: 'mapbox.streets', attribution: mbAttr});
+
     var map = new L.Map(mapWrapper.get()[0], mapConstructor(yasr, L));
+
+    var mapLayers = options.defaultOverlay;
+    if(mapLayers) L.control.layers(null, mapLayers).addTo(map);
+
     var features = [];
     var bindings = yasr.results.getBindings();
     var hasLabel = false;
@@ -47989,6 +47999,7 @@ var maps = {
       ]
     };
   },
+  /* free only up to 25'000 megapixels/year see https://shop.swisstopo.admin.ch/en/products/geoservice/swisstopo_geoservices/WMTS_info for further informations */
   chmaps: function(yasr, L) {
     var url = 'https://wmts10.geo.admin.ch/1.0.0/ch.swisstopo.pixelkarte-farbe/default/current/3857/{z}/{x}/{y}.jpeg';
     var stopoAttr = 'Map data &copy; <a href="https://www.swisstopo.admin.ch/">swisstopo</a> , ';
@@ -48020,6 +48031,7 @@ root.defaults = {
   },
   disabledTitle: "Query for geo variables in WKT format to plot them on a map",
   defaultColor: "#2e6c97",
+  defaultOverlay: null,
   defaultMap: "osm" //or nlmaps
 };
 
