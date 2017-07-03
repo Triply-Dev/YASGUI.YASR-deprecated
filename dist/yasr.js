@@ -45310,7 +45310,7 @@ Wkt.Wkt.prototype.deconstruct = function (obj) {
     }
 
     // L.Circle ////////////////////////////////////////////////////////////////
-    if (obj.constructor === L.Rectangle || obj.constructor === L.rectangle) {
+    if (obj.constructor === L.Circle || obj.constructor === L.circle) {
         console.log('Deconstruction of L.Circle objects is not yet supported');
 
     } else {
@@ -45318,6 +45318,7 @@ Wkt.Wkt.prototype.deconstruct = function (obj) {
     }
 
 };
+
 },{}],152:[function(require,module,exports){
 /** @license
  *
@@ -46203,53 +46204,27 @@ Wkt.Wkt.prototype.deconstruct = function (obj) {
 
 },{}],153:[function(require,module,exports){
 module.exports={
-  "_args": [
-    [
-      {
-        "raw": "yasgui-utils@1.6.7",
-        "scope": null,
-        "escapedName": "yasgui-utils",
-        "name": "yasgui-utils",
-        "rawSpec": "1.6.7",
-        "spec": "1.6.7",
-        "type": "version"
-      },
-      "/home/lrd900/yasgui/yasr"
-    ]
-  ],
-  "_from": "yasgui-utils@1.6.7",
+  "_from": "yasgui-utils@https://registry.npmjs.org/yasgui-utils/-/yasgui-utils-1.6.7.tgz",
   "_id": "yasgui-utils@1.6.7",
-  "_inCache": true,
+  "_inBundle": false,
+  "_integrity": "sha1-K8/FoxVojeOuYFeIPZrjQrIF8mc=",
   "_location": "/yasgui-utils",
-  "_nodeVersion": "7.10.0",
-  "_npmOperationalInternal": {
-    "host": "s3://npm-registry-packages",
-    "tmp": "tmp/yasgui-utils-1.6.7.tgz_1495459781202_0.06725964159704745"
-  },
-  "_npmUser": {
-    "name": "laurens.rietveld",
-    "email": "laurens.rietveld@gmail.com"
-  },
-  "_npmVersion": "4.2.0",
   "_phantomChildren": {},
   "_requested": {
-    "raw": "yasgui-utils@1.6.7",
-    "scope": null,
-    "escapedName": "yasgui-utils",
+    "type": "remote",
+    "raw": "yasgui-utils@https://registry.npmjs.org/yasgui-utils/-/yasgui-utils-1.6.7.tgz",
     "name": "yasgui-utils",
-    "rawSpec": "1.6.7",
-    "spec": "1.6.7",
-    "type": "version"
+    "escapedName": "yasgui-utils",
+    "rawSpec": "https://registry.npmjs.org/yasgui-utils/-/yasgui-utils-1.6.7.tgz",
+    "saveSpec": "https://registry.npmjs.org/yasgui-utils/-/yasgui-utils-1.6.7.tgz",
+    "fetchSpec": "https://registry.npmjs.org/yasgui-utils/-/yasgui-utils-1.6.7.tgz"
   },
   "_requiredBy": [
-    "#USER",
     "/",
     "/yasgui-yasqe"
   ],
   "_resolved": "https://registry.npmjs.org/yasgui-utils/-/yasgui-utils-1.6.7.tgz",
-  "_shasum": "2bcfc5a315688de3ae6057883d9ae342b205f267",
-  "_shrinkwrap": null,
-  "_spec": "yasgui-utils@1.6.7",
+  "_spec": "yasgui-utils@https://registry.npmjs.org/yasgui-utils/-/yasgui-utils-1.6.7.tgz",
   "_where": "/home/lrd900/yasgui/yasr",
   "author": {
     "name": "Laurens Rietveld"
@@ -46257,17 +46232,12 @@ module.exports={
   "bugs": {
     "url": "https://github.com/YASGUI/Utils/issues"
   },
+  "bundleDependencies": false,
   "dependencies": {
     "store": "^2.0.4"
   },
+  "deprecated": false,
   "description": "Utils for YASGUI libs",
-  "devDependencies": {},
-  "directories": {},
-  "dist": {
-    "shasum": "2bcfc5a315688de3ae6057883d9ae342b205f267",
-    "tarball": "https://registry.npmjs.org/yasgui-utils/-/yasgui-utils-1.6.7.tgz"
-  },
-  "gitHead": "6031b1cb732d390b29cd5376dceb9a9d665bbd11",
   "homepage": "https://github.com/YASGUI/Utils",
   "licenses": [
     {
@@ -46278,18 +46248,16 @@ module.exports={
   "main": "src/main.js",
   "maintainers": [
     {
-      "name": "laurens.rietveld",
-      "email": "laurens.rietveld@gmail.com"
+      "name": "Laurens Rietveld",
+      "email": "laurens.rietveld@gmail.com",
+      "url": "http://laurensrietveld.nl"
     }
   ],
   "name": "yasgui-utils",
-  "optionalDependencies": {},
-  "readme": "ERROR: No README data found!",
   "repository": {
     "type": "git",
     "url": "git://github.com/YASGUI/Utils.git"
   },
-  "scripts": {},
   "version": "1.6.7"
 }
 
@@ -46438,7 +46406,7 @@ module.exports = {
 module.exports={
   "name": "yasgui-yasr",
   "description": "Yet Another SPARQL Resultset GUI",
-  "version": "2.11.6",
+  "version": "2.11.7",
   "main": "src/main.js",
   "license": "MIT",
   "author": "Laurens Rietveld",
@@ -46514,7 +46482,7 @@ module.exports={
     "datatables.net-dt": "^1.10.15",
     "jquery": "^2.2.4",
     "jquery-ui": "1.10.5",
-    "leaflet": "^1.0.1",
+    "leaflet": "1.0.3",
     "lodash": "^4.16.1",
     "pivottable": "^2.1.0",
     "proj4": "^2.4.3",
