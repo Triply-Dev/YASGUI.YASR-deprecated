@@ -1,27 +1,14 @@
 "use strict";
-var $ = require("jquery"), CodeMirror = require("codemirror");
-
-require("codemirror/addon/fold/foldcode.js");
-require("codemirror/addon/fold/foldgutter.js");
-require("codemirror/addon/fold/xml-fold.js");
-require("codemirror/addon/fold/brace-fold.js");
-
-require("codemirror/addon/edit/matchbrackets.js");
-require("codemirror/mode/xml/xml.js");
-require("codemirror/mode/javascript/javascript.js");
+var $ = require("jquery");
 var imgs = require("./imgs.js");
 var Color = require("color");
 var L = require("leaflet");
-require("proj4");
-require("proj4leaflet");
-//Ugly... need to set this global, as wicket-leaflet tries to access this global variable
-global.Wkt = require("wicket/wicket");
-require("wicket/wicket-leaflet");
+
+
 var root = (module.exports = function(yasr) {
   var plugin = {};
   var options = $.extend(true, {}, root.defaults);
   var defaultColor = Color(options.defaultColor);
-  var cm = null;
   var getOption = function(key) {
     // if (!options[key]) return {};
     if (options[key]) {
@@ -34,6 +21,12 @@ var root = (module.exports = function(yasr) {
       return undefined;
     }
   };
+  require("proj4");
+  require("proj4leaflet");
+
+  //Ugly... need to set this global, as wicket-leaflet tries to access this global variable
+  global.Wkt = require("wicket/wicket");
+  require("wicket/wicket-leaflet");
   var getSvgMarker = function(colors) {
     var fillColor2 = colors.fill.lighten(0.3);
     var borderColor2 = colors.border.lighten(0.3);
@@ -50,6 +43,7 @@ var root = (module.exports = function(yasr) {
     );
   };
   var draw = function() {
+
     var zoomToEl = function(e) {
       map.setView(e.latlng, 15);
     };
