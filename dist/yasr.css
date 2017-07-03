@@ -779,8 +779,8 @@
   .yasr .leaflet-marker-icon,
   .yasr .leaflet-marker-shadow,
   .yasr .leaflet-tile-container,
-  .yasr .leaflet-map-pane svg,
-  .yasr .leaflet-map-pane canvas,
+  .yasr .leaflet-pane > svg,
+  .yasr .leaflet-pane > canvas,
   .yasr .leaflet-zoom-box,
   .yasr .leaflet-image-layer,
   .yasr .leaflet-layer {
@@ -806,6 +806,7 @@
     display: block; }
   .yasr .leaflet-container .leaflet-overlay-pane svg,
   .yasr .leaflet-container .leaflet-marker-pane img,
+  .yasr .leaflet-container .leaflet-shadow-pane img,
   .yasr .leaflet-container .leaflet-tile-pane img,
   .yasr .leaflet-container img.leaflet-image-layer {
     max-width: none !important; }
@@ -813,7 +814,7 @@
     touch-action: pan-x pan-y; }
   .yasr .leaflet-container.leaflet-touch-drag {
     -ms-touch-action: pinch-zoom; }
-  .yasr .leaflet-container.leaflet-touch-drag.leaflet-touch-drag {
+  .yasr .leaflet-container.leaflet-touch-drag.leaflet-touch-zoom {
     touch-action: none; }
   .yasr .leaflet-tile {
     -webkit-filter: inherit;
