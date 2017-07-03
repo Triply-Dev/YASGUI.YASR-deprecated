@@ -1,8 +1,8 @@
 "use strict";
 var $ = require("jquery");
-var imgs = require("./imgs.js");
+
 var Color = require("color");
-var L = require("leaflet");
+
 
 
 var root = (module.exports = function(yasr) {
@@ -21,12 +21,8 @@ var root = (module.exports = function(yasr) {
       return undefined;
     }
   };
-  require("proj4");
-  require("proj4leaflet");
 
-  //Ugly... need to set this global, as wicket-leaflet tries to access this global variable
-  global.Wkt = require("wicket/wicket");
-  require("wicket/wicket-leaflet");
+
   var getSvgMarker = function(colors) {
     var fillColor2 = colors.fill.lighten(0.3);
     var borderColor2 = colors.border.lighten(0.3);
@@ -43,7 +39,12 @@ var root = (module.exports = function(yasr) {
     );
   };
   var draw = function() {
-
+    var _L = options.L;
+    require("proj4");
+    require("proj4leaflet");
+    //Ugly... need to set this global, as wicket-leaflet tries to access this global variable
+    global.Wkt = require("wicket/wicket");
+    require("wicket/wicket-leaflet");
     var zoomToEl = function(e) {
       map.setView(e.latlng, 15);
     };
@@ -53,7 +54,7 @@ var root = (module.exports = function(yasr) {
     var mapWrapper = $('<div class="leaflet"/>').appendTo(yasr.resultsContainer);
     var mapConstructor = options.map;
     if (!mapConstructor) mapConstructor = options.maps[options.defaultMap || "osm"];
-    var map = new L.Map(mapWrapper.get()[0], mapConstructor(yasr, L));
+    var map = new _L.Map(mapWrapper.get()[0], mapConstructor(yasr, L));
     var features = [];
     var bindings = yasr.results.getBindings();
     var hasLabel = false;
@@ -74,7 +75,7 @@ var root = (module.exports = function(yasr) {
         };
         colors.border = colors.fill.saturate(0.2);
         var wicket = new Wkt.Wkt();
-        var mySVGIcon = L.divIcon({
+        var mySVGIcon = _L.divIcon({
           iconSize: [25, 41],
           // shadowSize: [25, 45],
           iconAnchor: [12, 41],
@@ -105,7 +106,7 @@ var root = (module.exports = function(yasr) {
           if (markerPos) {
             var shouldDrawSeparateMarker = !!feature.getBounds; //a lat/lng is already a marker
             if (shouldDrawSeparateMarker) {
-              addPopupAndEventsToMarker(L.marker(markerPos, { icon: mySVGIcon }).addTo(map));
+              addPopupAndEventsToMarker(_L.marker(markerPos, { icon: mySVGIcon }).addTo(map));
             } else {
               addPopupAndEventsToMarker(feature);
             }
@@ -115,8 +116,15 @@ var root = (module.exports = function(yasr) {
       }
     }
     if (features.length) {
-      var group = new L.featureGroup(features).addTo(map);
-      map.fitBounds(group.getBounds());
+      try {
+        var group = new _L.featureGroup(features).addTo(map);
+        map.fitBounds(group.getBounds());
+      } catch(e) {
+        //This is a strange issue. Depending on which leaflet instance was used (i.e. the window.L one, or the required one)
+	//we might run into issues where the returned bounds are undefined...
+	//solved it by simply preferring the global instance (though this can be turned off)
+        throw e;
+      }
     }
 
     // missingPopupMsg: function(yasr, L, geoVariables, bindings) {
@@ -219,6 +227,7 @@ var maps = {
 };
 root.defaults = {
   maps: maps,
+  L: window.L || require('leaflet'),
   formatPopup: function(yasr, L, forVariable, bindings) {
     if (bindings[forVariable + "Label"] && bindings[forVariable + "Label"].value) {
       return bindings[forVariable + "Label"].value;
@@ -239,5 +248,5 @@ root.defaults = {
 };
 
 root.version = {
-  leaflet: L.version
+  leaflet: root.defaults.L.version
 };
