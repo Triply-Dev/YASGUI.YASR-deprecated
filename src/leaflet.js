@@ -21,6 +21,8 @@ var root = (module.exports = function(yasr) {
   var plugin = {};
   var options = $.extend(true, {}, root.defaults);
   var defaultColor = Color(options.defaultColor);
+  var defaultStyle = options.defaultStyle;
+
   var cm = null;
   var getOption = function(key) {
     // if (!options[key]) return {};
@@ -73,17 +75,19 @@ var root = (module.exports = function(yasr) {
 
       for (var i = 0; i < bindings.length; i++) {
         var binding = bindings[i];
-
         if (!binding[plotVariable].value) continue;
+
         var getColor = function() {
           var colorBinding = binding[plotVariable + "Color"];
           if (colorBinding) return Color(colorBinding.value);
           return defaultColor;
         };
+
         var colors = {
           fill: getColor()
         };
         colors.border = colors.fill.saturate(0.2);
+
         var wicket = new Wkt.Wkt();
         var mySVGIcon = L.divIcon({
           iconSize: [25, 41],
@@ -92,7 +96,10 @@ var root = (module.exports = function(yasr) {
           popupAnchor: [0, -41],
           html: getSvgMarker(colors)
         });
-        var feature = wicket.read(binding[plotVariable].value).toObject({ icon: mySVGIcon, color: colors.fill });
+
+
+        var style = $.extend(true, defaultStyle, { icon: mySVGIcon, color: colors.fill})
+        var feature = wicket.read(binding[plotVariable].value).toObject(style);
 
         var popupContent = options.formatPopup && options.formatPopup(yasr, L, plotVariable, binding);
         if (popupContent) {
@@ -259,6 +266,7 @@ root.defaults = {
   },
   disabledTitle: "Query for geo variables in WKT format to plot them on a map",
   defaultColor: "#2e6c97",
+  defaultStyle: {},
   defaultOverlay: null,
   defaultMap: "osm" //or nlmaps
 };
