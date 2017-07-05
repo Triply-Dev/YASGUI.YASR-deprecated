@@ -8,7 +8,7 @@ sass = require("gulp-sass"), autoprefixer = require("gulp-autoprefixer"), cssImp
   "gulp-cssimport"
 ), rename = require("gulp-rename"), notify = require("gulp-notify"), minifyCSS = require("gulp-clean-css");
 
-gulp.task("makeCss", ["copyCssDeps"], function() {
+gulp.task("makeCss", ["copyCssDeps", "copyCssImages"], function() {
   return gulp
     .src(paths.style)
     .pipe(cssImport()) //needed, because css files are not -actually- imported by sass, but remain as css statement...
@@ -61,4 +61,8 @@ gulp.task("copyCssDeps", function() {
       })
     )
     .pipe(gulp.dest("./src/scss/cssIncludes"));
+});
+gulp.task('copyCssImages', function() {
+   gulp.src('./node_modules/leaflet/dist/images/*.png')
+   .pipe(gulp.dest(paths.bundleDir+'/images'));
 });
