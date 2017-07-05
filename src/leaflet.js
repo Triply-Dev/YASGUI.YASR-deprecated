@@ -58,7 +58,10 @@ var root = (module.exports = function(yasr) {
     var mapWrapper = $('<div class="leaflet"/>').appendTo(yasr.resultsContainer);
     var mapConstructor = options.map;
     if (!mapConstructor) mapConstructor = options.maps[options.defaultMap || "osm"];
-
+    if (!mapConstructor) {
+      console.error('Could not find leaflet configuration for map ' + options.defaultMap);
+      return;
+    }
     var map = new L.Map(mapWrapper.get()[0], mapConstructor(yasr, L));
 
     var mapLayers = options.defaultOverlay;
