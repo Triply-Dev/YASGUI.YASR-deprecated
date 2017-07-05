@@ -85298,7 +85298,7 @@ module.exports = {
 module.exports={
   "name": "yasgui-yasr",
   "description": "Yet Another SPARQL Resultset GUI",
-  "version": "2.11.8",
+  "version": "2.11.9",
   "main": "src/main.js",
   "license": "MIT",
   "author": "Laurens Rietveld",
@@ -86396,10 +86396,10 @@ var root = (module.exports = function(yasr) {
       console.error('Could not find leaflet configuration for map ' + options.defaultMap);
       return;
     }
-    var map = new L.Map(mapWrapper.get()[0], mapConstructor(yasr, L));
+    var map = new _L.Map(mapWrapper.get()[0], mapConstructor(yasr, L));
 
     var mapLayers = options.defaultOverlay;
-    if(mapLayers) L.control.layers(null, mapLayers).addTo(map);
+    if(mapLayers) _L.control.layers(null, mapLayers).addTo(map);
 
 
     var features = [];
