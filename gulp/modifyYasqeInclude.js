@@ -26,8 +26,8 @@ gulp.task("modifyYasqeInclude", function() {
     .pipe(
       htmlreplace(
         {
-          js: "//cdn.jsdelivr.net/yasqe/" + version + "/yasqe.bundled.min.js",
-          css: "//cdn.jsdelivr.net/yasqe/" + version + "/yasqe.min.css"
+          js: "//cdn.jsdelivr.net/npm/yasqe/" + version + "/yasqe.bundled.min.js",
+          css: "//cdn.jsdelivr.net/npm/yasqe/" + version + "/yasqe.min.css"
         },
         { keepBlockTags: true }
       )
