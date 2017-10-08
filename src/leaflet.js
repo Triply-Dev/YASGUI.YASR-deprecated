@@ -104,7 +104,13 @@ var root = (module.exports = function(yasr) {
 
 
         var style = $.extend({}, defaultStyle, { icon: mySVGIcon, color: Colors.fill.toString()})
-        var feature = wicket.read(binding[plotVariable].value).toObject(style);
+        var feature;
+        try {
+          feature = wicket.read(binding[plotVariable].value).toObject(style);
+        } catch(e) {
+          console.error('Failed to read WKT value: ' + binding[plotVariable].value)
+          continue;
+        }
 
         var popupContent = options.formatPopup && options.formatPopup(yasr, L, plotVariable, binding);
         if (popupContent) {
