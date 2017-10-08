@@ -1,14 +1,14 @@
 "use strict";
 var $ = require("jquery");
 
-var Color = require("color");
+var LibColor = require("color");
 
 
 
 var root = (module.exports = function(yasr) {
   var plugin = {};
   var options = $.extend(true, {}, root.defaults);
-  var defaultColor = Color(options.defaultColor);
+  var defaultColor = LibColor(options.defaultColor);
   var defaultStyle = options.defaultStyle;
 
   var cm = null;
@@ -27,16 +27,16 @@ var root = (module.exports = function(yasr) {
   };
 
 
-  var getSvgMarker = function(colors) {
-    var fillColor2 = colors.fill.lighten(0.3);
-    var borderColor2 = colors.border.lighten(0.3);
+  var getSvgMarker = function(Colors) {
+    var fillColor2 = Colors.fill.lighten(0.3).toString();
+    var borderColor2 = Colors.border.lighten(0.3).toString();
     return (
       '<svg xmlns="http://www.w3.org/2000/svg" width="25" height="40"><defs><linearGradient id="c"><stop offset="0" stop-color="' +
-      colors.fill +
+      Colors.fill.toString() +
       '"/><stop offset="1" stop-color="' +
       fillColor2 +
       '"/></linearGradient><linearGradient id="d"><stop offset="0" stop-color="' +
-      colors.border +
+      Colors.border.toString() +
       '"/><stop offset="1" stop-color="' +
       borderColor2 +
       '"/></linearGradient><linearGradient xlink:href="#a" x1="351.1" y1="551.6" x2="351.1" y2="512.9" gradientUnits="userSpaceOnUse" gradientTransform="translate(-2.715)"/><linearGradient xlink:href="#a" x1="318.6" y1="550.1" x2="318.6" y2="512.4" gradientUnits="userSpaceOnUse" gradientTransform="translate(94.732,2.054)"/><linearGradient xlink:href="#a" gradientUnits="userSpaceOnUse" gradientTransform="matrix(-1,0,0,1,731.268,2.054)" x1="318.6" y1="550.1" x2="318.6" y2="512.4"/><linearGradient xlink:href="#a" gradientUnits="userSpaceOnUse" gradientTransform="translate(94.232,2.054)" x1="318.6" y1="550.1" x2="318.6" y2="512.4"/><linearGradient xlink:href="#a" gradientUnits="userSpaceOnUse" gradientTransform="translate(-28.58,-0.437)" x1="445.3" y1="541.3" x2="445.3" y2="503.7"/><linearGradient xlink:href="#b" gradientUnits="userSpaceOnUse" gradientTransform="translate(63,-0.438)" x1="351.7" y1="522.8" x2="351.7" y2="503.7"/><linearGradient xlink:href="#a" gradientUnits="userSpaceOnUse" gradientTransform="translate(-28.58,-0.437)" x1="445.3" y1="541.3" x2="445.3" y2="503.7"/><linearGradient xlink:href="#b" gradientUnits="userSpaceOnUse" gradientTransform="translate(63,-0.438)" x1="351.7" y1="522.8" x2="351.7" y2="503.7"/><linearGradient xlink:href="#a" gradientUnits="userSpaceOnUse" gradientTransform="translate(-28.58,-0.437)" x1="445.3" y1="541.3" x2="445.3" y2="503.7"/><linearGradient xlink:href="#b" gradientUnits="userSpaceOnUse" gradientTransform="translate(63,-0.438)" x1="351.7" y1="522.8" x2="351.7" y2="503.7"/><linearGradient xlink:href="#a" gradientUnits="userSpaceOnUse" gradientTransform="translate(-432.796,-503.349)" x1="445.3" y1="541.3" x2="445.3" y2="503.7"/><linearGradient xlink:href="#b" gradientUnits="userSpaceOnUse" gradientTransform="translate(-341.216,-503.35)" x1="351.7" y1="522.8" x2="351.7" y2="503.7"/><linearGradient xlink:href="#a" gradientUnits="userSpaceOnUse" gradientTransform="translate(-28.846,-0.287)" x1="445.3" y1="541.3" x2="445.3" y2="503.7"/><linearGradient xlink:href="#b" gradientUnits="userSpaceOnUse" gradientTransform="translate(62.734,-0.288)" x1="351.7" y1="522.8" x2="351.7" y2="503.7"/></defs><rect y="4.5" x="6.3" height="14.5" width="12.6" fill="#fff"/><path d="M12.6 0.6C6 0.6 0.6 6.2 0.6 12.4c0 2.8 1.6 6.3 2.7 8.7l9.3 17.9 9.3-17.9c1.1-2.4 2.7-5.8 2.7-8.7 0-6.2-5.4-11.9-12-11.9zm0 7.2c2.6 0 4.7 2.1 4.7 4.7 0 2.6-2.1 4.7-4.7 4.7-2.6 0-4.7-2.1-4.7-4.7 0-2.6 2.1-4.7 4.7-4.7z" style="fill:url(#c);stroke:url(#d)"/><path d="m12.6 1.7c-5.9 0-10.9 5.2-10.9 10.8 0 2.4 1.4 5.8 2.6 8.3l0 0 8.3 16 8.3-16 0 0c1.1-2.4 2.6-5.7 2.6-8.2 0-5.5-4.9-10.7-10.9-10.7zm0 5c3.2 0 5.8 2.6 5.8 5.8 0 3.2-2.6 5.8-5.8 5.8-3.2 0-5.7-2.6-5.7-5.8 0-3.2 2.6-5.8 5.8-5.8z" style="fill:none;stroke-opacity:0.1;stroke:#fff"/></svg>'
@@ -80,26 +80,24 @@ var root = (module.exports = function(yasr) {
 
         var getColor = function() {
           var colorBinding = binding[plotVariable + "Color"];
-          if (colorBinding) return Color(colorBinding.value);
+          if (colorBinding) return LibColor(colorBinding.value);
           return defaultColor;
         };
-
-        var colors = {
+        var Colors = {
           fill: getColor()
         };
-        colors.border = colors.fill.saturate(0.2);
-
+        Colors.border = Colors.fill.saturate(0.2);
         var wicket = new Wkt.Wkt();
         var mySVGIcon = _L.divIcon({
           iconSize: [25, 41],
           // shadowSize: [25, 45],
           iconAnchor: [12, 41],
           popupAnchor: [0, -41],
-          html: getSvgMarker(colors)
+          html: getSvgMarker(Colors)
         });
 
 
-        var style = $.extend(true, defaultStyle, { icon: mySVGIcon, color: colors.fill})
+        var style = $.extend({}, defaultStyle, { icon: mySVGIcon, color: Colors.fill.toString()})
         var feature = wicket.read(binding[plotVariable].value).toObject(style);
 
         var popupContent = options.formatPopup && options.formatPopup(yasr, L, plotVariable, binding);
@@ -139,8 +137,8 @@ var root = (module.exports = function(yasr) {
         map.fitBounds(group.getBounds());
       } catch(e) {
         //This is a strange issue. Depending on which leaflet instance was used (i.e. the window.L one, or the required one)
-	//we might run into issues where the returned bounds are undefined...
-	//solved it by simply preferring the global instance (though this can be turned off)
+      	//we might run into issues where the returned bounds are undefined...
+      	//solved it by simply preferring the global instance (though this can be turned off)
         throw e;
       }
     }
