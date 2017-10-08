@@ -4,7 +4,11 @@ var $ = require("jquery");
 var LibColor = require("color");
 
 
-
+function getWicket() {
+  if (!global.Wkt) global.Wkt = require("wicket/wicket");
+  require("wicket/wicket-leaflet");
+  return new Wkt.Wkt();
+}
 var root = (module.exports = function(yasr) {
   var plugin = {};
   var options = $.extend(true, {}, root.defaults);
@@ -48,8 +52,7 @@ var root = (module.exports = function(yasr) {
     require("proj4");
     require("proj4leaflet");
     //Ugly... need to set this global, as wicket-leaflet tries to access this global variable
-    global.Wkt = require("wicket/wicket");
-    require("wicket/wicket-leaflet");
+
     var zoomToEl = function(e) {
       map.setView(e.latlng, 15);
     };
@@ -93,7 +96,7 @@ var root = (module.exports = function(yasr) {
           fill: getColor()
         };
         Colors.border = Colors.fill.saturate(0.2);
-        var wicket = new Wkt.Wkt();
+        var wicket = getWicket();
         var mySVGIcon = _L.divIcon({
           iconSize: [25, 41],
           // shadowSize: [25, 45],
@@ -172,6 +175,12 @@ var root = (module.exports = function(yasr) {
     val = val.trim().toUpperCase();
     for (var i = 0; i < geoKeywords.length; i++) {
       if (val.indexOf(geoKeywords[i]) === 0) {
+        try {
+          getWicket().read(val)
+        } catch(e) {
+          console.error('Failed to parse WKT value ' + val)
+          continue;
+        }
         return true;
       }
     }
