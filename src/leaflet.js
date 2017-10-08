@@ -84,11 +84,13 @@ var root = (module.exports = function(yasr) {
 
         var getColor = function() {
           var colorBinding = binding[plotVariable + "Color"];
-          try {
-            return LibColor(colorBinding.value);
-          } catch(e) {
-            //invalid color representation
-            return LibColor('grey')
+          if (colorBinding) {
+            try {
+              return LibColor(colorBinding.value);
+            } catch(e) {
+              //invalid color representation
+              return LibColor('grey')
+            }
           }
           return defaultColor;
         };
@@ -281,8 +283,14 @@ root.defaults = {
   maps: maps,
   L: window.L || require('leaflet'),
   formatPopup: function(yasr, L, forVariable, bindings) {
-    if (bindings[forVariable + "Label"] && bindings[forVariable + "Label"].value) {
-      return bindings[forVariable + "Label"].value;
+    var binding = bindings[forVariable+"Label"];
+    if (binding && binding.value) {
+      if (binding.type === 'uri') {
+        //format as link
+        return '<a href="' + binding.value + '" target="_blank">' + binding.value + '</a>'
+      } else {
+        return binding.value;
+      }
     }
   },
   missingPopupMsg: function(yasr, L, geoVariables) {
