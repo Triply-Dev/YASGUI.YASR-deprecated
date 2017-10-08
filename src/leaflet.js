@@ -3,7 +3,8 @@ var $ = require("jquery");
 
 var LibColor = require("color");
 
-
+var colormap = require('colormap');
+var colorScales = require('colormap/colorScale')
 function getWicket() {
   if (!global.Wkt) global.Wkt = require("wicket/wicket");
   require("wicket/wicket-leaflet");
@@ -89,8 +90,19 @@ var root = (module.exports = function(yasr) {
         var getColor = function() {
           var colorBinding = binding[plotVariable + "Color"];
           if (colorBinding) {
+            var colorVal = colorBinding.value;
+            var scaleSettings = colorVal.split(',');
+            if (scaleSettings.length === 2 && colorScales[scaleSettings[0]] && scaleSettings[1]) {
+              var scaleType = scaleSettings[0];
+              var scaleVal = +scaleSettings[1];
+              if (scaleVal >= 0 && scaleVal <= 1) {
+                var scalesForType = colormap(scaleType);
+                const index = Math.max(Math.round(scaleVal * scalesForType.length) -1, 0);
+                return LibColor(scalesForType[index]);
+              }
+            }
             try {
-              return LibColor(colorBinding.value);
+              return LibColor(colorVal);
             } catch(e) {
               //invalid color representation
               return LibColor('grey')
