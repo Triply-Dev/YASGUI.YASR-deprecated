@@ -81,7 +81,12 @@ var root = (module.exports = function(yasr) {
 
         var getColor = function() {
           var colorBinding = binding[plotVariable + "Color"];
-          if (colorBinding) return LibColor(colorBinding.value);
+          try {
+            return LibColor(colorBinding.value);
+          } catch(e) {
+            //invalid color representation
+            return LibColor('grey')
+          }
           return defaultColor;
         };
         var Colors = {
