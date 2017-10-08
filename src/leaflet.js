@@ -71,7 +71,11 @@ var root = (module.exports = function(yasr) {
     var mapLayers = options.defaultOverlay;
     if(mapLayers) _L.control.layers(null, mapLayers).addTo(map);
 
-
+    if (options.clickBeforeInteract) {
+      map.scrollWheelZoom.disable();
+      map.on('focus',  function() { map.scrollWheelZoom.enable(); });
+      map.on('blur',  function() { map.scrollWheelZoom.disable(); });
+    }
     var features = [];
     var bindings = yasr.results.getBindings();
     var hasLabel = false;
@@ -304,6 +308,7 @@ root.defaults = {
   },
   disabledTitle: "Query for geo variables in WKT format to plot them on a map",
   defaultColor: "#2e6c97",
+  clickBeforeInteract: false,
   defaultStyle: {},
   defaultOverlay: null,
   defaultMap: "osm" //or nlmaps
