@@ -34,7 +34,7 @@ var root = (module.exports = function(yasr) {
   var getSvgMarker = function(Colors) {
     var fillColor2 = Colors.fill.lighten(0.3).toString();
     var borderColor2 = Colors.border.lighten(0.3).toString();
-    const fillId=''+Math.random();
+    var fillId=''+Math.random();
     return (
       '<svg xmlns="http://www.w3.org/2000/svg" width="25" height="40"><defs><linearGradient id="' + fillId + 'c"><stop offset="0" stop-color="' +
       Colors.fill.toString() +
@@ -225,9 +225,11 @@ var root = (module.exports = function(yasr) {
 
 var maps = {
   osm: function(yasr, L) {
+    //use protocol relative req when served via http. Otherwise, just use http:// (e.g. when yasr is served via file://)
+    var protocol = window.location.protocol.indexOf("http") === 0 ? "//" : "http://";
     return {
       layers: [
-        new L.tileLayer("http://{s}.tile.osm.org/{z}/{x}/{y}.png", {
+        new L.tileLayer(protocol + "{s}.tile.osm.org/{z}/{x}/{y}.png", {
           attribution: '&copy; <a href="http://osm.org/copyright">OpenStreetMap</a> contributors'
         })
       ]
