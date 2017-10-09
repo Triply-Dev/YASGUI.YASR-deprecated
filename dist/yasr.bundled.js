@@ -85545,7 +85545,7 @@ module.exports = {
 module.exports={
   "name": "yasgui-yasr",
   "description": "Yet Another SPARQL Resultset GUI",
-  "version": "2.12.0",
+  "version": "2.12.1",
   "main": "src/main.js",
   "license": "MIT",
   "author": "Laurens Rietveld",
@@ -88281,13 +88281,13 @@ var root = module.exports = function(yasr) {
       },
       filename: "queryResults" + (type ? "." + type : ""),
       contentType: contentType ? contentType : "text/plain",
-      buttonTitle: "Download raw response"
+      buttonTitle: "Download response"
     };
   };
 
   return {
     draw: draw,
-    name: "Raw Response",
+    name: "Response",
     canHandleResults: canHandleResults,
     getPriority: 2,
     getDownloadInfo: getDownloadInfo
