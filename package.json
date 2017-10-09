@@ -55,7 +55,8 @@
     "build": "gulp",
     "patch": "gulp patch",
     "minor": "gulp minor",
-    "major": "gulp major"
+    "major": "gulp major",
+    "update-interactive": "npm-check --skip-unused -u"
   },
   "maintainers": [
     {
@@ -80,6 +81,7 @@
     "jquery-ui": "1.10.5",
     "leaflet": "1.0.3",
     "lodash": "^4.16.1",
+    "npm-check": "^5.4.5",
     "pivottable": "^2.1.0",
     "proj4": "^2.4.3",
     "proj4leaflet": "^1.0.1",
