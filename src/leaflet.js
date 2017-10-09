@@ -97,7 +97,7 @@ var root = (module.exports = function(yasr) {
               var scaleVal = +scaleSettings[1];
               if (scaleVal >= 0 && scaleVal <= 1) {
                 var scalesForType = colormap(scaleType);
-                const index = Math.max(Math.round(scaleVal * scalesForType.length) -1, 0);
+                var index = Math.max(Math.round(scaleVal * scalesForType.length) -1, 0);
                 return LibColor(scalesForType[index]);
               }
             }
