@@ -58,13 +58,13 @@ var root = module.exports = function(yasr) {
       },
       filename: "queryResults" + (type ? "." + type : ""),
       contentType: contentType ? contentType : "text/plain",
-      buttonTitle: "Download raw response"
+      buttonTitle: "Download response"
     };
   };
 
   return {
     draw: draw,
-    name: "Raw Response",
+    name: "Response",
     canHandleResults: canHandleResults,
     getPriority: 2,
     getDownloadInfo: getDownloadInfo
