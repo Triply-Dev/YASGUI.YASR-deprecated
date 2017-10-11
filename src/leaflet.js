@@ -247,7 +247,7 @@ var maps = {
     var protocol = window.location.protocol.indexOf("http") === 0 ? "//" : "http://";
     return {
       layers: [
-        new L.tileLayer(protocol + "{s}.tile.osm.org/{z}/{x}/{y}.png", {
+        new L.tileLayer(protocol + "tile.openstreetmap.org/{z}/{x}/{y}.png", {
           attribution: '&copy; <a href="http://osm.org/copyright">OpenStreetMap</a> contributors'
         })
       ]
