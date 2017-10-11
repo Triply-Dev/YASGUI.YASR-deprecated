@@ -46653,7 +46653,7 @@ module.exports = {
 module.exports={
   "name": "yasgui-yasr",
   "description": "Yet Another SPARQL Resultset GUI",
-  "version": "2.12.1",
+  "version": "2.12.2",
   "main": "src/main.js",
   "license": "MIT",
   "author": "Laurens Rietveld",
@@ -46707,7 +46707,8 @@ module.exports={
     "build": "gulp",
     "patch": "gulp patch",
     "minor": "gulp minor",
-    "major": "gulp major"
+    "major": "gulp major",
+    "update-interactive": "npm-check --skip-unused -u"
   },
   "maintainers": [
     {
@@ -46732,6 +46733,7 @@ module.exports={
     "jquery-ui": "1.10.5",
     "leaflet": "1.0.3",
     "lodash": "^4.16.1",
+    "npm-check": "^5.4.5",
     "pivottable": "^2.1.0",
     "proj4": "^2.4.3",
     "proj4leaflet": "^1.0.1",
@@ -47937,7 +47939,7 @@ var maps = {
     var protocol = window.location.protocol.indexOf("http") === 0 ? "//" : "http://";
     return {
       layers: [
-        new L.tileLayer(protocol + "{s}.tile.osm.org/{z}/{x}/{y}.png", {
+        new L.tileLayer(protocol + "tile.openstreetmap.org/{z}/{x}/{y}.png", {
           attribution: '&copy; <a href="http://osm.org/copyright">OpenStreetMap</a> contributors'
         })
       ]
