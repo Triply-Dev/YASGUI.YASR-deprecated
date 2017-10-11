@@ -94,10 +94,13 @@ var root = (module.exports = function(yasr) {
             var scaleSettings = colorVal.split(',');
             if (scaleSettings.length === 2 && colorScales[scaleSettings[0]] && scaleSettings[1]) {
               var scaleType = scaleSettings[0];
+              console.log(scaleType)
               var scaleVal = +scaleSettings[1];
+              // console.log({scaleVal})
               if (scaleVal >= 0 && scaleVal <= 1) {
-                var scalesForType = colormap(scaleType);
+                var scalesForType = colormap({colormap: scaleType});
                 var index = Math.max(Math.round(scaleVal * scalesForType.length) -1, 0);
+                // console.log(index)
                 return LibColor(scalesForType[index]);
               }
             }
