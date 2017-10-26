@@ -46653,7 +46653,7 @@ module.exports = {
 module.exports={
   "name": "yasgui-yasr",
   "description": "Yet Another SPARQL Resultset GUI",
-  "version": "2.12.3",
+  "version": "2.12.4",
   "main": "src/main.js",
   "license": "MIT",
   "author": "Laurens Rietveld",
@@ -47786,13 +47786,10 @@ var root = (module.exports = function(yasr) {
             var scaleSettings = colorVal.split(',');
             if (scaleSettings.length === 2 && colorScales[scaleSettings[0]] && scaleSettings[1]) {
               var scaleType = scaleSettings[0];
-              console.log(scaleType)
               var scaleVal = +scaleSettings[1];
-              // console.log({scaleVal})
               if (scaleVal >= 0 && scaleVal <= 1) {
                 var scalesForType = colormap({colormap: scaleType});
                 var index = Math.max(Math.round(scaleVal * scalesForType.length) -1, 0);
-                // console.log(index)
                 return LibColor(scalesForType[index]);
               }
             }
