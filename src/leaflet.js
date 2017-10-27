@@ -6,7 +6,7 @@ var LibColor = require("color");
 var colormap = require('colormap');
 var colorScales = require('colormap/colorScale')
 function getWicket() {
-  if (!global.Wkt) global.Wkt = require("wicket/wicket");
+  global.Wkt = require("wicket/wicket");
   require("wicket/wicket-leaflet");
   return new Wkt.Wkt();
 }
@@ -85,7 +85,7 @@ var root = (module.exports = function(yasr) {
 
       for (var i = 0; i < bindings.length; i++) {
         var binding = bindings[i];
-        if (!binding[plotVariable].value) continue;
+        if (! binding[plotVariable] || !binding[plotVariable].value) continue;
 
         var getColor = function() {
           var colorBinding = binding[plotVariable + "Color"];
@@ -297,7 +297,7 @@ var maps = {
 };
 root.defaults = {
   maps: maps,
-  L: window.L || require('leaflet'),
+  L: require('leaflet'),
   formatPopup: function(yasr, L, forVariable, bindings) {
     var binding = bindings[forVariable+"Label"];
     if (binding && binding.value) {
