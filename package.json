@@ -73,6 +73,7 @@
     "browserify-shim": "^3.8.12",
     "codemirror": "^5.17.0",
     "color": "^1.0.3",
+    "colorbrewer": "^1.0.0",
     "colormap": "^2.3.0",
     "d3": "^4.1.1",
     "datatables.net": "^1.10.15",
@@ -84,7 +85,7 @@
     "lodash": "^4.16.1",
     "npm-check": "^5.4.5",
     "pivottable": "^2.1.0",
-    "wicket": "https://github.com/arthur-e/Wicket.git",
+    "wicket": "git+https://github.com/arthur-e/Wicket.git#4c85030c80a2b7737b0a21758bbcf41dd976facc",
     "yasgui-utils": "^1.6.7"
   },
   "browserify-shim": {
