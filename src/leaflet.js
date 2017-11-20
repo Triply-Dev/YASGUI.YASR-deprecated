@@ -4,11 +4,38 @@ var $ = require("jquery");
 var LibColor = require("color");
 
 var colormap = require('colormap');
-var colorScales = require('colormap/colorScale')
+var _colorbrewer = require('colorbrewer')
+var colorbrewer = {};
+//postprocess colorbrower so we store the identifiers case insensitive.
+//also make sure to only add 1 map per identifier (it has several maps, each with varying specificity)
+for (var color in _colorbrewer) {
+  var mostSpecificScale = [];
+  $.each(_colorbrewer[color], function(i, scale) {
+    if (scale.length > mostSpecificScale.length) mostSpecificScale = scale;
+  })
+  colorbrewer[color.toLowerCase()] = mostSpecificScale
+}
+
+var colorScales = require('colormap/colorScale');
 function getWicket() {
   global.Wkt = require("wicket/wicket");
   require("wicket/wicket-leaflet");
   return new Wkt.Wkt();
+}
+function getHexFromScale(scaleType, scaleVal) {
+  if (scaleVal > 1 || scaleVal < 0) return;
+  if (!scaleType.length) return
+  var hexScale;
+  if (colorbrewer[scaleType.toLowerCase()]) {
+    //colorbrewer: http://colorbrewer2.org/#type=sequential&scheme=BuGn&n=3
+    hexScale = colorbrewer[scaleType.toLowerCase()];
+  } else if (colorScales[scaleType]) {
+    //colormap: https://github.com/bpostlethwaite/colormap
+    hexScale = colormap({colormap: scaleType});
+  }
+  if (!hexScale || !hexScale.length) return;
+  var index = Math.max(Math.round(scaleVal * hexScale.length) -1, 0);
+  return hexScale[index];
 }
 var root = (module.exports = function(yasr) {
   var plugin = {};
@@ -89,14 +116,11 @@ var root = (module.exports = function(yasr) {
           if (colorBinding) {
             var colorVal = colorBinding.value;
             var scaleSettings = colorVal.split(',');
-            if (scaleSettings.length === 2 && colorScales[scaleSettings[0]] && scaleSettings[1]) {
-              var scaleType = scaleSettings[0];
-              var scaleVal = +scaleSettings[1];
-              if (scaleVal >= 0 && scaleVal <= 1) {
-                var scalesForType = colormap({colormap: scaleType});
-                var index = Math.max(Math.round(scaleVal * scalesForType.length) -1, 0);
-                return LibColor(scalesForType[index]);
-              }
+
+
+            if (scaleSettings.length === 2) {
+              var colorFromScale = getHexFromScale(scaleSettings[0].trim(),scaleSettings[1].trim())
+              if (colorFromScale) colorVal = colorFromScale;
             }
             try {
               return LibColor(colorVal);
