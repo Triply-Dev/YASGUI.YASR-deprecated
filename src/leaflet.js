@@ -264,11 +264,9 @@ var root = (module.exports = function(yasr) {
 
 var maps = {
   osm: function(yasr, L) {
-    //use protocol relative req when served via http. Otherwise, just use http:// (e.g. when yasr is served via file://)
-    var protocol = window.location.protocol.indexOf("http") === 0 ? "//" : "http://";
     return {
       layers: [
-        new L.tileLayer(protocol + "tile.openstreetmap.org/{z}/{x}/{y}.png", {
+        new L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
           attribution: '&copy; <a href="http://osm.org/copyright">OpenStreetMap</a> contributors'
         })
       ]
