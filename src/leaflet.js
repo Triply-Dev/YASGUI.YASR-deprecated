@@ -50,9 +50,6 @@ var root = (module.exports = function(yasr) {
   };
   var draw = function() {
     var _L = options.L;
-    require("proj4");
-    require("proj4leaflet");
-    //Ugly... need to set this global, as wicket-leaflet tries to access this global variable
 
     var zoomToEl = function(e) {
       map.setView(e.latlng, 15);
@@ -254,29 +251,10 @@ var maps = {
     };
   },
   nlmaps: function(yasr, L) {
-    var res = [3440.64, 1720.32, 860.16, 430.08, 215.04, 107.52, 53.76, 26.88, 13.44, 6.72, 3.36, 1.68, 0.84, 0.42];
-    var scales = [];
-    res.forEach(function(res) {
-      scales.push(1 / res);
-    });
-
-    var k = new L.Proj
-      .CRS(
-      "EPSG:28992",
-      "+proj=sterea +lat_0=52.15616055555555 +lon_0=5.38763888888889 +k=0.9999079 +x_0=155000 +y_0=463000 +ellps=bessel +units=m +towgs84=565.2369,50.0087,465.658,-0.406857330322398,0.350732676542563,-1.8703473836068,4.0812 +no_defs",
-      {
-        transformation: new L.Transformation(1, 285401.92, -1, 903401.92),
-        scales: scales,
-        bounds: new L.bounds([-285401.92, 22598.08], [595401.9199999999, 903401.9199999999])
-      }
-    );
     return {
-      crs: k,
       layers: [
-        new L.tileLayer.wms("http://geodata.nationaalgeoregister.nl/tms/1.0.0/brtachtergrondkaart/{z}/{x}/{y}.png", {
-          minZoom: 1,
-          maxZoom: 13,
-          tms: true
+        new L.tileLayer("https://geodata.nationaalgeoregister.nl/tiles/service/wmts/brtachtergrondkaart/EPSG:3857/{z}/{x}/{y}.png", {
+          attribution: 'NLMaps | Kaartgegevens © Kadaster | <a href="http://www.verbeterdekaart.nl/" target="_blank">verbeter de kaart</a>'
         })
       ]
     };
