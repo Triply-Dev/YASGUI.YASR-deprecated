@@ -79009,7 +79009,7 @@ module.exports = {
 module.exports={
   "name": "yasgui-yasr",
   "description": "Yet Another SPARQL Resultset GUI",
-  "version": "2.12.9",
+  "version": "2.12.10",
   "main": "src/main.js",
   "license": "MIT",
   "author": "Laurens Rietveld",
@@ -80192,7 +80192,13 @@ var root = (module.exports = function(yasr) {
           console.error('Failed to read WKT value: ' + binding[plotVariable].value)
           continue;
         }
-        var feature = _L.geoJson(wkt, {style:style});
+        var feature = _L.geoJson(wkt, {style:style,
+
+                pointToLayer: function(feature, latlng) {
+                  return _L.marker(latlng, { icon: mySVGIcon });
+                }
+
+        });
 
         var popupContent = options.formatPopup && options.formatPopup(yasr, L, plotVariable, binding);
         if (popupContent) {
