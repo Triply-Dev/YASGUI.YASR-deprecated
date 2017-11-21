@@ -85,7 +85,7 @@
     "lodash": "^4.16.1",
     "npm-check": "^5.4.5",
     "pivottable": "^2.1.0",
-    "wicket": "git+https://github.com/arthur-e/Wicket.git#4c85030c80a2b7737b0a21758bbcf41dd976facc",
+    "wellknown": "^0.5.0",
     "yasgui-utils": "^1.6.7"
   },
   "browserify-shim": {

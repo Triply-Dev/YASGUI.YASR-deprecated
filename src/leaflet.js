@@ -2,7 +2,7 @@
 var $ = require("jquery");
 
 var LibColor = require("color");
-
+var wellknown = require('wellknown')
 var colormap = require('colormap');
 var _colorbrewer = require('colorbrewer')
 var colorbrewer = {};
@@ -17,11 +17,6 @@ for (var color in _colorbrewer) {
 }
 
 var colorScales = require('colormap/colorScale');
-function getWicket() {
-  global.Wkt = require("wicket/wicket");
-  require("wicket/wicket-leaflet");
-  return new Wkt.Wkt();
-}
 function getHexFromScale(scaleType, scaleVal) {
   if (scaleVal > 1 || scaleVal < 0) return;
   if (!scaleType.length) return
@@ -135,7 +130,6 @@ var root = (module.exports = function(yasr) {
           fill: getColor()
         };
         Colors.border = Colors.fill.saturate(0.2);
-        var wicket = getWicket();
         var mySVGIcon = _L.divIcon({
           iconSize: [25, 41],
           // shadowSize: [25, 45],
@@ -146,13 +140,12 @@ var root = (module.exports = function(yasr) {
 
 
         var style = $.extend({}, defaultStyle, { icon: mySVGIcon, color: Colors.fill.toString()})
-        var feature;
-        try {
-          feature = wicket.read(binding[plotVariable].value).toObject(style);
-        } catch(e) {
+        var wkt = wellknown(binding[plotVariable].value);
+        if (!wkt) {
           console.error('Failed to read WKT value: ' + binding[plotVariable].value)
           continue;
         }
+        var feature = _L.geoJson(wkt, {style:style});
 
         var popupContent = options.formatPopup && options.formatPopup(yasr, L, plotVariable, binding);
         if (popupContent) {
@@ -214,9 +207,7 @@ var root = (module.exports = function(yasr) {
     val = val.trim().toUpperCase();
     for (var i = 0; i < geoKeywords.length; i++) {
       if (val.indexOf(geoKeywords[i]) === 0) {
-        try {
-          getWicket().read(val)
-        } catch(e) {
+        if (!wellknown(val)) {
           console.error('Failed to parse WKT value ' + val)
           continue;
         }
