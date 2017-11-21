@@ -145,7 +145,13 @@ var root = (module.exports = function(yasr) {
           console.error('Failed to read WKT value: ' + binding[plotVariable].value)
           continue;
         }
-        var feature = _L.geoJson(wkt, {style:style});
+        var feature = _L.geoJson(wkt, {style:style,
+
+                pointToLayer: function(feature, latlng) {
+                  return _L.marker(latlng, { icon: mySVGIcon });
+                }
+
+        });
 
         var popupContent = options.formatPopup && options.formatPopup(yasr, L, plotVariable, binding);
         if (popupContent) {
