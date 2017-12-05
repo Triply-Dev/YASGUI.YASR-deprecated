@@ -40117,7 +40117,7 @@ module.exports = {
 module.exports={
   "name": "yasgui-yasr",
   "description": "Yet Another SPARQL Resultset GUI",
-  "version": "2.12.10",
+  "version": "2.12.11",
   "main": "src/main.js",
   "license": "MIT",
   "author": "Laurens Rietveld",
@@ -40377,7 +40377,16 @@ module.exports = {
   output: "table",
   useGoogleCharts: true,
   outputPlugins: ["table", "error", "boolean", "rawResponse", "pivot", "gchart", "leaflet"],
-
+  pluginSettings: {
+    //allows overwriting plugin settings. useful when passing settings via yasr constructor
+    table: {},
+    error: {},
+    boolean: {},
+    rawResponse: {},
+    pivot: {},
+    gchart: {},
+    leaflet: {}
+  },
   /**
 	 * Draw the output selector widget
 	 *
@@ -40821,7 +40830,8 @@ var root = module.exports = function(yasr) {
       //don't use jquery, so we can easily influence indentation
       return '<div style="width: 800px; height: 600px;">\n' + htmlString + "\n</div>";
     },
-    draw: function() {
+    draw: function(_customOpts) {
+      var customOpts = $.extend(true, {}, options, _customOpts);
       var doDraw = function() {
         //clear previous results (if any)
         yasr.resultsContainer.empty();
@@ -40872,17 +40882,17 @@ var root = module.exports = function(yasr) {
           });
           dataTable.addRow(row);
         });
-
-        if (options.chartConfig && options.chartConfig.chartType) {
-          options.chartConfig.containerId = wrapperId;
-          chartWrapper = new google.visualization.ChartWrapper(options.chartConfig);
-          if (chartWrapper.getChartType() === "MotionChart" && options.motionChartState) {
-            chartWrapper.setOption("state", options.motionChartState);
+        console.log(customOpts)
+        if (customOpts.chartConfig && customOpts.chartConfig.chartType) {
+          customOpts.chartConfig.containerId = wrapperId;
+          chartWrapper = new google.visualization.ChartWrapper(customOpts.chartConfig);
+          if (chartWrapper.getChartType() === "MotionChart" && customOpts.motionChartState) {
+            chartWrapper.setOption("state", customOpts.motionChartState);
             google.visualization.events.addListener(chartWrapper, "ready", function() {
               var motionChart;
               motionChart = chartWrapper.getChart();
               google.visualization.events.addListener(motionChart, "statechange", function() {
-                options.motionChartState = motionChart.getState();
+                customOpts.motionChartState = motionChart.getState();
                 yasr.store();
               });
             });
@@ -41359,7 +41369,8 @@ var root = (module.exports = function(yasr) {
       } else if (typeof options.missingPopupMsg === "function") {
         msg = options.missingPopupMsg(yasr, L, plotVariables);
       }
-      if (msg) yasr.resultsContainer.prepend(msg);
+      if (msg) yasr.resultsContainer.prepend($('<div className="geoHint">').html(msg))
+      // if (msg) yasr.resultsContainer.prepend(msg);
     }
   };
 
@@ -41612,7 +41623,7 @@ var YASR = function(parent, options, queryResults) {
     if (outputToDraw) {
       $(yasr.resultsContainer).empty();
       yasr.emit("draw", yasr, yasr.plugins[outputToDraw]);
-      yasr.plugins[outputToDraw].draw();
+      yasr.plugins[outputToDraw].draw(yasr.options.pluginSettings[outputToDraw] || {});
       yasr.emit("drawn", yasr, yasr.plugins[outputToDraw]);
       yasr.updateHeader();
       return true;
