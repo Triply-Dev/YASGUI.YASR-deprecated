@@ -204,7 +204,8 @@ var root = (module.exports = function(yasr) {
       } else if (typeof options.missingPopupMsg === "function") {
         msg = options.missingPopupMsg(yasr, L, plotVariables);
       }
-      if (msg) yasr.resultsContainer.prepend(msg);
+      if (msg) yasr.resultsContainer.prepend($('<div className="geoHint">').html(msg))
+      // if (msg) yasr.resultsContainer.prepend(msg);
     }
   };
 
