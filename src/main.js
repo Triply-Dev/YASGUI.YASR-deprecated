@@ -293,6 +293,8 @@ var YASR = function(parent, options, queryResults) {
         .append(require("yasgui-utils").svg.getElement(require("./imgs.js").fullscreen))
         .click(function() {
           yasr.container.addClass("yasr_fullscreen");
+          //draw, as yasr dimensions have changed (needed for e.g. leaflet)
+          yasr.draw();
         });
       yasr.header.append(button);
     };
@@ -301,6 +303,8 @@ var YASR = function(parent, options, queryResults) {
         .append(require("yasgui-utils").svg.getElement(require("./imgs.js").smallscreen))
         .click(function() {
           yasr.container.removeClass("yasr_fullscreen");
+          //draw, as yasr dimensions have changed (needed for e.g. leaflet)
+          yasr.draw();
         });
       yasr.header.append(button);
     };
