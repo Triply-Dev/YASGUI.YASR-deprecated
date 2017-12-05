@@ -79009,7 +79009,7 @@ module.exports = {
 module.exports={
   "name": "yasgui-yasr",
   "description": "Yet Another SPARQL Resultset GUI",
-  "version": "2.12.11",
+  "version": "2.12.12",
   "main": "src/main.js",
   "license": "MIT",
   "author": "Laurens Rietveld",
@@ -79616,7 +79616,7 @@ module.exports = new loader();
 "use strict";
 /**
  * todo: chart height as option
- * 
+ *
  */
 var $ = require("jquery"), utils = require("./utils.js"), yUtils = require("yasgui-utils");
 
@@ -79774,7 +79774,6 @@ var root = module.exports = function(yasr) {
           });
           dataTable.addRow(row);
         });
-        console.log(customOpts)
         if (customOpts.chartConfig && customOpts.chartConfig.chartType) {
           customOpts.chartConfig.containerId = wrapperId;
           chartWrapper = new google.visualization.ChartWrapper(customOpts.chartConfig);
@@ -80681,6 +80680,8 @@ var YASR = function(parent, options, queryResults) {
         .append(require("yasgui-utils").svg.getElement(require("./imgs.js").fullscreen))
         .click(function() {
           yasr.container.addClass("yasr_fullscreen");
+          //draw, as yasr dimensions have changed (needed for e.g. leaflet)
+          yasr.draw();
         });
       yasr.header.append(button);
     };
@@ -80689,6 +80690,8 @@ var YASR = function(parent, options, queryResults) {
         .append(require("yasgui-utils").svg.getElement(require("./imgs.js").smallscreen))
         .click(function() {
           yasr.container.removeClass("yasr_fullscreen");
+          //draw, as yasr dimensions have changed (needed for e.g. leaflet)
+          yasr.draw();
         });
       yasr.header.append(button);
     };
