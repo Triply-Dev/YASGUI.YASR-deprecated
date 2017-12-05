@@ -1,7 +1,7 @@
 "use strict";
 /**
  * todo: chart height as option
- * 
+ *
  */
 var $ = require("jquery"), utils = require("./utils.js"), yUtils = require("yasgui-utils");
 
@@ -159,7 +159,6 @@ var root = module.exports = function(yasr) {
           });
           dataTable.addRow(row);
         });
-        console.log(customOpts)
         if (customOpts.chartConfig && customOpts.chartConfig.chartType) {
           customOpts.chartConfig.containerId = wrapperId;
           chartWrapper = new google.visualization.ChartWrapper(customOpts.chartConfig);
