@@ -10,7 +10,16 @@ module.exports = {
   output: "table",
   useGoogleCharts: true,
   outputPlugins: ["table", "error", "boolean", "rawResponse", "pivot", "gchart", "leaflet"],
-
+  pluginSettings: {
+    //allows overwriting plugin settings. useful when passing settings via yasr constructor
+    table: {},
+    error: {},
+    boolean: {},
+    rawResponse: {},
+    pivot: {},
+    gchart: {},
+    leaflet: {}
+  },
   /**
 	 * Draw the output selector widget
 	 *
