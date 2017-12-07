@@ -40117,7 +40117,7 @@ module.exports = {
 module.exports={
   "name": "yasgui-yasr",
   "description": "Yet Another SPARQL Resultset GUI",
-  "version": "2.12.12",
+  "version": "2.12.13",
   "main": "src/main.js",
   "license": "MIT",
   "author": "Laurens Rietveld",
@@ -41790,6 +41790,10 @@ var YASR = function(parent, options, queryResults) {
           yasr.container.addClass("yasr_fullscreen");
           //draw, as yasr dimensions have changed (needed for e.g. leaflet)
           yasr.draw();
+          //useful to emit this, as then we can e.g. update the yasgui style when this happens
+          //needed this to fix z-index issues with leaflet, as the yasgui el has a relative pos
+          yasr.emit('fullscreen-enter', yasr);
+
         });
       yasr.header.append(button);
     };
@@ -41800,6 +41804,7 @@ var YASR = function(parent, options, queryResults) {
           yasr.container.removeClass("yasr_fullscreen");
           //draw, as yasr dimensions have changed (needed for e.g. leaflet)
           yasr.draw();
+          yasr.emit('fullscreen-leave', yasr);
         });
       yasr.header.append(button);
     };
