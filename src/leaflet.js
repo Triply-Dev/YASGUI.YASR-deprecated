@@ -173,7 +173,6 @@ var root = (module.exports = function(yasr) {
             markerPos = feature.getLatLng();
           }
           if (markerPos) {
-            var shouldDrawSeparateMarker = !!feature.getBounds; //a lat/lng is already a marker
             if (wkt.type === 'Point') {
               addPopupAndEventsToMarker(feature);
             } else {
