@@ -40117,7 +40117,7 @@ module.exports = {
 module.exports={
   "name": "yasgui-yasr",
   "description": "Yet Another SPARQL Resultset GUI",
-  "version": "2.12.14",
+  "version": "2.12.16",
   "main": "src/main.js",
   "license": "MIT",
   "author": "Laurens Rietveld",
@@ -41337,7 +41337,6 @@ var root = (module.exports = function(yasr) {
             markerPos = feature.getLatLng();
           }
           if (markerPos) {
-            var shouldDrawSeparateMarker = !!feature.getBounds; //a lat/lng is already a marker
             if (wkt.type === 'Point') {
               addPopupAndEventsToMarker(feature);
             } else {
