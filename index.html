@@ -8,7 +8,7 @@
   <link rel="icon"  type="image/png" href="doc/imgs/favicon.png">
   <link href="dist/yasr.min.css" rel="stylesheet" type="text/css" />
 <!-- build:css -->
-<link rel="stylesheet" href="//cdn.jsdelivr.net/npm/yasqe/2.11.18/yasqe.min.css">
+<link rel="stylesheet" href="//cdn.jsdelivr.net/npm/yasqe/3.11.18/yasqe.min.css">
 <!-- endbuild -->
   <link href="doc/doc.min.css" rel="stylesheet" type="text/css" />
 
@@ -72,6 +72,7 @@
       	YASR is part of the regular <a target="_blank" href='http://about.yasgui.org'>YASGUI</a> web application. YASR provides a plugin-based visualizations for SPARQL resultsets.
       	<div id="yasqe"></div>
       	<div id="showcase"></div>
+      	<div id="showcase2"></div>
       	<code>var yasr = YASR(document.getElementById("showcase"));</code>
       	</div>
       	</div>
@@ -188,7 +189,7 @@
 
 <script src="dist/yasr.bundled.min.js"></script>
 <!-- build:js -->
-<script src="//cdn.jsdelivr.net/npm/yasqe/2.11.18/yasqe.bundled.min.js"></script>
+<script src="//cdn.jsdelivr.net/npm/yasqe/3.11.18/yasqe.bundled.min.js"></script>
 <!-- endbuild -->
 <script src="doc/doc.min.js"></script>
 <script type="text/javascript">
@@ -215,6 +216,7 @@ yasqe = YASQE(document.getElementById("yasqe"), {
     // }
   }
 });
+yasr2 = YASR(document.getElementById("showcase2"));
 
 /**
     * Set some of the hooks to link YASR and YASQE
@@ -231,14 +233,14 @@ function testFile(testFile) {
   xhr.open("GET", testFile);
   xhr.onload = function() {
     if (xhr.status === 200) {
-      yasr.setResponse(xhr.responseText);
+      yasr2.setResponse(xhr.responseText);
     } else {
       console.error("Request failed.  Returned status of " + xhr.status);
     }
   };
   xhr.send();
 }
-//testFile("queryResults.json");
+testFile("queryResults.json");
 </script>
   </body>
 </html>

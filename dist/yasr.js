@@ -40117,7 +40117,7 @@ module.exports = {
 module.exports={
   "name": "yasgui-yasr",
   "description": "Yet Another SPARQL Resultset GUI",
-  "version": "2.12.13",
+  "version": "2.12.14",
   "main": "src/main.js",
   "license": "MIT",
   "author": "Laurens Rietveld",
@@ -41338,10 +41338,10 @@ var root = (module.exports = function(yasr) {
           }
           if (markerPos) {
             var shouldDrawSeparateMarker = !!feature.getBounds; //a lat/lng is already a marker
-            if (shouldDrawSeparateMarker) {
-              addPopupAndEventsToMarker(_L.marker(markerPos, { icon: mySVGIcon }).addTo(map));
-            } else {
+            if (wkt.type === 'Point') {
               addPopupAndEventsToMarker(feature);
+            } else {
+              addPopupAndEventsToMarker(_L.marker(markerPos, { icon: mySVGIcon }).addTo(map));
             }
           }
         }
