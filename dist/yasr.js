@@ -40117,7 +40117,7 @@ module.exports = {
 module.exports={
   "name": "yasgui-yasr",
   "description": "Yet Another SPARQL Resultset GUI",
-  "version": "2.12.16",
+  "version": "2.12.18",
   "main": "src/main.js",
   "license": "MIT",
   "author": "Laurens Rietveld",
@@ -41619,6 +41619,11 @@ var YASR = function(parent, options, queryResults) {
     }
 
     if (outputToDraw) {
+      if (yasr.options.output !== outputToDraw) {
+        yasr.options.output = outputToDraw;
+        updateOutputSelectorButtons();
+      }
+
       $(yasr.resultsContainer).empty();
       yasr.emit("draw", yasr, yasr.plugins[outputToDraw]);
       yasr.plugins[outputToDraw].draw(yasr.options.pluginSettings[outputToDraw] || {});
@@ -41631,9 +41636,14 @@ var YASR = function(parent, options, queryResults) {
     }
   };
 
+  var updateOutputSelectorButtons = function() {
+      var buttons = yasr.header.find(".yasr_btnGroup .yasr_btn").removeClass("selected");
+      buttons.filter(".select_" + yasr.options.output).addClass("selected");
+  };
+
   var disableOutputs = function(outputs) {
     //first enable everything.
-    yasr.header.find(".yasr_btnGroup .yasr_btn").removeClass("disabled");
+    yasr.header.find(".yasr_btnGroup .yasr_btn").removeClass("disabled").removeAttr("disabled");
 
     //now disable the outputs passed as param
     outputs.forEach(function(outputName) {
@@ -41641,7 +41651,8 @@ var YASR = function(parent, options, queryResults) {
       if (module.exports.plugins[outputName] && module.exports.plugins[outputName].defaults) {
         disabledTitle = module.exports.plugins[outputName].defaults.disabledTitle;
       }
-      yasr.header.find(".yasr_btnGroup .select_" + outputName).addClass("disabled").attr("title", disabledTitle || "");
+      yasr.header.find(".yasr_btnGroup .select_" + outputName).addClass("disabled").attr("title", disabledTitle || "")
+        .attr("disabled", true);
     });
   };
   yasr.somethingDrawn = function() {
