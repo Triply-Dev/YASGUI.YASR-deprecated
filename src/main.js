@@ -243,7 +243,7 @@ var YASR = function(parent, options, queryResults) {
 
         if (plugin.hideFromSelection) return;
         var name = plugin.name || pluginName;
-        var button = $("<button class='yasr_btn'></button>")
+        var button = $("<button type='button' class='yasr_btn'></button>")
           .text(name)
           .addClass("select_" + pluginName)
           .click(function() {
@@ -279,7 +279,7 @@ var YASR = function(parent, options, queryResults) {
         }
         return url;
       };
-      var button = $("<button class='yasr_btn yasr_downloadIcon btn_icon'></button>")
+      var button = $("<button type='button' class='yasr_btn yasr_downloadIcon btn_icon'></button>")
         .append(require("yasgui-utils").svg.getElement(require("./imgs.js").download))
         .click(function() {
           var currentPlugin = yasr.plugins[yasr.options.output];
@@ -300,7 +300,7 @@ var YASR = function(parent, options, queryResults) {
       yasr.header.append(button);
     };
     var drawFullscreenButton = function() {
-      var button = $("<button class='yasr_btn btn_fullscreen btn_icon'></button>")
+      var button = $("<button type='button' class='yasr_btn btn_fullscreen btn_icon'></button>")
         .append(require("yasgui-utils").svg.getElement(require("./imgs.js").fullscreen))
         .click(function() {
           yasr.container.addClass("yasr_fullscreen");
@@ -314,7 +314,7 @@ var YASR = function(parent, options, queryResults) {
       yasr.header.append(button);
     };
     var drawSmallscreenButton = function() {
-      var button = $("<button class='yasr_btn btn_smallscreen btn_icon'></button>")
+      var button = $("<button type='button' class='yasr_btn btn_smallscreen btn_icon'></button>")
         .append(require("yasgui-utils").svg.getElement(require("./imgs.js").smallscreen))
         .click(function() {
           yasr.container.removeClass("yasr_fullscreen");
@@ -325,7 +325,7 @@ var YASR = function(parent, options, queryResults) {
       yasr.header.append(button);
     };
     var drawEmbedButton = function() {
-      embedBtn = $("<button>", {
+      embedBtn = $("<button type='button'>", {
         class: "yasr_btn yasr_embedBtn",
         title: "Get HTML snippet to embed results on a web page"
       })
