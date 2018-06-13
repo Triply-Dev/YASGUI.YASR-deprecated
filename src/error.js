@@ -19,7 +19,7 @@ var root = module.exports = function(yasr) {
     var $tryBtn = null;
     if (options.tryQueryLink) {
       var link = options.tryQueryLink();
-      $tryBtn = $("<button>", {
+      $tryBtn = $("<button type='button'>", {
         class: "yasr_btn yasr_tryQuery"
       })
         .text("Try query in new browser window")
