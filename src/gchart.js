@@ -185,10 +185,6 @@ var root = module.exports = function(yasr) {
         chartWrapper.setOption("width", $wrapper.width());
         chartWrapper.setOption("height", $wrapper.height());
         chartWrapper.draw();
-        // introduce handler
-        if ( customOpts.selectHandler && typeof(customOpts.selectHandler) == 'function') 
-				   google.visualization.events.addListener(chartWrapper, "select", function() { customOpts.selectHandler(chartWrapper,jsonResults); });
-        
         google.visualization.events.addListener(chartWrapper, "ready", yasr.updateHeader);
       };
 
