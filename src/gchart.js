@@ -116,8 +116,8 @@ var root = module.exports = function(yasr) {
 
         yasr.resultsContainer
           .append(
-            $("<button type='button'>", {
-              class: "openGchartBtn yasr_btn"
+        	$("<button>", {
+                 class: "openGchartBtn yasr_btn",type: "button"
             })
               .text("Chart Config")
               .click(function() {
