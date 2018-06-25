@@ -109,7 +109,7 @@ var root = module.exports = function(yasr) {
         yasr.updateHeader();
       };
 
-      var openGchartBtn = $("<button>", {
+      var openGchartBtn = $("<button type='button'>", {
         class: "openPivotGchart yasr_btn"
       })
         .text("Chart Config")
