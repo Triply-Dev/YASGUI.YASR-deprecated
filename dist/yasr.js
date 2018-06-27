@@ -40117,7 +40117,7 @@ module.exports = {
 module.exports={
   "name": "yasgui-yasr",
   "description": "Yet Another SPARQL Resultset GUI",
-  "version": "2.12.18",
+  "version": "2.12.19",
   "main": "src/main.js",
   "license": "MIT",
   "author": "Laurens Rietveld",
@@ -40504,7 +40504,7 @@ var root = module.exports = function(yasr) {
     var $tryBtn = null;
     if (options.tryQueryLink) {
       var link = options.tryQueryLink();
-      $tryBtn = $("<button>", {
+      $tryBtn = $("<button type='button'>", {
         class: "yasr_btn yasr_tryQuery"
       })
         .text("Try query in new browser window")
@@ -40839,8 +40839,8 @@ var root = module.exports = function(yasr) {
 
         yasr.resultsContainer
           .append(
-            $("<button>", {
-              class: "openGchartBtn yasr_btn"
+        	$("<button>", {
+                 class: "openGchartBtn yasr_btn",type: "button"
             })
               .text("Chart Config")
               .click(function() {
@@ -40908,6 +40908,10 @@ var root = module.exports = function(yasr) {
         chartWrapper.setOption("width", $wrapper.width());
         chartWrapper.setOption("height", $wrapper.height());
         chartWrapper.draw();
+        // introduce handler
+        if ( customOpts.selectHandler && typeof(customOpts.selectHandler) == 'function') 
+				   google.visualization.events.addListener(chartWrapper, "select", function() { customOpts.selectHandler(chartWrapper,jsonResults); });
+        
         google.visualization.events.addListener(chartWrapper, "ready", yasr.updateHeader);
       };
 
@@ -41737,7 +41741,7 @@ var YASR = function(parent, options, queryResults) {
 
         if (plugin.hideFromSelection) return;
         var name = plugin.name || pluginName;
-        var button = $("<button class='yasr_btn'></button>")
+        var button = $("<button type='button' class='yasr_btn'></button>")
           .text(name)
           .addClass("select_" + pluginName)
           .click(function() {
@@ -41773,7 +41777,7 @@ var YASR = function(parent, options, queryResults) {
         }
         return url;
       };
-      var button = $("<button class='yasr_btn yasr_downloadIcon btn_icon'></button>")
+      var button = $("<button type='button' class='yasr_btn yasr_downloadIcon btn_icon'></button>")
         .append(require("yasgui-utils").svg.getElement(require("./imgs.js").download))
         .click(function() {
           var currentPlugin = yasr.plugins[yasr.options.output];
@@ -41794,7 +41798,7 @@ var YASR = function(parent, options, queryResults) {
       yasr.header.append(button);
     };
     var drawFullscreenButton = function() {
-      var button = $("<button class='yasr_btn btn_fullscreen btn_icon'></button>")
+      var button = $("<button type='button' class='yasr_btn btn_fullscreen btn_icon'></button>")
         .append(require("yasgui-utils").svg.getElement(require("./imgs.js").fullscreen))
         .click(function() {
           yasr.container.addClass("yasr_fullscreen");
@@ -41808,7 +41812,7 @@ var YASR = function(parent, options, queryResults) {
       yasr.header.append(button);
     };
     var drawSmallscreenButton = function() {
-      var button = $("<button class='yasr_btn btn_smallscreen btn_icon'></button>")
+      var button = $("<button type='button' class='yasr_btn btn_smallscreen btn_icon'></button>")
         .append(require("yasgui-utils").svg.getElement(require("./imgs.js").smallscreen))
         .click(function() {
           yasr.container.removeClass("yasr_fullscreen");
@@ -41819,7 +41823,7 @@ var YASR = function(parent, options, queryResults) {
       yasr.header.append(button);
     };
     var drawEmbedButton = function() {
-      embedBtn = $("<button>", {
+      embedBtn = $("<button type='button'>", {
         class: "yasr_btn yasr_embedBtn",
         title: "Get HTML snippet to embed results on a web page"
       })
@@ -42643,7 +42647,7 @@ var root = module.exports = function(yasr) {
         yasr.updateHeader();
       };
 
-      var openGchartBtn = $("<button>", {
+      var openGchartBtn = $("<button type='button'>", {
         class: "openPivotGchart yasr_btn"
       })
         .text("Chart Config")
