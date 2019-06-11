@@ -42,7 +42,7 @@ module.exports = function(result) {
       //and finally add quotes all around
       value = quote + value + quote;
     }
-    csvString += " " + value + " " + delimiter;
+    csvString += value + delimiter;
   };
 
   var needToQuoteString = function(value) {
